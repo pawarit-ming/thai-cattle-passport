@@ -21,16 +21,23 @@ class AppShell extends StatelessWidget {
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+            // แนะนำ Icons.pets (สัตว์) หรือ Icons.agriculture (เกษตรกรรม)
+            icon: Icon(Icons.pets),
+            label: 'วัว',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.add),
-            label: 'Add Cow',
+            // แนะนำ Icons.handshake (ตกลงซื้อขาย) หรือ Icons.gavel (ประมูล)
+            icon: Icon(Icons.handshake),
+            label: 'เสนอซื้อ',
+          ),
+          BottomNavigationBarItem(
+            // แนะนำ Icons.shopping_cart (ตะกร้าสินค้า)
+            icon: Icon(Icons.shopping_cart),
+            label: 'ซื้อ',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
-            label: 'Profile',
+            label: 'บัญชี',
           ),
         ],
       ),

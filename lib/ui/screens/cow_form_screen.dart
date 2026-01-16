@@ -35,12 +35,10 @@ class _CowFormScreenState extends State<CowFormScreen> {
     _breedController = TextEditingController();
 
     if (_isEditing) {
-      // In a real app, you would fetch data from a database/API
-      // For now, we'll use mock data.
-      _tagIdController.text = '101'; // Mock data for cowId '101'
+      // Mock data
+      _tagIdController.text = '101';
       _nameController.text = 'Bessie';
       _breedController.text = 'Brahman';
-      // Assume photos were already added
       _faceImageAdded = true;
       _bodyImageAdded = true;
       _legsImageAdded = true;
@@ -57,20 +55,40 @@ class _CowFormScreenState extends State<CowFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Cow' : 'New Cow'),
+        backgroundColor: colorScheme.primary, // ใช้สีหลัก (สีน้ำตาล)
+        foregroundColor: colorScheme.onPrimary, // สีตัวหนังสือ/ไอคอนเป็นสีขาว
+        centerTitle: true,
+        // ปุ่มย้อนกลับ
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
+        ),
+        title: Text(
+          _isEditing ? 'แก้ไขข้อมูลวัว' : 'เพิ่มวัวใหม่',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: Stepper(
         type: StepperType.vertical,
         currentStep: _currentStep,
+        physics: const ClampingScrollPhysics(), // ป้องกันการเด้งไปมา
         onStepTapped: (step) => setState(() => _currentStep = step),
         onStepContinue: () {
           final isLastStep = _currentStep == _getSteps().length - 1;
           if (isLastStep) {
             _saveForm();
           } else {
-            // Here you might want to validate step 1, e.g. check if photos are added
             setState(() => _currentStep += 1);
           }
         },
@@ -78,6 +96,30 @@ class _CowFormScreenState extends State<CowFormScreen> {
           if (_currentStep > 0) {
             setState(() => _currentStep -= 1);
           }
+        },
+        // ปรับแต่งสีของปุ่มใน Stepper
+        controlsBuilder: (context, details) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 20.0),
+            child: Row(
+              children: [
+                FilledButton(
+                  onPressed: details.onStepContinue,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                  ),
+                  child: Text(
+                      _currentStep == _getSteps().length - 1 ? 'บันทึก' : 'ถัดไป'),
+                ),
+                const SizedBox(width: 12),
+                if (_currentStep > 0)
+                  OutlinedButton(
+                    onPressed: details.onStepCancel,
+                    child: const Text('ย้อนกลับ'),
+                  ),
+              ],
+            ),
+          );
         },
         steps: _getSteps(),
       ),
@@ -87,9 +129,8 @@ class _CowFormScreenState extends State<CowFormScreen> {
   void _saveForm() {
     final isValid = _formKey.currentState?.validate() ?? false;
     if (isValid) {
-      // Process data
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Saving data...')),
+        const SnackBar(content: Text('กำลังบันทึกข้อมูล...')),
       );
       if (context.canPop()) {
         context.pop();
@@ -102,25 +143,26 @@ class _CowFormScreenState extends State<CowFormScreen> {
   List<Step> _getSteps() {
     return [
       Step(
-        title: const Text('Cow Identification Photos'),
+        title: const Text('รูปถ่ายระบุตัวตน', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         isActive: _currentStep >= 0,
         state: _currentStep > 0 ? StepState.complete : StepState.indexed,
         content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Please provide clear photos for identification.'),
-            const SizedBox(height: 24),
+            const Text('กรุณาถ่ายรูปให้ชัดเจนเพื่อใช้ในการระบุตัวตน'),
+            const SizedBox(height: 16),
             _buildPhotoPicker(
-              label: 'Face Photo',
+              label: 'รูปหน้าตรง',
               isAdded: _faceImageAdded,
               onTap: () => setState(() => _faceImageAdded = true),
             ),
             _buildPhotoPicker(
-              label: 'Body Photo',
+              label: 'รูปด้านข้างลำตัว',
               isAdded: _bodyImageAdded,
               onTap: () => setState(() => _bodyImageAdded = true),
             ),
             _buildPhotoPicker(
-              label: 'Legs Photo',
+              label: 'รูปขา/ตำหนิ',
               isAdded: _legsImageAdded,
               onTap: () => setState(() => _legsImageAdded = true),
             ),
@@ -128,41 +170,44 @@ class _CowFormScreenState extends State<CowFormScreen> {
         ),
       ),
       Step(
-        title: const Text('Cow Details'),
+        title: const Text('ข้อมูลรายละเอียด', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         isActive: _currentStep >= 1,
         state: _currentStep > 1 ? StepState.complete : StepState.indexed,
         content: Form(
           key: _formKey,
           child: Column(
             children: <Widget>[
-              TextFormField(
+              const SizedBox(height: 8),
+              // --- 1. ช่อง Tag ID ---
+              _buildStyledTextField(
                 controller: _tagIdController,
-                decoration: const InputDecoration(
-                  labelText: 'Tag ID',
-                ),
+                label: 'Tag ID (เลขหู)',
+                icon: Icons.confirmation_number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a Tag ID';
+                    return 'กรุณากรอกเลขหู';
                   }
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
-              TextFormField(
+              const SizedBox(height: 20), // เพิ่มระยะห่าง
+              
+              // --- 2. ช่อง Name ---
+              _buildStyledTextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                ),
+                label: 'ชื่อวัว',
+                icon: Icons.pets,
               ),
-              const SizedBox(height: 16),
-              TextFormField(
+              const SizedBox(height: 20),
+
+              // --- 3. ช่อง Breed ---
+              _buildStyledTextField(
                 controller: _breedController,
-                decoration: const InputDecoration(
-                  labelText: 'Breed',
-                ),
+                label: 'สายพันธุ์',
+                icon: Icons.category,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a breed';
+                    return 'กรุณากรอกสายพันธุ์';
                   }
                   return null;
                 },
@@ -174,32 +219,81 @@ class _CowFormScreenState extends State<CowFormScreen> {
     ];
   }
 
+  // Helper Widget สำหรับสร้าง TextField สวยๆ
+  Widget _buildStyledTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon), // ไอคอนนำหน้า
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12), // ขอบมน
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade400), // สีขอบปกติ
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2), // สีขอบตอนพิมพ์
+        ),
+        filled: true,
+        fillColor: Colors.grey.shade50, // พื้นหลังสีเทาอ่อน
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
+    );
+  }
+
   Widget _buildPhotoPicker({
     required String label,
     required bool isAdded,
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
         child: Container(
           height: 100,
           decoration: BoxDecoration(
-            border: Border.all(color: theme.dividerColor),
-            borderRadius: BorderRadius.circular(8.0),
+            color: isAdded ? colorScheme.primaryContainer.withOpacity(0.3) : Colors.white,
+            border: Border.all(
+              color: isAdded ? colorScheme.primary : Colors.grey.shade400, 
+              width: isAdded ? 2 : 1
+            ),
+            borderRadius: BorderRadius.circular(12.0),
           ),
           child: Center(
             child: isAdded
-                ? Icon(Icons.check_circle,
-                    color: theme.colorScheme.primary, size: 40)
-                : Row(
+                ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.camera_alt, color: theme.colorScheme.secondary),
+                      Icon(Icons.check_circle, color: colorScheme.primary, size: 32),
                       const SizedBox(width: 8),
-                      Text(label, style: theme.textTheme.bodyLarge),
+                      Text(
+                        '$label เรียบร้อย',
+                        style: TextStyle(
+                            color: colorScheme.primary, 
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add_a_photo, color: Colors.grey.shade600, size: 30),
+                      const SizedBox(height: 8),
+                      Text(label, style: TextStyle(color: Colors.grey.shade700)),
                     ],
                   ),
           ),

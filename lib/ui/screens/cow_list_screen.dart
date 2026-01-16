@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-// import 'package:table_calendar/table_calendar.dart'; // Comment ไว้ก่อนถ้ายังไม่ได้ใช้
 
 class CowListScreen extends StatefulWidget {
   const CowListScreen({super.key});
@@ -10,13 +9,14 @@ class CowListScreen extends StatefulWidget {
 }
 
 class _CowListScreenState extends State<CowListScreen> {
-  // --- ตัวแปรสำหรับ Filter (State) ---
-  String? _selectedGender; // 'Male', 'Female'
-  String? _selectedBreed;
-  RangeValues _ageRange = const RangeValues(0, 10); // อายุ 0-10 ปี
-  RangeValues _weightRange = const RangeValues(0, 1000); // น้ำหนัก 0-1000 กก.
+  // --- ไม่มีการกำหนดสี Hardcode ตรงนี้แล้ว ---
 
-  // ข้อมูลจำลองสำหรับ Dropdown สายพันธุ์
+  // --- ตัวแปรสำหรับ Filter (State) ---
+  String? _selectedGender;
+  String? _selectedBreed;
+  RangeValues _ageRange = const RangeValues(0, 20);
+  RangeValues _weightRange = const RangeValues(0, 1500);
+
   final List<String> _breeds = [
     'Brahman',
     'Charolais',
@@ -27,149 +27,372 @@ class _CowListScreenState extends State<CowListScreen> {
   ];
 
   @override
-  void initState() {
-    super.initState();
+  Widget build(BuildContext context) {
+    // เรียก Theme มาใช้
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Scaffold(
+      // backgroundColor ใช้ค่า default จาก Theme (scaffoldBackgroundColor)
+      appBar: AppBar(
+        // backgroundColor/foregroundColor ใช้ค่า default จาก Theme
+        title: const Text('วัวของฉัน'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            tooltip: 'Filter Cows',
+            onPressed: _showFilterDialog,
+          ),
+        ],
+      ),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          context.go('/form');
+        },
+        // ใช้ค่า default จาก Theme หรือกำหนดชัดเจนหากต้องการเน้น
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
+        tooltip: 'เพิ่มวัว',
+        child: const Icon(Icons.add),
+      ),
+
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // --- Header Section ---
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "รายการวัวทั้งหมด",
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        "จำนวน 5 ตัว",
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.secondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // --- Cow List ---
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 5,
+                itemBuilder: (context, index) {
+                  final cowId = 101 + index;
+                  final String name = 'Bessie ${index + 1}';
+                  final String breed = _breeds[index % _breeds.length];
+                  final String gender = index % 2 == 0 ? 'Male' : 'Female';
+
+                  return _buildCowCard(
+                    context: context,
+                    id: cowId.toString(),
+                    name: name,
+                    breed: breed,
+                    gender: gender,
+                    age: '${index + 2} ปี',
+                  );
+                },
+              ),
+              const SizedBox(height: 80),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- Widget การ์ดแสดงข้อมูลวัว ---
+  Widget _buildCowCard({
+    required BuildContext context, // รับ context เข้ามาเพื่อดึง Theme
+    required String id,
+    required String name,
+    required String breed,
+    required String gender,
+    required String age,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: theme.cardTheme.color ?? Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => context.go('/detail'),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              children: [
+                // 1. รูปภาพ/ไอคอนวัว
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: theme.scaffoldBackgroundColor, // ใช้สีพื้นหลังแอป
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: colorScheme.secondary.withOpacity(0.3)),
+                  ),
+                  child: Icon(Icons.pets, color: colorScheme.primary, size: 36),
+                ),
+                const SizedBox(width: 16),
+
+                // 2. ข้อมูลหลัก
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            name,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'ID: $id',
+                              style: TextStyle(
+                                  color: colorScheme.onPrimary,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$breed • $age',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      // Tags (Gender/Status) - สี Functional (ฟ้า/ชมพู/เขียว) เก็บไว้ได้
+                      Row(
+                        children: [
+                          _buildMiniTag(
+                            icon: gender == 'Male' ? Icons.male : Icons.female,
+                            label: gender,
+                            color: gender == 'Male'
+                                ? Colors.blue.shade100
+                                : Colors.pink.shade100,
+                            textColor: gender == 'Male'
+                                ? Colors.blue.shade900
+                                : Colors.pink.shade900,
+                          ),
+                          const SizedBox(width: 8),
+                          _buildMiniTag(
+                            icon: Icons.check_circle_outline,
+                            label: 'สมบูรณ์',
+                            color: Colors.green.shade100,
+                            textColor: Colors.green.shade800,
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+                Icon(Icons.arrow_forward_ios,
+                    size: 16, color: theme.dividerColor),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniTag(
+      {required IconData icon,
+      required String label,
+      required Color color,
+      required Color textColor}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: textColor),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+                fontSize: 10, color: textColor, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
   }
 
   // --- ฟังก์ชันแสดงหน้าต่าง Filter ---
   void _showFilterDialog() {
+    // ต้องดึง Theme นอก builder เพื่อส่งเข้าไป หรือดึงใหม่ข้างในก็ได้
+    // แต่ตรงนี้ context มี theme อยู่แล้ว
+
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // ให้ขยายเต็มจอได้เมื่อมีเนื้อหาเยอะ
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        // ใช้ StatefulBuilder เพื่อให้ update state (เช่น เลื่อน Slider) ใน BottomSheet ได้
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setStateSheet) {
             return Container(
-              padding: const EdgeInsets.all(20),
-              // ความสูงของหน้าจอ
-              height: MediaQuery.of(context).size.height * 0.6,
+              height: MediaQuery.of(context).size.height * 0.7,
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- Header ---
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'กรองข้อมูลวัว (Filter)',
-                        style: TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.bold),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
+                  Center(
+                    child: Container(
+                      width: 50,
+                      height: 5,
+                      decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
                   ),
-                  const Divider(),
+                  const SizedBox(height: 20),
+                  Text(
+                    'กรองข้อมูลวัว (Filter)',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
 
                   Expanded(
                     child: ListView(
                       children: [
-                        // 1. เพศ (Gender)
-                        const Text('เพศ (Gender)',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 8),
+                        _buildFilterSectionHeader('เพศ (Gender)', theme),
                         Row(
                           children: [
                             _buildGenderChip(
-                                'ตัวผู้ (Male)', 'Male', setStateSheet),
+                                'ตัวผู้ (Male)', 'Male', setStateSheet, theme),
                             const SizedBox(width: 10),
-                            _buildGenderChip(
-                                'ตัวเมีย (Female)', 'Female', setStateSheet),
+                            _buildGenderChip('ตัวเมีย (Female)', 'Female',
+                                setStateSheet, theme),
                           ],
                         ),
-                        const SizedBox(height: 20),
-
-                        // 2. สายพันธุ์ (Breed)
-                        const Text('สายพันธุ์ (Breed)',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        DropdownButtonFormField<String>(
-                          value: _selectedBreed,
-                          hint: const Text('เลือกสายพันธุ์'),
-                          isExpanded: true,
-                          items: _breeds.map((String breed) {
-                            return DropdownMenuItem<String>(
-                              value: breed,
-                              child: Text(breed),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setStateSheet(() {
-                              _selectedBreed = value;
-                            });
-                          },
+                        const SizedBox(height: 24),
+                        _buildFilterSectionHeader('สายพันธุ์ (Breed)', theme),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: theme.scaffoldBackgroundColor,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: DropdownButtonFormField<String>(
+                            value: _selectedBreed,
+                            decoration:
+                                const InputDecoration(border: InputBorder.none),
+                            hint: const Text('เลือกสายพันธุ์'),
+                            icon: Icon(Icons.arrow_drop_down,
+                                color: colorScheme.primary),
+                            isExpanded: true,
+                            items: _breeds.map((String breed) {
+                              return DropdownMenuItem<String>(
+                                value: breed,
+                                child: Text(breed),
+                              );
+                            }).toList(),
+                            onChanged: (value) =>
+                                setStateSheet(() => _selectedBreed = value),
+                          ),
                         ),
-                        const SizedBox(height: 20),
-
-                        // 3. อายุ (Age)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('อายุ (Age)',
-                                style: TextStyle(fontWeight: FontWeight.bold)),
-                            Text(
-                                '${_ageRange.start.round()} - ${_ageRange.end.round()} ปี'),
-                          ],
-                        ),
+                        const SizedBox(height: 24),
+                        _buildFilterSectionHeader(
+                            'อายุ (${_ageRange.start.round()} - ${_ageRange.end.round()} ปี)',
+                            theme),
                         RangeSlider(
+                          activeColor: colorScheme.primary,
+                          inactiveColor: theme.scaffoldBackgroundColor,
                           values: _ageRange,
                           min: 0,
                           max: 20,
                           divisions: 20,
-                          labels: RangeLabels(
-                            '${_ageRange.start.round()} ปี',
-                            '${_ageRange.end.round()} ปี',
-                          ),
-                          onChanged: (RangeValues values) {
-                            setStateSheet(() {
-                              _ageRange = values;
-                            });
-                          },
+                          labels: RangeLabels('${_ageRange.start.round()}',
+                              '${_ageRange.end.round()}'),
+                          onChanged: (val) =>
+                              setStateSheet(() => _ageRange = val),
                         ),
-                        const SizedBox(height: 20),
-
-                        // 4. น้ำหนัก (Weight)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('น้ำหนัก (Weight)',
-                                style: TextStyle(fontWeight: FontWeight.bold)),
-                            Text(
-                                '${_weightRange.start.round()} - ${_weightRange.end.round()} กก.'),
-                          ],
-                        ),
+                        _buildFilterSectionHeader(
+                            'น้ำหนัก (${_weightRange.start.round()} - ${_weightRange.end.round()} กก.)',
+                            theme),
                         RangeSlider(
+                          activeColor: colorScheme.primary,
+                          inactiveColor: theme.scaffoldBackgroundColor,
                           values: _weightRange,
                           min: 0,
                           max: 1500,
-                          divisions: 150, // ขยับทีละ 10 กก.
-                          labels: RangeLabels(
-                            '${_weightRange.start.round()} กก.',
-                            '${_weightRange.end.round()} กก.',
-                          ),
-                          onChanged: (RangeValues values) {
-                            setStateSheet(() {
-                              _weightRange = values;
-                            });
-                          },
+                          divisions: 150,
+                          labels: RangeLabels('${_weightRange.start.round()}',
+                              '${_weightRange.end.round()}'),
+                          onChanged: (val) =>
+                              setStateSheet(() => _weightRange = val),
                         ),
                       ],
                     ),
                   ),
 
-                  // --- Buttons Bottom ---
-                  const SizedBox(height: 10),
+                  // Buttons
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () {
-                            // Reset ค่าทั้งหมด
                             setStateSheet(() {
                               _selectedGender = null;
                               _selectedBreed = null;
@@ -177,19 +400,16 @@ class _CowListScreenState extends State<CowListScreen> {
                               _weightRange = const RangeValues(0, 1500);
                             });
                           },
-                          child: const Text('ล้างค่า (Reset)'),
+                          // Style จะถูกดึงมาจาก Theme (OutlinedButtonThemeData)
+                          child: const Text('ล้างค่า'),
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: FilledButton(
-                          onPressed: () {
-                            // TODO: ส่งค่า Filter กลับไปประมวลผลที่หน้าหลัก
-                            Navigator.pop(context);
-                            print(
-                                "Filter: Breed=$_selectedBreed, Gender=$_selectedGender, Age=${_ageRange.start}-${_ageRange.end}, Weight=${_weightRange.start}-${_weightRange.end}");
-                          },
-                          child: const Text('ค้นหา (Apply)'),
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          // Style จะถูกดึงมาจาก Theme (ElevatedButtonThemeData)
+                          child: const Text('ค้นหา'),
                         ),
                       ),
                     ],
@@ -203,77 +423,35 @@ class _CowListScreenState extends State<CowListScreen> {
     );
   }
 
-  // Widget ย่อยสำหรับสร้าง Chip เลือกเพศ
+  Widget _buildFilterSectionHeader(String title, ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Text(title,
+          style: TextStyle(
+              fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+    );
+  }
+
   Widget _buildGenderChip(
-      String label, String value, StateSetter setStateSheet) {
+      String label, String value, StateSetter setStateSheet, ThemeData theme) {
     final isSelected = _selectedGender == value;
-    return FilterChip(
+    final colorScheme = theme.colorScheme;
+
+    return ChoiceChip(
       label: Text(label),
       selected: isSelected,
+      selectedColor: colorScheme.primary,
+      disabledColor: theme.cardColor,
+      labelStyle:
+          TextStyle(color: isSelected ? colorScheme.onPrimary : Colors.black),
+      backgroundColor: theme.cardColor,
+      side: BorderSide(
+          color: isSelected ? Colors.transparent : theme.dividerColor),
       onSelected: (bool selected) {
         setStateSheet(() {
           _selectedGender = selected ? value : null;
         });
       },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            tooltip: 'Filter Cows',
-            onPressed: _showFilterDialog,
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(
-                "My Cows",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ),
-
-            // Cow List
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 5,
-              itemBuilder: (context, index) {
-                final cowId = 100 + index;
-                return Card(
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  child: ListTile(
-                    leading: Icon(Icons.pets,
-                        color: theme.colorScheme.primary, size: 40),
-                    title: Text('Cow #$cowId',
-                        style: theme.textTheme.headlineSmall),
-                    subtitle: Text('Name: Bessie ${index + 1}\nBreed: Brahman',
-                        style: theme.textTheme.bodyMedium),
-                    isThreeLine:
-                        true, // เพิ่มบรรทัดเพื่อให้เห็นข้อมูลสายพันธุ์ตัวอย่าง
-                    trailing: const Icon(Icons.arrow_forward_ios),
-                    onTap: () => context.go('/detail'),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

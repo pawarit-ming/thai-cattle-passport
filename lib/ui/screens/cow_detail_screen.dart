@@ -5,6 +5,7 @@ import 'package:th_cow_passport/ui/screens/cow_detail/tabs/activity/activity_tab
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/general/general_tab.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/health/health_tab.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/vaccine/vaccine_tab.dart';
+import 'package:th_cow_passport/ui/screens/cow_identification_screen.dart';
 import 'package:th_cow_passport/ui/widgets/owner_overlay.dart';
 
 class CowDetailScreen extends StatelessWidget {
@@ -77,8 +78,12 @@ class CowDetailScreen extends StatelessWidget {
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text('Starting cow identification...')));
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CowIdentificationScreen(),
+              ),
+            );
           },
           child: const Icon(Icons.camera_alt),
         ),

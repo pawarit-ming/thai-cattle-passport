@@ -77,7 +77,7 @@ class _EditCowScreenState extends State<EditCowScreen> {
             if (context.canPop()) {
               context.pop();
             } else {
-              context.go('/');
+              context.go('/detail');
             }
           },
         ),

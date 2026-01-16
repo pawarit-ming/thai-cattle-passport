@@ -17,7 +17,7 @@ class CowDetailScreen extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return DefaultTabController(
-      length: 4,
+      length: 2,
       child: Scaffold(
         body: NestedScrollView(
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {

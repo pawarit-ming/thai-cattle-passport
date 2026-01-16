@@ -13,7 +13,7 @@ class _CowListScreenState extends State<CowListScreen> {
 
   // --- ตัวแปรสำหรับ Filter (State) ---
   String? _selectedGender;
-  String? _selectedBreed;
+  final List<String> _selectedBreeds = [];
   RangeValues _ageRange = const RangeValues(0, 20);
   RangeValues _weightRange = const RangeValues(0, 1500);
 
@@ -39,9 +39,8 @@ class _CowListScreenState extends State<CowListScreen> {
         title: const Text('วัวของฉัน'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list),
-            tooltip: 'Filter Cows',
-            onPressed: _showFilterDialog,
+            icon: const Icon(Icons.edit),
+            onPressed: () {},
           ),
         ],
       ),
@@ -84,6 +83,18 @@ class _CowListScreenState extends State<CowListScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      // color: colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.filter_list),
+                      color: colorScheme.primary,
+                      tooltip: 'Filter Cows',
+                      onPressed: _showFilterDialog,
+                    ),
                   ),
                 ],
               ),
@@ -306,7 +317,7 @@ class _CowListScreenState extends State<CowListScreen> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'กรองข้อมูลวัว (Filter)',
+                    'กรองข้อมูลวัว',
                     style: theme.textTheme.headlineSmall?.copyWith(
                         color: colorScheme.primary,
                         fontWeight: FontWeight.bold),
@@ -316,41 +327,47 @@ class _CowListScreenState extends State<CowListScreen> {
                   Expanded(
                     child: ListView(
                       children: [
-                        _buildFilterSectionHeader('เพศ (Gender)', theme),
+                        _buildFilterSectionHeader('เพศ', theme),
                         Row(
                           children: [
                             _buildGenderChip(
-                                'ตัวผู้ (Male)', 'Male', setStateSheet, theme),
+                                'ตัวผู้', 'Male', setStateSheet, theme),
                             const SizedBox(width: 10),
-                            _buildGenderChip('ตัวเมีย (Female)', 'Female',
+                            _buildGenderChip('ตัวเมีย', 'Female',
                                 setStateSheet, theme),
                           ],
                         ),
                         const SizedBox(height: 24),
-                        _buildFilterSectionHeader('สายพันธุ์ (Breed)', theme),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(
-                            color: theme.scaffoldBackgroundColor,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: DropdownButtonFormField<String>(
-                            value: _selectedBreed,
-                            decoration:
-                                const InputDecoration(border: InputBorder.none),
-                            hint: const Text('เลือกสายพันธุ์'),
-                            icon: Icon(Icons.arrow_drop_down,
-                                color: colorScheme.primary),
-                            isExpanded: true,
-                            items: _breeds.map((String breed) {
-                              return DropdownMenuItem<String>(
-                                value: breed,
-                                child: Text(breed),
-                              );
-                            }).toList(),
-                            onChanged: (value) =>
-                                setStateSheet(() => _selectedBreed = value),
-                          ),
+                        _buildFilterSectionHeader('สายพันธุ์', theme),
+                        Wrap(
+                          spacing: 8.0,
+                          runSpacing: 8.0,
+                          children: _breeds.map((breed) {
+                            final isSelected = _selectedBreeds.contains(breed);
+                            return FilterChip(
+                              label: Text(breed),
+                              selected: isSelected,
+                              selectedColor: colorScheme.primary,
+                              disabledColor: theme.cardColor,
+                              showCheckmark: false,
+                              labelStyle: TextStyle(
+                                color: isSelected ? colorScheme.onPrimary : theme.colorScheme.onSurface,
+                              ),
+                              backgroundColor: theme.cardColor,
+                              side: BorderSide(
+                                color: isSelected ? Colors.transparent : theme.dividerColor,
+                              ),
+                              onSelected: (bool selected) {
+                                setStateSheet(() {
+                                  if (selected) {
+                                    _selectedBreeds.add(breed);
+                                  } else {
+                                    _selectedBreeds.remove(breed);
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
                         ),
                         const SizedBox(height: 24),
                         _buildFilterSectionHeader(
@@ -395,7 +412,7 @@ class _CowListScreenState extends State<CowListScreen> {
                           onPressed: () {
                             setStateSheet(() {
                               _selectedGender = null;
-                              _selectedBreed = null;
+                              _selectedBreeds.clear();
                               _ageRange = const RangeValues(0, 20);
                               _weightRange = const RangeValues(0, 1500);
                             });

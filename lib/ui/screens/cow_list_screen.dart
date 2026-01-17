@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class CowListScreen extends StatefulWidget {
+class CowListScreen extends ConsumerStatefulWidget {
   const CowListScreen({super.key});
 
   @override
-  State<CowListScreen> createState() => _CowListScreenState();
+  ConsumerState<CowListScreen> createState() => _CowListScreenState();
 }
 
-class _CowListScreenState extends State<CowListScreen> {
+class _CowListScreenState extends ConsumerState<CowListScreen> {
   // --- ไม่มีการกำหนดสี Hardcode ตรงนี้แล้ว ---
 
   // --- ตัวแปรสำหรับ Filter (State) ---

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class CowFormScreen extends StatefulWidget {
+class CowFormScreen extends ConsumerStatefulWidget {
   final String? cowId;
 
   const CowFormScreen({super.key, this.cowId});

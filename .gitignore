@@ -1,0 +1,28 @@
+# Flutter/Dart specific
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+
+# IDE specific
+.idea/
+.vscode/
+*.iml
+*.metadata
+
+# Generated files
+*.packages
+
+# Android
+android/.gradle
+android/app/build
+android/local.properties
+
+# iOS
+ios/Pods/
+ios/Runner/GeneratedPluginRegistrant.*
+
+# pubspec.lock is intentionally NOT ignored in this file. For an application
+# (as opposed to a library), it is recommended to commit this file to ensure
+# that all developers on a team and all build servers are using the same
+# versions of dependencies.

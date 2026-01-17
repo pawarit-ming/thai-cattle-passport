@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class BuyScreen extends StatelessWidget {
+
+class BuyScreen extends ConsumerStatefulWidget {
   const BuyScreen({super.key});
 
+  @override
+  ConsumerState<BuyScreen> createState() => _BuyScreenState();
+}
+
+class _BuyScreenState extends ConsumerState<BuyScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

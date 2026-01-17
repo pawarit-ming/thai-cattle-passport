@@ -3,8 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/activity/activity_tab.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/general/general_tab.dart';
-import 'package:th_cow_passport/ui/screens/cow_detail/tabs/health/health_tab.dart';
-import 'package:th_cow_passport/ui/screens/cow_detail/tabs/vaccine/vaccine_tab.dart';
 import 'package:th_cow_passport/ui/screens/cow_identification_screen.dart';
 // import 'package:th_cow_passport/ui/widgets/owner_overlay.dart'; // ไม่ได้ใช้แล้วถ้าเอาปุ่มซื้อออก
 

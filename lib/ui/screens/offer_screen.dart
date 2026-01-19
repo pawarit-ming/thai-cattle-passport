@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class OfferScreen extends StatelessWidget {
   const OfferScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('คำขอเสนอซื้อ'),
       ),
       body: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.r),
         itemCount: 5, // Mock Data: สมมติว่ามี 5 รายการ
         itemBuilder: (context, index) {
           return _buildOfferCard(context, index);
@@ -31,14 +31,14 @@ class OfferScreen extends StatelessWidget {
     final cowId = '10${index + 1}';
     final bidderName = 'ฟาร์มโชคชัย ${index + 1}';
     final price = '${35 + index * 5},000';
-    final date = '1${index} ต.ค. 2566';
+    final date = '1$index ต.ค. 2566';
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: 16.h),
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.r),
         child: Column(
           children: [
             // ส่วนหัว: ข้อมูลวัว และ สถานะ
@@ -47,16 +47,16 @@ class OfferScreen extends StatelessWidget {
               children: [
                 // รูปวัว (Placeholder)
                 Container(
-                  width: 60,
-                  height: 60,
+                  width: 60.r,
+                  height: 60.r,
                   decoration: BoxDecoration(
                     color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(color: Colors.grey.shade300),
                   ),
-                  child: Icon(Icons.pets, color: colorScheme.primary, size: 30),
+                  child: Icon(Icons.pets, color: colorScheme.primary, size: 30.r),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12.w),
                 // รายละเอียดวัว
                 Expanded(
                   child: Column(
@@ -74,19 +74,19 @@ class OfferScreen extends StatelessWidget {
                           color: Colors.grey.shade600,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4.h),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8.w, vertical: 2.h),
                         decoration: BoxDecoration(
                           color: Colors.orange.shade50,
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(6.r),
                           border: Border.all(color: Colors.orange.shade200),
                         ),
                         child: Text(
                           'รอการตอบรับ',
                           style: TextStyle(
-                              fontSize: 10,
+                              fontSize: 10.sp,
                               color: Colors.orange.shade800,
                               fontWeight: FontWeight.bold),
                         ),
@@ -108,25 +108,25 @@ class OfferScreen extends StatelessWidget {
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: colorScheme.primary,
                         fontWeight: FontWeight.bold,
-                        fontSize: 20,
+                        fontSize: 20.sp,
                       ),
                     ),
                   ],
                 ),
               ],
             ),
-            const Divider(height: 24),
+            Divider(height: 24.h),
 
             // ข้อมูลผู้เสนอราคา
             Row(
               children: [
                 CircleAvatar(
-                  radius: 12,
+                  radius: 12.r,
                   backgroundColor: colorScheme.secondary.withOpacity(0.2),
                   child: Icon(Icons.person,
-                      size: 14, color: colorScheme.secondary),
+                      size: 14.r, color: colorScheme.secondary),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8.w),
                 Text(
                   'เสนอโดย: $bidderName',
                   style: theme.textTheme.bodyMedium,
@@ -139,7 +139,7 @@ class OfferScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
 
             // ปุ่ม Action (ปฏิเสธ / ยอมรับ)
             Row(
@@ -150,18 +150,18 @@ class OfferScreen extends StatelessWidget {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.red,
                       side: const BorderSide(color: Colors.red),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
                     ),
                     child: const Text('ปฏิเสธ'),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12.w),
                 Expanded(
                   child: FilledButton(
                     onPressed: () {},
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
                     ),
                     child: const Text('ยอมรับ'),
                   ),

@@ -1,153 +1,122 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
+import 'package:th_cow_passport/ui/screens/camera_screen.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/activity/activity_tab.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/general/general_tab.dart';
-import 'package:th_cow_passport/ui/screens/cow_identification_screen.dart';
-// import 'package:th_cow_passport/ui/widgets/owner_overlay.dart'; // ไม่ได้ใช้แล้วถ้าเอาปุ่มซื้อออก
+import 'package:th_cow_passport/ui/widgets/cow_detail_widget.dart';
 
-class CowDetailScreen extends StatelessWidget {
-  const CowDetailScreen({super.key});
+class CowDetailScreen extends ConsumerStatefulWidget {
+  final int cowId;
+  const CowDetailScreen({super.key, required this.cowId});
+
+  @override
+  ConsumerState<CowDetailScreen> createState() => _CowDetailScreenState();
+}
+
+class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // ดึงข้อมูลเมื่อเข้าหน้าจอ
+    Future.microtask(
+        () => ref.read(cowDetailServiceProvider).fetchCowById(widget.cowId));
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        body: NestedScrollView(
-          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-            return <Widget>[
-              // 1. ส่วน AppBar ด้านบนสุด (Sticky)
-              SliverAppBar(
-                pinned: true,
-                floating: false,
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                centerTitle: true,
-                title: const Text(
-                  'ข้อมูลประจำตัววัว',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                ),
-                leading: BackButton(
-                  onPressed: () {
-                    if (context.canPop()) {
-                      context.pop();
-                    } else {
-                      context.go('/');
-                    }
-                  },
-                ),
-                actions: [
-                  // --- แก้ไขจุดที่ 1: ลบปุ่ม Edit ออก เหลือแค่ QR Code ---
-                  IconButton(
-                    icon: const Icon(Icons.qr_code_2),
-                    tooltip: 'Show QR Code',
-                    onPressed: () => _showQrDialog(context, '101'),
-                  ),
-                ],
-              ),
+    final detailState = ref.watch(cowDetailServiceProvider);
+    final cow = detailState.currentCow;
 
-              // 2. ส่วนรูปภาพ
-              SliverToBoxAdapter(
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: Image.network(
-                    'https://images.unsplash.com/photo-1546445317-29f4545e9d53?q=80&w=1000',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[300],
-                        child: Icon(Icons.pets, size: 80, color: Colors.grey[500]),
-                      );
-                    },
-                  ),
-                ),
-              ),
+    if (detailState.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
-              // 3. ส่วน TabBar (Sticky)
-              SliverPersistentHeader(
-                delegate: _StickyTabBarDelegate(
-                  TabBar(
-                    labelColor: colorScheme.primary,
-                    unselectedLabelColor: Colors.grey,
-                    indicatorColor: colorScheme.primary,
-                    indicatorWeight: 3,
-                    labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    tabs: const [
-                      Tab(text: 'ข้อมูลทั่วไป'),
-                      // Tab(text: 'ประวัติวัคซีน'),
-                      // Tab(text: 'สุขภาพ'),
-                      Tab(text: 'กิจกรรม'),
-                    ],
-                  ),
-                  backgroundColor: theme.scaffoldBackgroundColor,
-                ),
-                pinned: true,
-              ),
-            ];
-          },
-          body: const TabBarView(
-            children: [
-              GeneralTab(),
-              // VaccineTab(),
-              // HealthTab(),
-              ActivityTab(),
-            ],
-          ),
+    if (cow == null) {
+      return const Scaffold(body: Center(child: Text("ไม่พบข้อมูลวัว")));
+    }
+
+    return CowDetailWidget(
+      title: 'ข้อมูลประจำตัววัว',
+      imageUrl: cow.fullBodyPic,
+      onBack: () {
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/');
+        }
+      },
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.qr_code_2),
+          tooltip: 'Show QR Code',
+          onPressed: () => _showQrDialog(context, cow.nidNumber),
         ),
-
-        // --- แก้ไขจุดที่ 2: เปลี่ยนปุ่มด้านล่างเป็นปุ่มแก้ไข ---
-        bottomNavigationBar: _buildBottomBar(context, colorScheme, theme),
-        
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const CowIdentificationScreen(),
+      ],
+      tabs: const [
+        Tab(text: 'ข้อมูลทั่วไป'),
+        Tab(text: 'กิจกรรม'),
+      ],
+      tabViews: const [
+        GeneralTab(),
+        ActivityTab(),
+      ],
+      bottomBar: _buildBottomBar(context, colorScheme, theme, cow.animalId!),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CameraScreen(
+                baseTitle: 'ระบุตัวตนวัว',
+                steps: ['หน้าวัว', 'ตัววัว', 'ขาวัว'],
               ),
-            );
-          },
-          backgroundColor: colorScheme.secondary,
-          foregroundColor: colorScheme.onSecondary,
-          child: const Icon(Icons.camera_alt),
-        ),
+            ),
+          );
+        },
+        backgroundColor: colorScheme.secondary,
+        foregroundColor: colorScheme.onSecondary,
+        child: const Icon(Icons.camera_alt),
       ),
     );
   }
 
-  Widget _buildBottomBar(BuildContext context, ColorScheme colorScheme, ThemeData theme) {
+  Widget _buildBottomBar(
+      BuildContext context, ColorScheme colorScheme, ThemeData theme, int id) {
     return Container(
       decoration: BoxDecoration(
         color: theme.cardColor,
         boxShadow: [
           BoxShadow(
             color: colorScheme.primary.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -4),
+            blurRadius: 10.r,
+            offset: Offset(0, -4.h),
           ),
         ],
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(16.r),
           child: ElevatedButton.icon(
-            // เปลี่ยน Action เป็นการไปหน้าแก้ไข
-            onPressed: () => context.go('/edit-form/101'), 
+            // ส่ง ID ไปหน้าแก้ไขให้ถูกต้อง
+            onPressed: () => context.push('/edit-form/$id'),
             // เปลี่ยน Icon และข้อความ
-            icon: const Icon(Icons.edit), 
-            label: const Text('แก้ไขข้อมูล',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            icon: const Icon(Icons.edit),
+            label: Text('แก้ไขข้อมูล',
+                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
             style: ElevatedButton.styleFrom(
               backgroundColor: colorScheme.primary,
               foregroundColor: colorScheme.onPrimary,
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: EdgeInsets.symmetric(vertical: 16.h),
               elevation: 0,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12.r)),
             ),
           ),
         ),
@@ -164,7 +133,8 @@ class CowDetailScreen extends StatelessWidget {
       builder: (context) {
         return AlertDialog(
           actionsAlignment: MainAxisAlignment.center,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
           title: Center(
               child: Text('Cow ID: $cowId',
                   style: TextStyle(
@@ -174,25 +144,25 @@ class CowDetailScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: EdgeInsets.all(10.r),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12.r),
                   border: Border.all(
-                      color: theme.scaffoldBackgroundColor, width: 2),
+                      color: theme.scaffoldBackgroundColor, width: 2.w),
                 ),
                 child: SizedBox(
-                  width: 200,
-                  height: 200,
+                  width: 200.w,
+                  height: 200.h,
                   child: QrImageView(
                     data: cowId,
                     version: QrVersions.auto,
-                    size: 200.0,
+                    size: 200.r,
                     backgroundColor: Colors.white,
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
               Text('สแกนเพื่อดูข้อมูลวัว',
                   style: TextStyle(color: theme.hintColor)),
             ],
@@ -203,7 +173,7 @@ class CowDetailScreen extends StatelessWidget {
               style: TextButton.styleFrom(foregroundColor: Colors.grey),
               child: const Text('ปิด'),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8.w),
             FilledButton.icon(
               onPressed: () {
                 Navigator.pop(context);
@@ -211,7 +181,7 @@ class CowDetailScreen extends StatelessWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: colorScheme.primary,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
+                    borderRadius: BorderRadius.circular(8.r)),
               ),
               icon: const Icon(Icons.save_alt),
               label: const Text('บันทึก'),
@@ -236,7 +206,8 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => _tabBar.preferredSize.height;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
       color: backgroundColor,
       child: _tabBar,

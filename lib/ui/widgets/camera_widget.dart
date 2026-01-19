@@ -1,0 +1,197 @@
+import 'dart:io';
+import 'package:camera/camera.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:logger/logger.dart';
+
+class CameraWidget extends StatefulWidget {
+  final String title;
+  final Function(String) onPictureConfirmed;
+
+  const CameraWidget({
+    super.key,
+    required this.title,
+    required this.onPictureConfirmed,
+  });
+
+  @override
+  State<CameraWidget> createState() => _CameraWidgetState();
+}
+
+class _CameraWidgetState extends State<CameraWidget> {
+  final logger = Logger();
+  CameraController? _controller;
+  Future<void>? _initializeControllerFuture;
+  String? _cameraError;
+  String? _previewImagePath;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeCamera();
+  }
+
+  Future<void> _initializeCamera() async {
+    try {
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        if (mounted) {
+          setState(() {
+            _cameraError = "No cameras available.";
+            logger.e(_cameraError);
+          });
+        }
+        return;
+      }
+
+      final firstCamera = cameras.first;
+      _controller = CameraController(
+        firstCamera,
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
+
+      _initializeControllerFuture = _controller!.initialize();
+      await _initializeControllerFuture;
+      logger.i("Camera initialized successfully.");
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _cameraError = "Failed to initialize camera: ${e.toString()}";
+          logger.e(_cameraError, error: e);
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _takePicture() async {
+    if (_controller == null || !_controller!.value.isInitialized) {
+      return;
+    }
+
+    try {
+      await _initializeControllerFuture;
+      final image = await _controller!.takePicture();
+      logger.d("Picture taken: ${image.path}");
+      if (!mounted) return;
+      setState(() {
+        _previewImagePath = image.path;
+      });
+    } catch (e) {
+      logger.e("Error taking picture: $e", error: e);
+    }
+  }
+
+  void _confirmPicture() {
+    if (_previewImagePath == null) return;
+    logger.d("Confirming picture: $_previewImagePath");
+    widget.onPictureConfirmed(_previewImagePath!);
+    if (mounted) {
+      setState(() {
+        _previewImagePath = null;
+      });
+    }
+  }
+
+  void _retakePicture() {
+    logger.d("Retaking picture.");
+    setState(() {
+      _previewImagePath = null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: _previewImagePath == null,
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          _retakePicture();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+            title: Text(_previewImagePath != null
+                ? 'ภาพตัวอย่าง - ${widget.title}'
+                : widget.title)),
+        body: _buildBody(),
+        floatingActionButton: _previewImagePath == null && _cameraError == null
+            ? FloatingActionButton(
+                onPressed: _takePicture,
+                child: const Icon(Icons.camera_alt),
+              )
+            : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_initializeControllerFuture == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_cameraError != null) {
+      return Center(child: Text(_cameraError!));
+    }
+
+    if (_previewImagePath != null) {
+      return Column(
+        children: [
+          Expanded(
+            child: Image.file(File(_previewImagePath!), fit: BoxFit.contain),
+          ),
+          Container(
+            color: Colors.black,
+            padding: EdgeInsets.symmetric(vertical: 16.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: _retakePicture,
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.red,
+                  ),
+                  child: const Text('ถ่ายใหม่'),
+                ),
+                ElevatedButton(
+                  onPressed: _confirmPicture,
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.green,
+                  ),
+                  child: const Text('ยืนยัน'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    return FutureBuilder<void>(
+      future: _initializeControllerFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          if (_controller != null && _controller!.value.isInitialized) {
+            return CameraPreview(_controller!);
+          }
+          return const Center(child: Text("Error initializing camera"));
+        } else {
+          return const Center(child: CircularProgressIndicator());
+        }
+      },
+    );
+  }
+}

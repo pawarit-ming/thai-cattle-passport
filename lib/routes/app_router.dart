@@ -23,15 +23,17 @@ final router = GoRouter(
   debugLogDiagnostics: true,
   routes: [
     GoRoute(
-      path: '/detail',
-      parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) => const CowDetailScreen(),
+      path: '/detail/:id',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return CowDetailScreen(cowId: id);
+      },
     ),
     GoRoute(
       path: '/edit-form/:id',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) {
-        final id = state.pathParameters['id']!;
+        final id = int.parse(state.pathParameters['id']!);
         return EditCowScreen(cowId: id);
       },
     ),

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="ProjectModuleManager">
-    <modules>
-      <module fileurl="file://$PROJECT_DIR$/th_cow_passport.iml" filepath="$PROJECT_DIR$/th_cow_passport.iml" />
-      <module fileurl="file://$PROJECT_DIR$/android/th_cow_passport_android.iml" filepath="$PROJECT_DIR$/android/th_cow_passport_android.iml" />
-    </modules>
-  </component>
-</project>

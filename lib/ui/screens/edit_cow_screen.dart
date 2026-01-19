@@ -1,57 +1,108 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
+import 'package:th_cow_passport/ui/widgets/cow_detail_widget.dart';
 
-class EditCowScreen extends StatefulWidget {
-  final String cowId;
+class EditCowScreen extends ConsumerStatefulWidget {
+  final int cowId;
   const EditCowScreen({super.key, required this.cowId});
 
   @override
-  State<EditCowScreen> createState() => _EditCowScreenState();
+  ConsumerState<EditCowScreen> createState() => _EditCowScreenState();
 }
 
-class _EditCowScreenState extends State<EditCowScreen> {
+class _EditCowScreenState extends ConsumerState<EditCowScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  late TextEditingController _tagIdController;
+// Controllers สำหรับทุกฟิลด์
   late TextEditingController _nameController;
+  late TextEditingController _nidController;
   late TextEditingController _breedController;
-  late TextEditingController _dobController;
-  late TextEditingController _damController;
-  late TextEditingController _sireController;
+  late TextEditingController _colorController;
+  late TextEditingController _weightController;
+  late TextEditingController _heightController;
+  late TextEditingController _eyeColorController;
+  late TextEditingController _noseColorController;
+  late TextEditingController _damIdController;
+  late TextEditingController _sireIdController;
+  late TextEditingController _markNumberController;
+
+  DateTime? _selectedBirthDate;
+  String? _selectedSex;
+  String? _selectedStatus;
 
   @override
   void initState() {
     super.initState();
-    // จำลองข้อมูล (Mock Data)
-    _tagIdController = TextEditingController(text: '101');
-    _nameController = TextEditingController(text: 'Bessie');
-    _breedController = TextEditingController(text: 'Brahman');
-    _dobController = TextEditingController(text: '2023-01-15');
-    _damController = TextEditingController(text: '502');
-    _sireController = TextEditingController(text: '007');
+    // 1. ดึงข้อมูลวัวตัวปัจจุบันจาก Service มาตั้งค่าเริ่มต้น
+    final cow = ref.read(cowDetailServiceProvider).currentCow;
+
+    //กำหนดค่าเริ่มต้นจากข้อมูลจริง
+    _nameController = TextEditingController(text: cow?.animalName);
+    _nidController = TextEditingController(text: cow?.nidNumber);
+    _breedController = TextEditingController(text: cow?.breed);
+    _colorController = TextEditingController(text: cow?.animalColor);
+    _weightController = TextEditingController(text: cow?.weight.toString());
+    _heightController = TextEditingController(text: cow?.height.toString());
+    _eyeColorController = TextEditingController(text: cow?.eyeColor);
+    _noseColorController = TextEditingController(text: cow?.noseColor);
+    _damIdController = TextEditingController(text: cow?.damId?.toString());
+    _sireIdController = TextEditingController(text: cow?.sireId?.toString());
+    _markNumberController = TextEditingController(text: cow?.markNumber);
+
+    _selectedBirthDate = cow?.birthDate;
+    _selectedSex = cow?.sex;
+    _selectedStatus = cow?.animalStatus;
   }
 
   @override
   void dispose() {
-    _tagIdController.dispose();
+    // ล้าง Controller เมื่อหน้าจอถูกทำลาย
     _nameController.dispose();
+    _nidController.dispose();
     _breedController.dispose();
-    _dobController.dispose();
-    _damController.dispose();
-    _sireController.dispose();
+    _colorController.dispose();
+    _weightController.dispose();
+    _heightController.dispose();
+    _eyeColorController.dispose();
+    _noseColorController.dispose();
+    _damIdController.dispose();
+    _sireIdController.dispose();
+    _markNumberController.dispose();
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _handleSave() async {
     if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('อัปเดตข้อมูลเรียบร้อยแล้ว')),
+      final currentCow = ref.read(cowDetailServiceProvider).currentCow;
+      if (currentCow == null) return;
+
+      final updatedCow = currentCow.copyWith(
+        animalName: _nameController.text,
+        nidNumber: _nidController.text,
+        breed: _breedController.text,
+        animalColor: _colorController.text,
+        weight: double.tryParse(_weightController.text),
+        height: double.tryParse(_heightController.text),
+        damId: int.tryParse(_damIdController.text),
+        sireId: int.tryParse(_sireIdController.text),
+        birthDate: _selectedBirthDate,
+        sex: _selectedSex,
+        animalStatus: _selectedStatus,
+        updatedAt: DateTime.now(),
       );
-      if (context.canPop()) {
-        context.pop();
-      } else {
-        context.go('/detail'); // หรือ route ที่เหมาะสม
+
+      // 3. ส่งข้อมูลไปบันทึกที่ Supabase ผ่าน Service
+      final success =
+          await ref.read(cowDetailServiceProvider).updateCow(updatedCow);
+
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('บันทึกการแก้ไขเรียบร้อยแล้ว')),
+        );
+        context.pop(); // กลับไปหน้า Detail
       }
     }
   }
@@ -60,157 +111,196 @@ class _EditCowScreenState extends State<EditCowScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final cow = ref.watch(cowDetailServiceProvider).currentCow;
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: colorScheme.primary, // สีน้ำตาล
-        foregroundColor: colorScheme.onPrimary, // สีขาว
-        centerTitle: true,
-        title: const Text(
-          'แก้ไขข้อมูลวัว',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        // --- ส่วนที่ 1: เพิ่มปุ่มย้อนกลับ ---
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/detail');
-            }
-          },
-        ),
-        // actions: [
-        //   IconButton(
-        //     icon: const Icon(Icons.save),
-        //     tooltip: 'บันทึก',
-        //     onPressed: _save,
-        //   )
-        // ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 8),
-              // --- ส่วนที่ 2: ปรับแต่งช่องกรอกข้อมูลให้ชัดเจน ---
-              _buildStyledTextField(
-                label: 'Tag ID (เลขหู)',
-                controller: _tagIdController,
-                icon: Icons.confirmation_number,
-                isRequired: true,
-              ),
-              const SizedBox(height: 16),
-              
-              _buildStyledTextField(
+    if (cow == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    return CowDetailWidget(
+      title: 'แก้ไขข้อมูล: ${cow.animalName}',
+      imageUrl: cow.facePic,
+      tabs: const [
+        Tab(text: 'ข้อมูลทั่วไป'),
+        Tab(text: 'ข้อมูลกายภาพ'),
+      ],
+      tabViews: [
+        _buildGeneralTab(), // Tab 1
+        _buildPhysicalTab(), // Tab 2
+      ],
+      bottomBar: _buildBottomSaveBar(colorScheme),
+      onBack: () => context.pop(),
+    );
+  }
+
+  Widget _buildGeneralTab() {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.r),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            _buildStyledTextField(
                 label: 'ชื่อวัว',
                 controller: _nameController,
                 icon: Icons.pets,
-              ),
-              const SizedBox(height: 16),
-              
-              _buildStyledTextField(
-                label: 'สายพันธุ์',
-                controller: _breedController,
-                icon: Icons.category,
-                isRequired: true,
-              ),
-              const SizedBox(height: 16),
-              
-              _buildStyledTextField(
-                label: 'วันเกิด (YYYY-MM-DD)',
-                controller: _dobController,
-                icon: Icons.calendar_today,
-                keyboardType: TextInputType.datetime,
-              ),
-              const SizedBox(height: 16),
-              
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStyledTextField(
-                      label: 'แม่พันธุ์ (Dam)',
-                      controller: _damController,
-                      icon: Icons.female,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildStyledTextField(
-                      label: 'พ่อพันธุ์ (Sire)',
-                      controller: _sireController,
-                      icon: Icons.male,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              
-              // ปุ่มบันทึกขนาดใหญ่ด้านล่าง (เผื่อผู้ใช้ถนัดกดข้างล่าง)
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: FilledButton.icon(
-                  onPressed: _save,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  icon: const Icon(Icons.save),
-                  label: const Text('บันทึกการแก้ไข', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                ),
-              ),
+                isRequired: true),
+            SizedBox(height: 16.h),
+            _buildStyledTextField(
+                label: 'Tag ID',
+                controller: _nidController,
+                icon: Icons.tag,
+                isRequired: true),
+            SizedBox(height: 16.h),
+
+            // เพิ่มส่วนเลือกวันที่และเพศเพื่อให้แก้ไขได้ทุกอย่าง
+            ListTile(
+              title: const Text("วันเกิด"),
+              subtitle: Text(
+                  _selectedBirthDate?.toIso8601String().substring(0, 10) ??
+                      "ระบุวันที่"),
+              leading: const Icon(Icons.calendar_today),
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: _selectedBirthDate ?? DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime.now(),
+                );
+                if (date != null) setState(() => _selectedBirthDate = date);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhysicalTab() {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.r),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                  child: _buildStyledTextField(
+                      label: 'น้ำหนัก (กก.)',
+                      controller: _weightController,
+                      icon: Icons.monitor_weight,
+                      keyboardType: TextInputType.number)),
+              SizedBox(width: 16.w),
+              Expanded(
+                  child: _buildStyledTextField(
+                      label: 'ส่วนสูง (ซม.)',
+                      controller: _heightController,
+                      icon: Icons.height,
+                      keyboardType: TextInputType.number)),
             ],
+          ),
+          SizedBox(height: 16.h),
+          _buildStyledTextField(
+              label: 'สีตัว',
+              controller: _colorController,
+              icon: Icons.palette),
+          SizedBox(height: 16.h),
+          _buildStyledTextField(
+              label: 'ID พ่อพันธุ์',
+              controller: _sireIdController,
+              icon: Icons.male,
+              keyboardType: TextInputType.number),
+          SizedBox(height: 16.h),
+          _buildStyledTextField(
+              label: 'ID แม่พันธุ์',
+              controller: _damIdController,
+              icon: Icons.female,
+              keyboardType: TextInputType.number),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomSaveBar(ColorScheme colorScheme) {
+    return Container(
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black12, blurRadius: 4.r, offset: Offset(0, -2.h))
+        ],
+      ),
+      child: SafeArea(
+        child: ElevatedButton.icon(
+          onPressed: _handleSave,
+          icon: const Icon(Icons.save),
+          label: Text('บันทึกการเปลี่ยนแปลง',
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+            minimumSize: Size(double.infinity, 56.h),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r)),
           ),
         ),
       ),
     );
   }
 
-  // Widget Helper สำหรับสร้าง TextField สวยๆ (ใช้ Logic เดียวกับ CowFormScreen)
   Widget _buildStyledTextField({
     required String label,
     required TextEditingController controller,
     required IconData icon,
+    String? hintText,
     bool isRequired = false,
     TextInputType? keyboardType,
   }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      validator: (value) {
-        if (isRequired && (value == null || value.isEmpty)) {
-          return 'กรุณากรอกข้อมูล $label';
-        }
-        return null;
-      },
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label, style: theme.textTheme.labelLarge),
+            if (isRequired)
+              const Text(' *', style: TextStyle(color: Colors.red)),
+            if (!isRequired)
+              Text(
+                ' (ไม่บังคับ)',
+                style: TextStyle(
+                    color: Colors.grey.shade600, fontSize: 12.sp),
+              ),
+          ],
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade400),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.primary,
-            width: 2,
+        SizedBox(height: 8.h),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          validator: (value) {
+            if (isRequired && (value == null || value.isEmpty)) {
+              return 'กรุณากรอก $label';
+            }
+            if (keyboardType == TextInputType.number &&
+                value != null &&
+                value.isNotEmpty) {
+              if (double.tryParse(value) == null) {
+                return 'กรุณากรอกตัวเลขที่ถูกต้อง';
+              }
+            }
+            return null;
+          },
+          decoration: InputDecoration(
+            hintText: hintText ?? label,
+            prefixIcon: Icon(icon),
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r)),
           ),
         ),
-        filled: true,
-        fillColor: Colors.grey.shade50, // พื้นหลังสีเทาอ่อน
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      ),
+      ],
     );
   }
 }

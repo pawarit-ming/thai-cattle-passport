@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class ActivityTab extends StatelessWidget {
   const ActivityTab({super.key});
@@ -45,7 +46,7 @@ class ActivityTab extends StatelessWidget {
     ];
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.r),
       itemCount: activities.length,
       itemBuilder: (context, index) {
         return _buildTimelineItem(context, activities[index],
@@ -96,30 +97,30 @@ class ActivityTab extends StatelessWidget {
           Column(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 40.r,
+                height: 40.r,
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   shape: BoxShape.circle,
                   border: Border.all(color: color.withOpacity(0.3)),
                 ),
-                child: Icon(icon, color: color, size: 20),
+                child: Icon(icon, color: color, size: 20.r),
               ),
               if (!isLast)
                 Expanded(
                   child: Container(
-                    width: 2,
+                    width: 2.w,
                     color: Colors.grey.shade300,
-                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    margin: EdgeInsets.symmetric(vertical: 4.h),
                   ),
                 ),
             ],
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16.w),
           // ส่วนเนื้อหา
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 24.0),
+              padding: EdgeInsets.only(bottom: 24.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -132,7 +133,7 @@ class ActivityTab extends StatelessWidget {
                           color: colorScheme.onSurface,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8.w),
                       Text(
                         item['time'],
                         style: theme.textTheme.bodySmall?.copyWith(
@@ -141,7 +142,7 @@ class ActivityTab extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4.h),
                   Text(
                     item['title'],
                     style: theme.textTheme.titleMedium?.copyWith(
@@ -149,18 +150,18 @@ class ActivityTab extends StatelessWidget {
                       color: colorScheme.primary,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4.h),
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: EdgeInsets.all(12.r),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(12.r),
                       border: Border.all(color: Colors.grey.shade200),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.grey.shade100,
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
+                          blurRadius: 4.r,
+                          offset: Offset(0, 2.h),
                         ),
                       ],
                     ),

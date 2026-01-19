@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -21,7 +22,7 @@ class ProfileScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 32),
+            SizedBox(height: 32.h),
             // ส่วนหัว: รูปโปรไฟล์และชื่อ
             Center(
               child: Column(
@@ -32,10 +33,10 @@ class ProfileScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border:
-                              Border.all(color: colorScheme.primary, width: 3),
+                              Border.all(color: colorScheme.primary, width: 3.w),
                         ),
                         child: CircleAvatar(
-                          radius: 50,
+                          radius: 50.r,
                           backgroundColor: Colors.grey.shade200,
                           backgroundImage: const NetworkImage(
                               'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200'),
@@ -45,19 +46,19 @@ class ProfileScreen extends StatelessWidget {
                         bottom: 0,
                         right: 0,
                         child: Container(
-                          padding: const EdgeInsets.all(4),
+                          padding: EdgeInsets.all(4.r),
                           decoration: BoxDecoration(
                             color: colorScheme.secondary,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
+                            border: Border.all(color: Colors.white, width: 2.w),
                           ),
-                          child: const Icon(Icons.edit,
-                              color: Colors.white, size: 16),
+                          child: Icon(Icons.edit,
+                              color: Colors.white, size: 16.r),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   Text(
                     'สมชาย ใจดี',
                     style: theme.textTheme.headlineSmall?.copyWith(
@@ -65,7 +66,7 @@ class ProfileScreen extends StatelessWidget {
                       color: colorScheme.primary,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4.h),
                   Text(
                     'ฟาร์มโชคชัย • 081-234-5678',
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -75,7 +76,7 @@ class ProfileScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32.h),
 
             // เมนูตัวเลือก
             _buildProfileMenu(context,
@@ -93,7 +94,7 @@ class ProfileScreen extends StatelessWidget {
                 iconColor: colorScheme.error, onTap: () {
               // Handle logout
             }),
-            const SizedBox(height: 32),
+            SizedBox(height: 32.h),
           ],
         ),
       ),
@@ -111,13 +112,13 @@ class ProfileScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+      contentPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 4.h),
       leading: Container(
-        width: 40,
-        height: 40,
+        width: 40.r,
+        height: 40.r,
         decoration: BoxDecoration(
           color: (iconColor ?? theme.colorScheme.primary).withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
         ),
         child: Icon(icon, color: iconColor ?? theme.colorScheme.primary),
       ),
@@ -129,7 +130,7 @@ class ProfileScreen extends StatelessWidget {
         ),
       ),
       trailing:
-          Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
+          Icon(Icons.arrow_forward_ios, size: 16.r, color: Colors.grey.shade400),
       onTap: onTap ?? () {},
     );
   }

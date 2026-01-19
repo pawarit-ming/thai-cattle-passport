@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class BuyScreen extends ConsumerStatefulWidget {
   const BuyScreen({super.key});
@@ -30,7 +30,7 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
         ],
       ),
       body: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.r),
         itemCount: 10, // Mock Data
         itemBuilder: (context, index) {
           return _MarketItemCard(index: index);
@@ -61,7 +61,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
     final cowName = 'Daisy ${widget.index + 1}';
     final price = '${40 + widget.index * 2},000';
     final seller = 'ฟาร์มลุงแดง ${widget.index + 1}';
-    final location = 'นครราชสีมา';
+    const location = 'นครราชสีมา';
 
     // Mock Images & Breed Logic
     final String breed;
@@ -94,9 +94,9 @@ class _MarketItemCardState extends State<_MarketItemCard> {
     }
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: 16.h),
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
@@ -107,7 +107,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
           children: [
             // Image Section
             Container(
-              height: 180,
+              height: 180.h,
               width: double.infinity,
               color: Colors.grey.shade300,
               child: Stack(
@@ -125,42 +125,42 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                         images[pageIndex],
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.image_not_supported,
-                                size: 50, color: Colors.grey),
+                            Icon(Icons.image_not_supported,
+                                size: 50.r, color: Colors.grey),
                       );
                     },
                   ),
                   Positioned(
-                    top: 12,
-                    right: 12,
+                    top: 12.h,
+                    right: 12.w,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 10.w, vertical: 6.h),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Text(
                         '฿$price',
-                        style: const TextStyle(
+                        style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 16),
+                            fontSize: 16.sp),
                       ),
                     ),
                   ),
                   // Image Indicator (Dots)
                   Positioned(
-                    bottom: 8,
+                    bottom: 8.h,
                     left: 0,
                     right: 0,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: images.asMap().entries.map((entry) {
                         return Container(
-                          width: 8.0,
-                          height: 8.0,
-                          margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                          width: 8.w,
+                          height: 8.h,
+                          margin: EdgeInsets.symmetric(horizontal: 4.w),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: _currentImageIndex == entry.key
@@ -177,7 +177,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
 
             // Details Section
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.r),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -190,28 +190,28 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8.w, vertical: 2.h),
                         decoration: BoxDecoration(
                           color: colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Text(
                           breed,
                           style: TextStyle(
                               color: colorScheme.primary,
-                              fontSize: 12,
+                              fontSize: 12.sp,
                               fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8.h),
                   Row(
                     children: [
                       Icon(Icons.location_on,
-                          size: 16, color: Colors.grey.shade600),
-                      const SizedBox(width: 4),
+                          size: 16.r, color: Colors.grey.shade600),
+                      SizedBox(width: 4.w),
                       Text(
                         '$location • ผู้ขาย: $seller',
                         style: theme.textTheme.bodyMedium
@@ -219,7 +219,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(

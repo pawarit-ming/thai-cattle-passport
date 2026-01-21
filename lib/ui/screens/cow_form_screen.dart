@@ -191,9 +191,22 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> {
 
   // --- UI Building ---
 
+// --- UI Building ---
+
   @override
   Widget build(BuildContext context) {
-    return _isImagePickerStep ? _buildImagePickerStep() : _buildFormStep();
+    // 1. เพิ่ม PopScope เพื่อจัดการปุ่ม Back ของ Android (Hardware Back Button)
+    return PopScope(
+      // ถ้าอยู่ขั้นตอนที่ 1 (Image Picker) อนุญาตให้ปิดหน้านี้ได้เลย (canPop = true)
+      // ถ้าอยู่ขั้นตอนที่ 2 (Form) ห้ามปิดหน้า (canPop = false) เพื่อเราจะเขียน logic ถอยไปขั้นตอน 1 เอง
+      canPop: _isImagePickerStep,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        // Logic สำหรับขั้นตอนที่ 2: เมื่อกด Back ให้กลับไปขั้นตอนที่ 1
+        setState(() => _isImagePickerStep = true);
+      },
+      child: _isImagePickerStep ? _buildImagePickerStep() : _buildFormStep(),
+    );
   }
 
   Widget _buildImagePickerStep() {
@@ -206,18 +219,30 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> {
       appBar: AppBar(
         title: const Text('เพิ่มวัวใหม่ (ขั้นตอนที่ 1/2)'),
         centerTitle: true,
-        leading: BackButton(onPressed: () => context.pop()),
+        // 2. ปรับปุ่ม Back บน AppBar ให้ทำงานได้แน่นอนขึ้น
+        leading: BackButton(
+          onPressed: () {
+            // เช็คว่าถอยหลังได้ไหม
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              // ถ้าถอยไม่ได้ (เช่น refresh หน้ามา) ให้บังคับกลับไปหน้าแรก
+              context.go('/');
+            }
+          },
+        ),
       ),
       body: Padding(
+        // ... (โค้ดส่วน body เหมือนเดิม) ...
         padding: EdgeInsets.all(16.r),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('รูปถ่ายระบุตัวตน',
-                style:
-                    TextStyle(fontWeight: FontWeight.bold, fontSize: 20.sp)),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.sp)),
             SizedBox(height: 8.h),
-            const Text('กรุณาเพิ่มรูปภาพให้ครบทั้ง 3 รูปเพื่อใช้ในการระบุตัวตน'),
+            const Text(
+                'กรุณาเพิ่มรูปภาพให้ครบทั้ง 3 รูปเพื่อใช้ในการระบุตัวตน'),
             SizedBox(height: 24.h),
             Expanded(
               child: SingleChildScrollView(
@@ -226,8 +251,8 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> {
                     _buildPhotoPicker(
                       label: 'รูปหน้าตรง',
                       imageFile: _faceImage,
-                      onTap: () => _showImageSourceDialog(
-                          'รูปหน้าตรง', (file) => setState(() => _faceImage = file)),
+                      onTap: () => _showImageSourceDialog('รูปหน้าตรง',
+                          (file) => setState(() => _faceImage = file)),
                     ),
                     _buildPhotoPicker(
                       label: 'รูปด้านข้างลำตัว',
@@ -461,8 +486,7 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> {
                 )
               : const Icon(Icons.save),
           label: Text('บันทึกข้อมูลวัว',
-              style:
-                  TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
           style: ElevatedButton.styleFrom(
             backgroundColor: colorScheme.primary,
             foregroundColor: colorScheme.onPrimary,
@@ -497,8 +521,7 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> {
             if (!isRequired)
               Text(
                 ' (ไม่บังคับ)',
-                style: TextStyle(
-                    color: Colors.grey.shade600, fontSize: 12.sp),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp),
               ),
           ],
         ),
@@ -524,8 +547,8 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> {
             prefixIcon: Icon(icon),
             filled: true,
             fillColor: Colors.grey.shade50,
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r)),
+            border:
+                OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
           ),
         ),
       ],
@@ -571,8 +594,7 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> {
                         color: colorScheme.primary,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.check,
-                          color: Colors.white, size: 20.r),
+                      child: Icon(Icons.check, color: Colors.white, size: 20.r),
                     ),
                   )
                 : Center(

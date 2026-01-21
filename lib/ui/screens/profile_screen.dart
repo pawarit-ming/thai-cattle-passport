@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:th_cow_passport/supabase_config.dart'; // 1. เพิ่ม import นี้เพื่อเรียกใช้ supabase
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -8,6 +9,10 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    // ดึงข้อมูลผู้ใช้ปัจจุบัน (ถ้ามี)
+    final user = supabase.auth.currentUser;
+    final email = user?.email ?? 'ไม่ระบุอีเมล';
 
     return Scaffold(
       appBar: AppBar(
@@ -32,12 +37,13 @@ class ProfileScreen extends StatelessWidget {
                       Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border:
-                              Border.all(color: colorScheme.primary, width: 3.w),
+                          border: Border.all(
+                              color: colorScheme.primary, width: 3.w),
                         ),
                         child: CircleAvatar(
                           radius: 50.r,
                           backgroundColor: Colors.grey.shade200,
+                          // รูปโปรไฟล์ (ในอนาคตอาจดึงจาก user_metadata)
                           backgroundImage: const NetworkImage(
                               'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200'),
                         ),
@@ -52,15 +58,15 @@ class ProfileScreen extends StatelessWidget {
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 2.w),
                           ),
-                          child: Icon(Icons.edit,
-                              color: Colors.white, size: 16.r),
+                          child:
+                              Icon(Icons.edit, color: Colors.white, size: 16.r),
                         ),
                       ),
                     ],
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    'สมชาย ใจดี',
+                    'สมชาย ใจดี', // ในอนาคตสามารถใช้ user?.userMetadata?['full_name']
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: colorScheme.primary,
@@ -68,7 +74,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    'ฟาร์มโชคชัย • 081-234-5678',
+                    email, // แสดงอีเมลที่ login อยู่
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: Colors.grey.shade600,
                     ),
@@ -87,12 +93,16 @@ class ProfileScreen extends StatelessWidget {
                 icon: Icons.history, text: 'ประวัติการซื้อขาย'),
             _buildProfileMenu(context,
                 icon: Icons.notifications_outlined, text: 'การแจ้งเตือน'),
+
+            // --- ส่วนที่แก้ไข: เพิ่มฟังก์ชัน Logout ---
             _buildProfileMenu(context,
                 icon: Icons.logout,
                 text: 'ออกจากระบบ',
                 textColor: colorScheme.error,
-                iconColor: colorScheme.error, onTap: () {
-              // Handle logout
+                iconColor: colorScheme.error, onTap: () async {
+              // เรียกคำสั่ง Sign Out
+              await supabase.auth.signOut();
+              // ไม่ต้องสั่ง context.go('/login') เพราะ Router จะทำงานอัตโนมัติเมื่อ Auth State เปลี่ยน
             }),
             SizedBox(height: 32.h),
           ],
@@ -129,8 +139,8 @@ class ProfileScreen extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
-      trailing:
-          Icon(Icons.arrow_forward_ios, size: 16.r, color: Colors.grey.shade400),
+      trailing: Icon(Icons.arrow_forward_ios,
+          size: 16.r, color: Colors.grey.shade400),
       onTap: onTap ?? () {},
     );
   }

@@ -1,12 +1,15 @@
+import 'dart:async'; // เพิ่ม import นี้
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:th_cow_passport/supabase_config.dart'; // import supabase config
 import 'package:th_cow_passport/ui/screens/app_shell.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail_screen.dart';
 import 'package:th_cow_passport/ui/screens/cow_form_screen.dart';
 import 'package:th_cow_passport/ui/screens/cow_list_screen.dart';
 import 'package:th_cow_passport/ui/screens/edit_cow_screen.dart';
+import 'package:th_cow_passport/ui/screens/login_screen.dart'; // เพิ่ม import หน้า Login
 import 'package:th_cow_passport/ui/screens/profile_screen.dart';
-// เพิ่ม import 2 บรรทัดนี้ (ตรวจสอบ path ให้ตรงกับโฟลเดอร์ที่คุณวางไฟล์ไว้)
 import 'package:th_cow_passport/ui/screens/offer_screen.dart';
 import 'package:th_cow_passport/ui/screens/buy_screen.dart';
 
@@ -21,7 +24,34 @@ final router = GoRouter(
   initialLocation: '/',
   navigatorKey: _rootNavigatorKey,
   debugLogDiagnostics: true,
+  // 1. เพิ่ม refreshListenable เพื่อให้ Router ทำงานใหม่เมื่อ Auth เปลี่ยนแปลง
+  refreshListenable: GoRouterRefreshStream(supabase.auth.onAuthStateChange),
+
+  // 2. เพิ่ม logic การ Redirect
+  redirect: (context, state) {
+    final session = supabase.auth.currentSession;
+    final isLoggingIn = state.matchedLocation == '/login';
+
+    // ถ้ายังไม่ Login และไม่ได้อยู่ที่หน้า Login -> บังคับไป Login
+    if (session == null && !isLoggingIn) {
+      return '/login';
+    }
+
+    // ถ้า Login แล้ว แต่อยู่ที่หน้า Login -> ให้ไปหน้าแรก (Home)
+    if (session != null && isLoggingIn) {
+      return '/';
+    }
+
+    return null; // ไม่มีการ redirect
+  },
+
   routes: [
+    // 3. เพิ่ม Route สำหรับหน้า Login
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginScreen(),
+    ),
+
     GoRoute(
       path: '/detail/:id',
       builder: (context, state) {
@@ -60,24 +90,24 @@ final router = GoRouter(
           ],
         ),
 
-        // Tab 2: เสนอซื้อ (Offer) -> แก้ไขให้ชี้ไปที่ OfferScreen
+        // Tab 2: เสนอซื้อ (Offer)
         StatefulShellBranch(
           navigatorKey: _shellNavigatorBKey,
           routes: [
             GoRoute(
               path: '/offers',
-              builder: (context, state) => const OfferScreen(), // เปลี่ยนตรงนี้
+              builder: (context, state) => const OfferScreen(),
             ),
           ],
         ),
 
-        // Tab 3: ซื้อ (Buy) -> แก้ไขให้ชี้ไปที่ BuyScreen
+        // Tab 3: ซื้อ (Buy)
         StatefulShellBranch(
           navigatorKey: _shellNavigatorCKey,
           routes: [
             GoRoute(
               path: '/market',
-              builder: (context, state) => const BuyScreen(), // เปลี่ยนตรงนี้
+              builder: (context, state) => const BuyScreen(),
             ),
           ],
         ),
@@ -96,3 +126,23 @@ final router = GoRouter(
     ),
   ],
 );
+
+// 4. Class ช่วยแปลง Stream ของ Supabase เป็น Listenable สำหรับ GoRouter
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<AuthState> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen(
+      (AuthState authState) {
+        notifyListeners();
+      },
+    );
+  }
+
+  late final StreamSubscription<AuthState> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}

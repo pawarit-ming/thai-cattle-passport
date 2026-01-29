@@ -45,31 +45,31 @@ class CowDetailService extends ChangeNotifier {
     _setLoading(true);
     try {
       String? faceUrl = updatedCow.facePic;
-      String? bodyUrl = updatedCow.fullBodyPic;
+      String? bodyUrl = updatedCow.bodyPic;
       String? markUrl = updatedCow.markPic;
+      final nidNumber = updatedCow.nidNumber ?? 'unknown';
 
       // ถ้ามีการเลือกรูปใหม่ ให้ทำการอัปโหลดก่อน
-      if (newFacePic != null) faceUrl = await _uploadImage(newFacePic, updatedCow.nidNumber, 'face');
-      if (newBodyPic != null) bodyUrl = await _uploadImage(newBodyPic, updatedCow.nidNumber, 'body');
-      if (newMarkPic != null) markUrl = await _uploadImage(newMarkPic, updatedCow.nidNumber, 'mark');
+      if (newFacePic != null) faceUrl = await _uploadImage(newFacePic, nidNumber, 'face');
+      if (newBodyPic != null) bodyUrl = await _uploadImage(newBodyPic, nidNumber, 'body');
+      if (newMarkPic != null) markUrl = await _uploadImage(newMarkPic, nidNumber, 'mark');
 
       final dataToUpdate = {
         'animal_name': updatedCow.animalName,
         'nid_number': updatedCow.nidNumber,
         'breed': updatedCow.breed,
-        'animal_color': updatedCow.animalColor,
+        'color': updatedCow.color,
         'weight': updatedCow.weight,
         'height': updatedCow.height,
-        'eye_color': updatedCow.eyeColor,
-        'nose_color': updatedCow.noseColor,
         'dam_id': updatedCow.damId,
+        'dam_name': updatedCow.damName,
         'sire_id': updatedCow.sireId,
-        'mark_number': updatedCow.markNumber,
-        'birth_date': updatedCow.birthDate.toIso8601String(),
+        'sire_name': updatedCow.sireName,
+        'birth_date': updatedCow.birthDate?.toIso8601String(),
         'sex': updatedCow.sex,
-        'animal_status': updatedCow.animalStatus,
+        'status': updatedCow.status,
         'face_pic': faceUrl,
-        'full_body_pic': bodyUrl,
+        'body_pic': bodyUrl,
         'mark_pic': markUrl,
         'updated_at': DateTime.now().toIso8601String(),
       };
@@ -97,26 +97,27 @@ class CowDetailService extends ChangeNotifier {
   }
 
   // 3. ฟังก์ชันเพิ่มวัวใหม่ (Add)
-  Future<bool> addCow(Cow cow, {File? fullBodyPic, File? facePic, File? markPic}) async {
+  Future<bool> addCow(Cow cow, {File? bodyPic, File? facePic, File? markPic}) async {
     _setLoading(true);
     try {
-      String? fullBodyPicUrl;
+      String? bodyPicUrl;
       String? facePicUrl;
       String? markPicUrl;
+      final nidNumber = cow.nidNumber ?? 'unknown';
 
       // Upload images if provided, using the typed _uploadImage method
-      if (fullBodyPic != null) {
-        fullBodyPicUrl = await _uploadImage(fullBodyPic, cow.nidNumber, 'body');
+      if (bodyPic != null) {
+        bodyPicUrl = await _uploadImage(bodyPic, nidNumber, 'body');
       }
       if (facePic != null) {
-        facePicUrl = await _uploadImage(facePic, cow.nidNumber, 'face');
+        facePicUrl = await _uploadImage(facePic, nidNumber, 'face');
       }
       if (markPic != null) {
-        markPicUrl = await _uploadImage(markPic, cow.nidNumber, 'mark');
+        markPicUrl = await _uploadImage(markPic, nidNumber, 'mark');
       }
 
       final cowWithImages = cow.copyWith(
-        fullBodyPic: fullBodyPicUrl,
+        bodyPic: bodyPicUrl,
         facePic: facePicUrl,
         markPic: markPicUrl,
       );

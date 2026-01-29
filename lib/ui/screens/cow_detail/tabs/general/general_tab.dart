@@ -29,23 +29,23 @@ class GeneralTab extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildDetailRow(theme, 'Tag ID:', cow.nidNumber),
+              _buildDetailRow(theme, 'Tag ID:', cow.nidNumber ?? '-'),
               _buildDetailRow(theme, 'ชื่อ:', cow.animalName),
-              _buildDetailRow(theme, 'สายพันธุ์:', cow.breed),
-              _buildDetailRow(
-                  theme, 'เพศ:', cow.sex == 'M' ? 'พ่อพันธุ์' : 'แม่พันธุ์'),
+              _buildDetailRow(theme, 'สายพันธุ์:', cow.breed ?? '-'),
+                _buildDetailRow(
+                  theme, 'เพศ:', cow.sex == 'MALE' ? 'พ่อพันธุ์' : 'แม่พันธุ์'),
               _buildDetailRow(theme, 'วันเกิด:',
-                  cow.birthDate.toIso8601String().substring(0, 10)),
-              _buildDetailRow(theme, 'น้ำหนัก:', '${cow.weight} กก.'),
-              _buildDetailRow(theme, 'ส่วนสูง:', '${cow.height} ซม.'),
-              _buildDetailRow(theme, 'สีตัว:', cow.animalColor),
+                  cow.birthDate?.toIso8601String().substring(0, 10) ?? '-'),
+              _buildDetailRow(theme, 'น้ำหนัก:', '${cow.weight ?? '-'} กก.'),
+              _buildDetailRow(theme, 'ส่วนสูง:', '${cow.height ?? '-'} ซม.'),
+              _buildDetailRow(theme, 'สีตัว:', cow.color ?? '-'),
               Divider(height: 32.h),
               _buildDetailRow(
-                  theme, 'แม่พันธุ์ (Dam ID):', cow.damId?.toString() ?? '-'),
+                  theme, 'แม่พันธุ์ (Dam):', cow.damName ?? cow.damId?.toString() ?? '-'),
               _buildDetailRow(
-                  theme, 'พ่อพันธุ์ (Sire ID):', cow.sireId?.toString() ?? '-'),
+                  theme, 'พ่อพันธุ์ (Sire):', cow.sireName ?? cow.sireId?.toString() ?? '-'),
               _buildDetailRow(
-                  theme, 'สถานะ:', _getStatusLabel(cow.animalStatus)),
+                  theme, 'สถานะ:', _getStatusLabel(cow.status)),
             ],
           ),
         ),
@@ -72,14 +72,14 @@ class GeneralTab extends ConsumerWidget {
 
   String _getStatusLabel(String status) {
     switch (status) {
-      case '0':
+      case 'ACTIVE':
+        return 'ใช้งาน';
+      case 'SOLD':
         return 'ขายแล้ว';
-      case '1':
-        return 'ตาย';
-      case '2':
-        return 'คัดทิ้ง';
-      case '4':
-        return 'ปกติ';
+      case 'DECEASED':
+        return 'ตายแล้ว';
+      case 'SICK':
+        return 'ป่วย';
       default:
         return 'ไม่ระบุ';
     }

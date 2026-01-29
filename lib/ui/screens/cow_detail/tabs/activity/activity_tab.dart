@@ -44,6 +44,16 @@ class ActivityTab extends ConsumerWidget {
         return 'การรักษา';
       case ActivityType.EDIT_LOG:
         return 'ประวัติการแก้ไข';
+      case ActivityType.PREGNANCY_CHECK:
+        return 'ตรวจการตั้งท้อง';
+      case ActivityType.BREEDING:
+        return 'ผสมพันธุ์';
+      case ActivityType.WEIGHT_UPDATE:
+        return 'ปรับปรุงน้ำหนัก';
+      case ActivityType.SOLD:
+        return 'ขาย';
+      case ActivityType.DEATH:
+        return 'ตายแล้ว';
     }
   }
 
@@ -89,6 +99,26 @@ class ActivityTab extends ConsumerWidget {
       case ActivityType.EDIT_LOG:
         icon = Icons.edit_note;
         color = Colors.purple;
+        break;
+      case ActivityType.PREGNANCY_CHECK:
+        icon = Icons.pregnant_woman;
+        color = Colors.green;
+        break;
+      case ActivityType.WEIGHT_UPDATE:
+        icon = Icons.monitor_weight;
+        color = Colors.teal;
+        break;
+      case ActivityType.SOLD:
+        icon = Icons.sell;
+        color = Colors.brown;
+        break;
+      case ActivityType.BREEDING:
+        icon = Icons.favorite;
+        color = Colors.red;
+        break;
+      case ActivityType.DEATH:
+        icon = Icons.close_outlined;
+        color = Colors.grey;
         break;
     }
 

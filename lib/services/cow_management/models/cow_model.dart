@@ -1,59 +1,51 @@
 class Cow {
   final int? animalId;
+  final String userId;
   final int farmId;
-  final int userId;
-  final String nidNumber;
-  final String animalIdMarkType;
-  final String? markNumber;
-  final String breed;
-  final String isFirstBreed;
-  final String animalStatus;
+  final String? nidNumber;
   final String animalName;
-  final DateTime birthDate;
+  final String? breed;
   final String sex;
+  final DateTime? birthDate;
   final int? sireId;
+  final String? sireName;
   final int? damId;
-  final String origin;
-  final String? originCountry;
-  final DateTime? importDate;
-  final String animalColor;
-  final double height;
-  final double weight;
-  final String eyeColor;
-  final String noseColor;
-  final String? fullBodyPic;
+  final String? damName;
+  final String? color;
+  final double? weight;
+  final double? height;
   final String? facePic;
+  final String? bodyPic;
   final String? markPic;
+  final String? origin;
+  final DateTime? importDate;
+  final String status;
   final bool isDeleted;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
   Cow({
     this.animalId,
-    required this.farmId,
     required this.userId,
-    required this.nidNumber,
-    this.animalIdMarkType = '0',
-    this.markNumber,
-    required this.breed,
-    this.isFirstBreed = '0',
-    this.animalStatus = '4',
+    required this.farmId,
+    this.nidNumber,
     required this.animalName,
-    required this.birthDate,
+    this.breed,
     required this.sex,
+    this.birthDate,
     this.sireId,
+    this.sireName,
     this.damId,
-    this.origin = '0',
-    this.originCountry,
-    this.importDate,
-    required this.animalColor,
-    required this.height,
-    required this.weight,
-    required this.eyeColor,
-    required this.noseColor,
-    this.fullBodyPic,
+    this.damName,
+    this.color,
+    this.weight,
+    this.height,
     this.facePic,
+    this.bodyPic,
     this.markPic,
+    this.origin,
+    this.importDate,
+    this.status = 'ACTIVE',
     this.isDeleted = false,
     this.createdAt,
     this.updatedAt,
@@ -61,43 +53,54 @@ class Cow {
 
   Cow copyWith({
     int? animalId,
+    String? userId,
+    int? farmId,
     String? nidNumber,
     String? animalName,
     String? breed,
-    double? weight,
-    double? height,
-    String? animalColor,
-    String? animalStatus,
     String? sex,
     DateTime? birthDate,
     int? sireId,
+    String? sireName,
     int? damId,
+    String? damName,
+    String? color,
+    double? weight,
+    double? height,
     String? facePic,
-    String? fullBodyPic,
+    String? bodyPic,
     String? markPic,
+    String? origin,
+    DateTime? importDate,
+    String? status,
+    bool? isDeleted,
     DateTime? updatedAt,
   }) {
     return Cow(
       animalId: animalId ?? this.animalId,
-      farmId: farmId,
-      userId: userId,
+      userId: userId ?? this.userId,
+      farmId: farmId ?? this.farmId,
       nidNumber: nidNumber ?? this.nidNumber,
       animalName: animalName ?? this.animalName,
       breed: breed ?? this.breed,
-      weight: weight ?? this.weight,
-      height: height ?? this.height,
-      animalColor: animalColor ?? this.animalColor,
-      animalStatus: animalStatus ?? this.animalStatus,
       sex: sex ?? this.sex,
       birthDate: birthDate ?? this.birthDate,
       sireId: sireId ?? this.sireId,
+      sireName: sireName ?? this.sireName,
       damId: damId ?? this.damId,
+      damName: damName ?? this.damName,
+      color: color ?? this.color,
+      weight: weight ?? this.weight,
+      height: height ?? this.height,
       facePic: facePic ?? this.facePic,
-      fullBodyPic: fullBodyPic ?? this.fullBodyPic,
+      bodyPic: bodyPic ?? this.bodyPic,
       markPic: markPic ?? this.markPic,
+      origin: origin ?? this.origin,
+      importDate: importDate ?? this.importDate,
+      status: status ?? this.status,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      eyeColor: '',
-      noseColor: '',
     );
   }
 
@@ -105,37 +108,29 @@ class Cow {
   factory Cow.fromMap(Map<String, dynamic> map) {
     return Cow(
       animalId: map['animal_id'],
-      farmId: map['farm_id'],
       userId: map['user_id'],
+      farmId: map['farm_id'],
       nidNumber: map['nid_number'],
-      animalIdMarkType: map['animal_id_mark_type'],
-      markNumber: map['mark_number'],
-      breed: map['breed'],
-      isFirstBreed: map['is_first_breed'],
-      animalStatus: map['animal_status'],
       animalName: map['animal_name'],
-      birthDate: DateTime.parse(map['birth_date']),
+      breed: map['breed'],
       sex: map['sex'],
+      birthDate: map['birth_date'] != null ? DateTime.parse(map['birth_date']) : null,
       sireId: map['sire_id'],
+      sireName: map['sire_name'],
       damId: map['dam_id'],
-      origin: map['origin'],
-      originCountry: map['origin_country'],
-      importDate: map['import_date'] != null
-          ? DateTime.parse(map['import_date'])
-          : null,
-      animalColor: map['animal_color'],
-      height: (map['height'] as num).toDouble(),
-      weight: (map['weight'] as num).toDouble(),
-      eyeColor: map['eye_color'],
-      noseColor: map['nose_color'],
-      fullBodyPic: map['full_body_pic'],
+      damName: map['dam_name'],
+      color: map['color'],
+      weight: map['weight'] != null ? (map['weight'] as num).toDouble() : null,
+      height: map['height'] != null ? (map['height'] as num).toDouble() : null,
       facePic: map['face_pic'],
+      bodyPic: map['body_pic'],
       markPic: map['mark_pic'],
-      isDeleted: map['is_deleted'],
-      createdAt:
-          map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
-      updatedAt:
-          map['updated_at'] != null ? DateTime.parse(map['updated_at']) : null,
+      origin: map['origin'],
+      importDate: map['import_date'] != null ? DateTime.parse(map['import_date']) : null,
+      status: map['status'] ?? 'ACTIVE',
+      isDeleted: map['is_deleted'] ?? false,
+      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
+      updatedAt: map['updated_at'] != null ? DateTime.parse(map['updated_at']) : null,
     );
   }
 
@@ -152,33 +147,26 @@ class Cow {
   Map<String, dynamic> toMap() {
     return {
       'animal_id': animalId,
-      'farm_id': farmId,
       'user_id': userId,
+      'farm_id': farmId,
       'nid_number': nidNumber,
-      'animal_id_mark_type': animalIdMarkType,
-      'mark_number': markNumber,
-      'breed': breed,
-      'is_first_breed': isFirstBreed,
-      'animal_status': animalStatus,
       'animal_name': animalName,
-      'birth_date':
-          birthDate.toIso8601String().substring(0, 10), // Format as YYYY-MM-DD
+      'breed': breed,
       'sex': sex,
+      'birth_date': birthDate?.toIso8601String().substring(0, 10),
       'sire_id': sireId,
+      'sire_name': sireName,
       'dam_id': damId,
-      'origin': origin,
-      'origin_country': originCountry,
-      'import_date': importDate
-          ?.toIso8601String()
-          .substring(0, 10), // Format as YYYY-MM-DD
-      'animal_color': animalColor,
-      'height': height,
+      'dam_name': damName,
+      'color': color,
       'weight': weight,
-      'eye_color': eyeColor,
-      'nose_color': noseColor,
-      'full_body_pic': fullBodyPic,
+      'height': height,
       'face_pic': facePic,
+      'body_pic': bodyPic,
       'mark_pic': markPic,
+      'origin': origin,
+      'import_date': importDate?.toIso8601String().substring(0, 10),
+      'status': status,
       'is_deleted': isDeleted,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),

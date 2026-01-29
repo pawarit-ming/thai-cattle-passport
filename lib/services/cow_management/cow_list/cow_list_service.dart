@@ -1,7 +1,5 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
 import '../../../supabase_config.dart';
 import 'package:logger/logger.dart';
@@ -21,24 +19,6 @@ class CowService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Generic image upload function
-  Future<String?> _uploadImage(File imageFile, String cowNid) async {
-    try {
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}.${imageFile.path.split('.').last}';
-      final String path = '${SupabaseConfig.bucketName}/$cowNid/$fileName';
-
-      await supabase.storage.from(SupabaseConfig.bucketName).upload(
-        path,
-        imageFile,
-        fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
-      );
-      logger.d("Image uploaded successfully for cowNid: $cowNid, path: $path");
-      return supabase.storage.from(SupabaseConfig.bucketName).getPublicUrl(path);
-    } catch (e) {
-      logger.e('Error uploading image: $e', error: e);
-      return null;
-    }
-  }
 
   // Fetch all cows that are not soft-deleted
   Future<void> fetchCows() async {

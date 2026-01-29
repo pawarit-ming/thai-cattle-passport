@@ -8,6 +8,7 @@ import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_se
 import 'package:th_cow_passport/ui/screens/camera_screen.dart';
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
 import 'package:th_cow_passport/ui/widgets/cow_detail_widget.dart';
+import 'package:th_cow_passport/supabase_config.dart';
 
 class CowFormScreen extends ConsumerStatefulWidget {
   const CowFormScreen({super.key});
@@ -31,13 +32,13 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
   late TextEditingController _nidNumberController;
   late TextEditingController _animalNameController;
   late TextEditingController _breedController;
-  late TextEditingController _animalColorController;
+  late TextEditingController _colorController;
   late TextEditingController _heightController;
   late TextEditingController _weightController;
-  late TextEditingController _eyeColorController;
-  late TextEditingController _noseColorController;
   late TextEditingController _damIdController;
   late TextEditingController _sireIdController;
+  late TextEditingController _sireNameController;
+  late TextEditingController _damNameController;
 
   // Image files
   File? _faceImage;
@@ -45,7 +46,7 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
   File? _markImage;
 
   DateTime _birthDate = DateTime.now();
-  String _sex = 'M'; // Default to Male
+  String _sex = 'MALE'; // Default to MALE
 
   void _updateSaveButtonState() {
     final isEnabled = _nidNumberController.text.isNotEmpty &&
@@ -65,13 +66,13 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
     _nidNumberController = TextEditingController();
     _animalNameController = TextEditingController();
     _breedController = TextEditingController();
-    _animalColorController = TextEditingController();
+    _colorController = TextEditingController();
     _heightController = TextEditingController();
     _weightController = TextEditingController();
-    _eyeColorController = TextEditingController();
-    _noseColorController = TextEditingController();
     _damIdController = TextEditingController();
     _sireIdController = TextEditingController();
+    _sireNameController = TextEditingController();
+    _damNameController = TextEditingController();
 
     _nidNumberController.addListener(_updateSaveButtonState);
     _animalNameController.addListener(_updateSaveButtonState);
@@ -87,13 +88,13 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
     _nidNumberController.dispose();
     _animalNameController.dispose();
     _breedController.dispose();
-    _animalColorController.dispose();
+    _colorController.dispose();
     _heightController.dispose();
     _weightController.dispose();
-    _eyeColorController.dispose();
-    _noseColorController.dispose();
     _damIdController.dispose();
     _sireIdController.dispose();
+    _sireNameController.dispose();
+    _damNameController.dispose();
     super.dispose();
   }
 
@@ -167,29 +168,39 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
     if (!isValid) return;
 
     final cowService = ref.read(cowDetailServiceProvider);
+    
+    // Get current user ID from Supabase auth
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ข้อผิดพลาด: ไม่พบข้อมูลผู้ใช้')),
+      );
+      return;
+    }
 
     final newCow = Cow(
-      farmId: 3, // FIXME: Replace with actual farm ID
-      userId: 1, // FIXME: Replace with actual user ID
+      farmId: 1, // TODO: Replace with actual farm ID selection
+      userId: userId,
       nidNumber: _nidNumberController.text,
       animalName: _animalNameController.text,
       breed: _breedController.text,
       birthDate: _birthDate,
       sex: _sex,
-      animalColor: _animalColorController.text,
-      height: double.tryParse(_heightController.text) ?? 0.0,
-      weight: double.tryParse(_weightController.text) ?? 0.0,
-      eyeColor: _eyeColorController.text,
-      noseColor: _noseColorController.text,
+      color: _colorController.text,
+      height: double.tryParse(_heightController.text),
+      weight: double.tryParse(_weightController.text),
       damId: int.tryParse(_damIdController.text),
       sireId: int.tryParse(_sireIdController.text),
+      sireName: _sireNameController.text.isNotEmpty ? _sireNameController.text : null,
+      damName: _damNameController.text.isNotEmpty ? _damNameController.text : null,
+      status: 'ACTIVE',
     );
 
     try {
       final success = await cowService.addCow(
         newCow,
         facePic: _faceImage,
-        fullBodyPic: _bodyImage,
+        bodyPic: _bodyImage,
         markPic: _markImage,
       );
 
@@ -395,8 +406,8 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
                   OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
             ),
             items: const [
-              DropdownMenuItem(value: 'M', child: Text('ผู้')),
-              DropdownMenuItem(value: 'F', child: Text('เมีย')),
+              DropdownMenuItem(value: 'MALE', child: Text('ผู้')),
+              DropdownMenuItem(value: 'FEMALE', child: Text('เมีย')),
             ],
             onChanged: (value) {
               if (value != null) setState(() => _sex = value);
@@ -436,25 +447,17 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
           ),
           SizedBox(height: 16.h),
           _buildStyledTextField(
-            controller: _animalColorController,
+            controller: _colorController,
             label: 'สี',
             hintText: 'เช่น ขาว, ดำ, แดง',
             icon: Icons.color_lens,
           ),
           SizedBox(height: 16.h),
           _buildStyledTextField(
-            controller: _eyeColorController,
-            label: 'สีตา',
-            hintText: 'เช่น ดำ, น้ำตาล',
-            icon: Icons.visibility,
-          ),
-          SizedBox(height: 16.h),
-          _buildStyledTextField(
-            controller: _noseColorController,
-            label: 'สีจมูก',
-            hintText: 'เช่น ดำ, ชมพู',
-            icon: Icons.air,
-          ),
+              label: 'ชื่อพ่อพันธุ์',
+              hintText: 'เช่น บราห์มัน',
+              controller: _sireNameController,
+              icon: Icons.male),
           SizedBox(height: 16.h),
           _buildStyledTextField(
               label: 'ID พ่อพันธุ์',
@@ -462,6 +465,12 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
               controller: _sireIdController,
               icon: Icons.male,
               keyboardType: TextInputType.number),
+          SizedBox(height: 16.h),
+          _buildStyledTextField(
+              label: 'ชื่อแม่พันธุ์',
+              hintText: 'เช่น โลลิตา',
+              controller: _damNameController,
+              icon: Icons.female),
           SizedBox(height: 16.h),
           _buildStyledTextField(
               label: 'ID แม่พันธุ์',

@@ -247,7 +247,9 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
   }) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final age = DateTime.now().difference(cow.birthDate).inDays ~/ 365;
+    final age = cow.birthDate != null 
+        ? DateTime.now().difference(cow.birthDate!).inDays ~/ 365
+        : null;
 
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
@@ -349,21 +351,21 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          '${cow.breed} • $age ปี',
+                          '${cow.breed ?? '-'} • ${age != null ? '$age ปี' : 'ไม่ทราบ'}',
                           style: theme.textTheme.bodyMedium,
                         ),
                         SizedBox(height: 8.h),
                         Row(
                           children: [
                             _buildMiniTag(
-                              icon: cow.sex == 'M' ? Icons.male : Icons.female,
-                              label: cow.sex == 'M' ? 'ผู้' : 'เมีย',
-                              color: cow.sex == 'M'
-                                  ? Colors.blue.shade100
-                                  : Colors.pink.shade100,
-                              textColor: cow.sex == 'M'
-                                  ? Colors.blue.shade900
-                                  : Colors.pink.shade900,
+                              icon: cow.sex == 'MALE' ? Icons.male : Icons.female,
+                              label: cow.sex == 'MALE' ? 'ผู้' : 'เมีย',
+                              color: cow.sex == 'MALE'
+                                ? Colors.blue.shade100
+                                : Colors.pink.shade100,
+                              textColor: cow.sex == 'MALE'
+                                ? Colors.blue.shade800
+                                : Colors.pink.shade800,
                             ),
                             SizedBox(width: 8.w),
                             _buildMiniTag(
@@ -460,10 +462,10 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                         Row(
                           children: [
                             _buildGenderChip(
-                                'ตัวผู้', 'M', setStateSheet, theme),
+                                'ตัวผู้', 'MALE', setStateSheet, theme),
                             SizedBox(width: 10.w),
                             _buildGenderChip(
-                                'ตัวเมีย', 'F', setStateSheet, theme),
+                                'ตัวเมีย', 'FEMALE', setStateSheet, theme),
                           ],
                         ),
                         SizedBox(height: 24.h),

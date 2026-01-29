@@ -26,11 +26,10 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> with SingleTicker
   late TextEditingController _colorController;
   late TextEditingController _weightController;
   late TextEditingController _heightController;
-  late TextEditingController _eyeColorController;
-  late TextEditingController _noseColorController;
   late TextEditingController _damIdController;
   late TextEditingController _sireIdController;
-  late TextEditingController _markNumberController;
+  late TextEditingController _sireNameController;
+  late TextEditingController _damNameController;
 
   DateTime? _selectedBirthDate;
   String? _selectedSex;
@@ -47,18 +46,17 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> with SingleTicker
     _nameController = TextEditingController(text: cow?.animalName);
     _nidController = TextEditingController(text: cow?.nidNumber);
     _breedController = TextEditingController(text: cow?.breed);
-    _colorController = TextEditingController(text: cow?.animalColor);
-    _weightController = TextEditingController(text: cow?.weight.toString());
-    _heightController = TextEditingController(text: cow?.height.toString());
-    _eyeColorController = TextEditingController(text: cow?.eyeColor);
-    _noseColorController = TextEditingController(text: cow?.noseColor);
+    _colorController = TextEditingController(text: cow?.color);
+    _weightController = TextEditingController(text: cow?.weight?.toString());
+    _heightController = TextEditingController(text: cow?.height?.toString());
     _damIdController = TextEditingController(text: cow?.damId?.toString());
     _sireIdController = TextEditingController(text: cow?.sireId?.toString());
-    _markNumberController = TextEditingController(text: cow?.markNumber);
+    _sireNameController = TextEditingController(text: cow?.sireName);
+    _damNameController = TextEditingController(text: cow?.damName);
 
     _selectedBirthDate = cow?.birthDate;
     _selectedSex = cow?.sex;
-    _selectedStatus = cow?.animalStatus;
+    _selectedStatus = cow?.status;
   }
 
   @override
@@ -71,11 +69,10 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> with SingleTicker
     _colorController.dispose();
     _weightController.dispose();
     _heightController.dispose();
-    _eyeColorController.dispose();
-    _noseColorController.dispose();
     _damIdController.dispose();
     _sireIdController.dispose();
-    _markNumberController.dispose();
+    _sireNameController.dispose();
+    _damNameController.dispose();
     super.dispose();
   }
 
@@ -88,14 +85,16 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> with SingleTicker
         animalName: _nameController.text,
         nidNumber: _nidController.text,
         breed: _breedController.text,
-        animalColor: _colorController.text,
+        color: _colorController.text,
         weight: double.tryParse(_weightController.text),
         height: double.tryParse(_heightController.text),
         damId: int.tryParse(_damIdController.text),
         sireId: int.tryParse(_sireIdController.text),
+        sireName: _sireNameController.text,
+        damName: _damNameController.text,
         birthDate: _selectedBirthDate,
         sex: _selectedSex,
-        animalStatus: _selectedStatus,
+        status: _selectedStatus,
         updatedAt: DateTime.now(),
       );
 
@@ -163,6 +162,12 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> with SingleTicker
               icon: Icons.tag,
               isRequired: true),
           SizedBox(height: 16.h),
+          _buildStyledTextField(
+              label: 'สายพันธุ์',
+              controller: _breedController,
+              icon: Icons.category,
+              isRequired: true),
+          SizedBox(height: 16.h),
 
           // เพิ่มส่วนเลือกวันที่และเพศเพื่อให้แก้ไขได้ทุกอย่าง
           ListTile(
@@ -179,6 +184,40 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> with SingleTicker
                 lastDate: DateTime.now(),
               );
               if (date != null) setState(() => _selectedBirthDate = date);
+            },
+          ),
+          SizedBox(height: 16.h),
+          DropdownButtonFormField<String>(
+            value: _selectedSex,
+            decoration: InputDecoration(
+              labelText: 'เพศ',
+              prefixIcon: const Icon(Icons.wc),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+            ),
+            items: const [
+              DropdownMenuItem(value: 'MALE', child: Text('ผู้')),
+              DropdownMenuItem(value: 'FEMALE', child: Text('เมีย')),
+            ],
+            onChanged: (value) {
+              if (value != null) setState(() => _selectedSex = value);
+            },
+          ),
+          SizedBox(height: 16.h),
+          DropdownButtonFormField<String>(
+            value: _selectedStatus,
+            decoration: InputDecoration(
+              labelText: 'สถานะ',
+              prefixIcon: const Icon(Icons.info),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+            ),
+            items: const [
+              DropdownMenuItem(value: 'ACTIVE', child: Text('ใช้งาน')),
+              DropdownMenuItem(value: 'SOLD', child: Text('ขายแล้ว')),
+              DropdownMenuItem(value: 'DECEASED', child: Text('ตายแล้ว')),
+              DropdownMenuItem(value: 'SICK', child: Text('ป่วย')),
+            ],
+            onChanged: (value) {
+              if (value != null) setState(() => _selectedStatus = value);
             },
           ),
         ],
@@ -215,10 +254,20 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> with SingleTicker
               icon: Icons.palette),
           SizedBox(height: 16.h),
           _buildStyledTextField(
+              label: 'ชื่อพ่อพันธุ์',
+              controller: _sireNameController,
+              icon: Icons.male),
+          SizedBox(height: 16.h),
+          _buildStyledTextField(
               label: 'ID พ่อพันธุ์',
               controller: _sireIdController,
               icon: Icons.male,
               keyboardType: TextInputType.number),
+          SizedBox(height: 16.h),
+          _buildStyledTextField(
+              label: 'ชื่อแม่พันธุ์',
+              controller: _damNameController,
+              icon: Icons.female),
           SizedBox(height: 16.h),
           _buildStyledTextField(
               label: 'ID แม่พันธุ์',

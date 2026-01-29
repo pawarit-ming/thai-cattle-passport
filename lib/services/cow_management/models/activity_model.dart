@@ -1,7 +1,12 @@
 enum ActivityType {
   VACCINE,
-  BIRTH,
   TREATMENT,
+  BIRTH,
+  WEIGHT_UPDATE,
+  BREEDING,
+  PREGNANCY_CHECK,
+  DEATH,
+  SOLD,
   EDIT_LOG;
 
   String toJson() => name;
@@ -11,39 +16,38 @@ enum ActivityType {
 class Activity {
   final int? id;
   final int animalId;
-  final ActivityType activityType; // 'VACCINE', 'BIRTH', 'TREATMENT', 'EDIT_LOG'
-  final DateTime activityDate;
+  final ActivityType activityType;
   final String? description;
-  final Map<String, dynamic> data; // สำหรับเก็บ JSONB
+  final Map<String, dynamic> data;
+  final DateTime activityDate;
   final DateTime? createdAt;
 
   Activity({
     this.id,
     required this.animalId,
     required this.activityType,
-    required this.activityDate,
     this.description,
-    this.data = const {}, // ค่า Default เป็น Map ว่าง
+    this.data = const {},
+    required this.activityDate,
     this.createdAt,
   });
 
-  // copyWith มาตรฐานเดียวกับ Cow
   Activity copyWith({
     int? id,
     int? animalId,
     ActivityType? activityType,
-    DateTime? activityDate,
     String? description,
     Map<String, dynamic>? data,
+    DateTime? activityDate,
     DateTime? createdAt,
   }) {
     return Activity(
       id: id ?? this.id,
       animalId: animalId ?? this.animalId,
       activityType: activityType ?? this.activityType,
-      activityDate: activityDate ?? this.activityDate,
       description: description ?? this.description,
       data: data ?? this.data,
+      activityDate: activityDate ?? this.activityDate,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -54,17 +58,14 @@ class Activity {
       id: map['id'],
       animalId: map['animal_id'],
       activityType: ActivityType.fromJson(map['activity_type']),
-      activityDate: DateTime.parse(map['activity_date']),
       description: map['description'],
-      // จัดการ JSONB ให้เป็น Map ที่ปลอดภัย
       data: map['data'] != null ? Map<String, dynamic>.from(map['data']) : {},
-      createdAt: map['created_at'] != null 
-          ? DateTime.parse(map['created_at']) 
-          : null,
+      activityDate: DateTime.parse(map['activity_date']),
+      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
     );
   }
 
-  // toMapForInsert (ตัด id และ created_at ออกเหมือน Cow)
+  // toMap for insertion
   Map<String, dynamic> toMapForInsert() {
     final map = toMap();
     map.remove('id');
@@ -78,10 +79,9 @@ class Activity {
       'id': id,
       'animal_id': animalId,
       'activity_type': activityType.toJson(),
-      // activity_date เป็น Timestamp ต้องส่งเวลาไปด้วย ไม่ต้อง substring(0,10)
-      'activity_date': activityDate.toIso8601String(), 
       'description': description,
-      'data': data, // Supabase จะแปลง Map นี้เป็น JSONB ให้เอง
+      'data': data,
+      'activity_date': activityDate.toIso8601String(),
       'created_at': createdAt?.toIso8601String(),
     };
   }

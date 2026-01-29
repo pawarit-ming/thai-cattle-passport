@@ -74,7 +74,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
 
     return CowDetailWidget(
       title: 'ข้อมูลประจำตัววัว',
-      imageUrl: cow.fullBodyPic,
+      imageUrl: cow.bodyPic,
       tabController: _tabController,
       onBack: () {
         if (context.canPop()) {
@@ -87,7 +87,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
         IconButton(
           icon: const Icon(Icons.qr_code_2),
           tooltip: 'Show QR Code',
-          onPressed: () => _showQrDialog(context, cow.nidNumber),
+          onPressed: () => _showQrDialog(context, cow.nidNumber ?? 'unknown'),
         ),
       ],
       tabs: const [

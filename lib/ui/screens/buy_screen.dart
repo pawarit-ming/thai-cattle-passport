@@ -12,9 +12,6 @@ class BuyScreen extends ConsumerStatefulWidget {
 class _BuyScreenState extends ConsumerState<BuyScreen> {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('ตลาดซื้อขายวัว'),

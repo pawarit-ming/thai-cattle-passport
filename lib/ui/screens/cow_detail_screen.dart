@@ -74,7 +74,11 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
 
     return CowDetailWidget(
       title: 'ข้อมูลประจำตัววัว',
-      imageUrl: cow.bodyPic,
+      images: [
+        if (cow.facePic != null) cow.facePic!,
+        if (cow.bodyPic != null) cow.bodyPic!,
+        if (cow.markPic != null) cow.markPic!,
+      ],
       tabController: _tabController,
       onBack: () {
         if (context.canPop()) {
@@ -98,8 +102,8 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
         const GeneralTab(),
         ActivityTab(cowId: cow.animalId!),
       ],
-      bottomBar:
-          _buildBottomBar(context, colorScheme, theme, cow.animalId!, cow.animalId!),
+      bottomBar: _buildBottomBar(
+          context, colorScheme, theme, cow.animalId!, cow.animalId!),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -232,5 +236,3 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
     );
   }
 }
-
-

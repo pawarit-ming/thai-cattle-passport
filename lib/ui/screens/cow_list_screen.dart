@@ -438,8 +438,8 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                           ),
                           SizedBox(width: 8.w),
                           _buildMiniTag(
-                            icon: Icons.check_circle_outline,
-                            label: 'สมบูรณ์',
+                            icon: Icons.monitor_heart_outlined,
+                            label: 'สุขภาพดี',
                             color: Colors.green.shade100,
                             textColor: Colors.green.shade800,
                           ),

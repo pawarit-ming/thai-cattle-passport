@@ -347,7 +347,7 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
     return Scaffold(
       appBar: AppBar(
         title: _isSearching
-            ? 
+            ?
             // --- 1. ปรับแต่งช่องค้นหา (Search Box) ---
             Container(
                 height: 40.h, // กำหนดความสูงของช่องค้นหา
@@ -359,14 +359,19 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
                     hintText: 'ค้นหาชื่อวัว หรือ ผู้ขาย...',
                     hintStyle: TextStyle(color: Colors.grey[400]),
                     border: InputBorder.none, // เอาเส้นขอบเดิมออก
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h), // ระยะห่างข้อความข้างใน
-                    prefixIcon: Icon(Icons.search, color: Colors.grey), // เพิ่มไอคอนแว่นขยายข้างใน (ถ้าต้องการ)
+                    contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 8.h), // ระยะห่างข้อความข้างใน
+                    prefixIcon: Icon(Icons.search,
+                        color: Colors
+                            .grey), // เพิ่มไอคอนแว่นขยายข้างใน (ถ้าต้องการ)
                   ),
                   onChanged: (val) => _applyFilters(),
                 ),
               )
-            : 
-            Text('ตลาดซื้อขายวัว',),
+            : Text(
+                'ตลาดซื้อขายวัว',
+              ),
         actions: [
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
@@ -623,7 +628,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final item = widget.item;
+    final item = widget.item; // We use this to access our data
 
     return Card(
       margin: EdgeInsets.only(bottom: 16.h),
@@ -661,25 +666,10 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                       );
                     },
                   ),
-                  Positioned(
-                    top: 12.h,
-                    right: 12.w,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 10.w, vertical: 6.h),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Text(
-                        '฿$price',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16.sp),
-                      ),
-                    ),
-                  ),
+
+                  // *** FIX 1: Removed price overlay since 'price' is no longer in model ***
+                  // If you want to show something else here, like the ID or status, you can.
+
                   // Image Indicator (Dots)
                   Positioned(
                     bottom: 8.h,
@@ -687,7 +677,8 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                     right: 0,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: images.asMap().entries.map((entry) {
+                      // *** FIX 2: Changed 'images' to 'item.images' ***
+                      children: item.images.asMap().entries.map((entry) {
                         return Container(
                           width: 8.w,
                           height: 8.h,
@@ -712,7 +703,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ชื่อและสายพันธุ์
+                  // ... rest of your code (Name, Breed, Sex, etc.) remains the same
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -725,7 +716,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                         padding: EdgeInsets.symmetric(
                             horizontal: 8.w, vertical: 2.h),
                         decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.1),
+                          color: colorScheme.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Text(
@@ -739,8 +730,6 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                     ],
                   ),
                   SizedBox(height: 12.h),
-
-                  // ข้อมูลย่อย: เพศ, น้ำหนัก, ผู้ขาย, สถานที่
                   Row(
                     children: [
                       Icon(item.sex == 'M' ? Icons.male : Icons.female,
@@ -754,7 +743,6 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                     ],
                   ),
                   SizedBox(height: 6.h),
-
                   Row(
                     children: [
                       Icon(Icons.monitor_weight_outlined,
@@ -767,7 +755,6 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                     ],
                   ),
                   SizedBox(height: 6.h),
-
                   Row(
                     children: [
                       Icon(Icons.person_outline,
@@ -783,7 +770,6 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                     ],
                   ),
                   SizedBox(height: 6.h),
-
                   Row(
                     children: [
                       Icon(Icons.location_on_outlined,
@@ -798,17 +784,11 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                       ),
                     ],
                   ),
-
                   SizedBox(height: 16.h),
-
-                  // ปุ่มเสนอซื้อ (แก้ไข onPressed ตรงนี้)
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: () {
-                        // เรียกฟังก์ชันแสดงข้อมูลผู้ขาย
-                        _showSellerDetails(context);
-                      },
+                      onPressed: () => _showSellerDetails(context),
                       icon: const Icon(Icons.shopping_bag_outlined),
                       label: const Text('เสนอซื้อ'),
                     ),

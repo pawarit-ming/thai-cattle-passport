@@ -4,7 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class CowDetailWidget extends StatelessWidget {
   final String title;
-  final String? imageUrl;
+  // 1. เปลี่ยนจาก String? เป็น List<String> เพื่อรับหลายรูป
+  final List<String> images;
   final List<Tab> tabs;
   final List<Widget> tabViews;
   final Widget? bottomBar;
@@ -16,7 +17,8 @@ class CowDetailWidget extends StatelessWidget {
   const CowDetailWidget({
     super.key,
     required this.title,
-    this.imageUrl,
+    // รับเป็น List แทน (ถ้าไม่มีให้ส่งเป็น empty list [])
+    this.images = const [],
     required this.tabs,
     required this.tabViews,
     required this.tabController,
@@ -25,24 +27,6 @@ class CowDetailWidget extends StatelessWidget {
     this.onBack,
     this.floatingActionButton,
   });
-
-  Widget _buildImage(String? url) {
-    if (url == null || url.isEmpty) {
-      return Container(
-        color: Colors.grey[300],
-        child: Icon(Icons.pets, size: 80.r, color: Colors.grey[400]),
-      );
-    }
-
-    final isNetworkImage = url.startsWith('http');
-
-    return isNetworkImage
-        ? Image.network(url, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => Container(
-            color: Colors.grey[300],
-            child: Icon(Icons.error, size: 40.r, color: Colors.red),
-          ),)
-        : Image.file(File(url), fit: BoxFit.cover);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +37,6 @@ class CowDetailWidget extends StatelessWidget {
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
-            // ส่วนหัวที่เลื่อนเก็บได้
             SliverAppBar(
               pinned: true,
               backgroundColor: colorScheme.primary,
@@ -64,14 +47,13 @@ class CowDetailWidget extends StatelessWidget {
               leading: BackButton(onPressed: onBack),
               actions: actions,
             ),
-            // ส่วนรูปภาพวัว
+            // 2. เรียกใช้ Widget แสดงรูปภาพแบบสไลด์ที่สร้างขึ้นใหม่ด้านล่าง
             SliverToBoxAdapter(
               child: AspectRatio(
                 aspectRatio: 16 / 9,
-                child: _buildImage(imageUrl),
+                child: _ImageCarousel(images: images),
               ),
             ),
-            // ส่วน TabBar ที่จะค้างอยู่ด้านบน (Sticky)
             SliverPersistentHeader(
               pinned: true,
               delegate: _StickyTabBarDelegate(
@@ -88,7 +70,6 @@ class CowDetailWidget extends StatelessWidget {
             ),
           ];
         },
-        // ส่วนเนื้อหาที่จะเปลี่ยนไปตาม Tab
         body: TabBarView(
           controller: tabController,
           children: tabViews,
@@ -100,7 +81,93 @@ class CowDetailWidget extends StatelessWidget {
   }
 }
 
-// Helper Class สำหรับ Sticky TabBar
+// --- Widget สำหรับแสดงรูปภาพแบบเลื่อนได้ (Carousel) ---
+class _ImageCarousel extends StatefulWidget {
+  final List<String> images;
+
+  const _ImageCarousel({required this.images});
+
+  @override
+  State<_ImageCarousel> createState() => _ImageCarouselState();
+}
+
+class _ImageCarouselState extends State<_ImageCarousel> {
+  int _currentIndex = 0;
+
+  Widget _buildSingleImage(String? url) {
+    if (url == null || url.isEmpty) {
+      return Container(
+        color: Colors.grey[300],
+        child: Icon(Icons.pets, size: 80.r, color: Colors.grey[400]),
+      );
+    }
+
+    final isNetworkImage = url.startsWith('http');
+
+    if (isNetworkImage) {
+      return Image.network(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          color: Colors.grey[300],
+          child: Icon(Icons.error, size: 40.r, color: Colors.red),
+        ),
+      );
+    } else {
+      return Image.file(File(url), fit: BoxFit.cover);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // กรณีไม่มีรูปเลย
+    if (widget.images.isEmpty) {
+      return _buildSingleImage(null);
+    }
+
+    return Stack(
+      children: [
+        // ส่วนแสดงรูปภาพ (Slide)
+        PageView.builder(
+          itemCount: widget.images.length,
+          onPageChanged: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          itemBuilder: (context, index) {
+            return _buildSingleImage(widget.images[index]);
+          },
+        ),
+
+        // ส่วนจุดแสดงสถานะ (Indicators)
+        if (widget.images.length > 1)
+          Positioned(
+            bottom: 10.h,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: widget.images.asMap().entries.map((entry) {
+                return Container(
+                  width: 8.w,
+                  height: 8.h,
+                  margin: EdgeInsets.symmetric(horizontal: 4.w),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _currentIndex == entry.key
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.5),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar _tabBar;
   final Color backgroundColor;
@@ -126,5 +193,3 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
     return false;
   }
 }
-
-

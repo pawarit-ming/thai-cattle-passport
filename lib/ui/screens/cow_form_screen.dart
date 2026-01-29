@@ -22,9 +22,20 @@ class CowFormScreen extends ConsumerStatefulWidget {
   ConsumerState<CowFormScreen> createState() => _CowFormScreenState();
 }
 
-class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTickerProviderStateMixin {
+class _CowFormScreenState extends ConsumerState<CowFormScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final ImagePicker _picker = ImagePicker();
+
+  final List<String> _breedOptions = [
+    'บราห์มัน',
+    'ชาร์โรเลส์',
+    'วากิว',
+    'แองกัส',
+    'ฮินดูบราซิล',
+    'พื้นเมือง',
+    'อื่นๆ'
+  ];
 
   // State
   bool _isImagePickerStep = true;
@@ -187,7 +198,7 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
     }
 
     final cowService = ref.read(cowDetailServiceProvider);
-    
+
     // Get current user ID from Supabase auth
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) {
@@ -211,14 +222,16 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
       weight: double.tryParse(_weightController.text),
       damId: int.tryParse(_damIdController.text),
       sireId: int.tryParse(_sireIdController.text),
-      sireName: _sireNameController.text.isNotEmpty ? _sireNameController.text : null,
-      damName: _damNameController.text.isNotEmpty ? _damNameController.text : null,
+      sireName:
+          _sireNameController.text.isNotEmpty ? _sireNameController.text : null,
+      damName:
+          _damNameController.text.isNotEmpty ? _damNameController.text : null,
       status: 'ACTIVE',
     );
 
     try {
       logger.i('[CowForm] Saving cow: ${_animalNameController.text}');
-      
+
       final success = await cowService.addCow(
         newCow,
         facePic: _faceImage,
@@ -248,10 +261,130 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
     }
   }
 
+  // --- เพิ่มฟังก์ชันนี้สำหรับสร้างฟาร์มแบบด่วน ---
+  Future<void> _showCreateFarmDialog() async {
+    final nameController = TextEditingController();
+    final provinceController = TextEditingController();
+    final userId = supabase.auth.currentUser?.id;
+
+    if (userId == null) return;
+
+    // กำหนดสไตล์ของขอบเตรียมไว้ใช้ร่วมกัน
+    final defaultBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12.r),
+      borderSide: BorderSide(color: Colors.grey.shade300),
+    );
+
+    final focusedBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12.r),
+      borderSide:
+          BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5),
+    );
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        title: const Text('สร้างฟาร์มใหม่'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('กรุณากรอกข้อมูลเบื้องต้นเพื่อสร้างฟาร์ม'),
+            SizedBox(height: 16.h),
+            // ช่องกรอกชื่อฟาร์ม
+            TextField(
+              controller: nameController,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: 'ชื่อฟาร์ม *',
+                hintText: 'เช่น ฟาร์มโชคชัย',
+                filled: true,
+                fillColor: Colors.grey.shade50, // พื้นหลังสีเทาอ่อน
+                border: defaultBorder,
+                enabledBorder: defaultBorder, // ขอบตอนปกติ
+                focusedBorder: focusedBorder, // ขอบตอนกดพิมพ์
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+              ),
+            ),
+            SizedBox(height: 12.h),
+            // ช่องกรอกจังหวัด
+            TextField(
+              controller: provinceController,
+              decoration: InputDecoration(
+                labelText: 'จังหวัด *',
+                hintText: 'เช่น นครราชสีมา',
+                filled: true,
+                fillColor: Colors.grey.shade50, // พื้นหลังสีเทาอ่อน
+                border: defaultBorder,
+                enabledBorder: defaultBorder, // ขอบตอนปกติ
+                focusedBorder: focusedBorder, // ขอบตอนกดพิมพ์
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('ยกเลิก', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              // ตรวจสอบว่ากรอกครบทั้งคู่
+              if (nameController.text.trim().isEmpty ||
+                  provinceController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('กรุณากรอกชื่อฟาร์มและจังหวัด'),
+                    backgroundColor: Colors.redAccent,
+                  ),
+                );
+                return;
+              }
+
+              try {
+                // เพิ่ม field 'province' เข้าไปในคำสั่ง insert
+                await supabase.from('farms').insert({
+                  'user_id': userId,
+                  'farm_name': nameController.text.trim(),
+                  'province': provinceController.text.trim(),
+                });
+
+                if (mounted) {
+                  ref.invalidate(userFarmsProvider(userId));
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('สร้างฟาร์มเรียบร้อยแล้ว')),
+                  );
+                }
+              } catch (e) {
+                logger.e(e);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          'เกิดข้อผิดพลาด: ${e.toString().split('\n').first}'),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r)),
+            ),
+            child: const Text('ยืนยัน'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // --- UI Building ---
-
-// --- UI Building ---
-
   @override
   Widget build(BuildContext context) {
     // 1. เพิ่ม PopScope เพื่อจัดการปุ่ม Back ของ Android (Hardware Back Button)
@@ -292,7 +425,6 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
         ),
       ),
       body: Padding(
-        // ... (โค้ดส่วน body เหมือนเดิม) ...
         padding: EdgeInsets.all(16.r),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -358,7 +490,11 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
       child: CowDetailWidget(
         title: 'เพิ่มวัวใหม่ (ขั้นตอนที่ 2/2)',
         // Use the first image as the header image
-        imageUrl: _faceImage?.path,
+        images: [
+          if (_faceImage != null) _faceImage!.path,
+          if (_bodyImage != null) _bodyImage!.path,
+          if (_markImage != null) _markImage!.path,
+        ],
         tabController: _tabController,
         tabs: const [
           Tab(text: 'ข้อมูลทั่วไป'),
@@ -390,31 +526,68 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
                 return farmsAsync.when(
                   loading: () => const CircularProgressIndicator(),
                   error: (error, stack) {
-                    logger.e('[CowForm] Error loading farms', error: error, stackTrace: stack);
+                    logger.e('[CowForm] Error loading farms',
+                        error: error, stackTrace: stack);
                     return Text('Error loading farms: $error');
                   },
                   data: (farms) {
                     if (farms.isEmpty) {
+                      // --- แก้ไขตรงนี้: เปลี่ยนจากกล่องข้อความธรรมดา เป็นปุ่มให้กดสร้าง ---
                       return Container(
-                        padding: EdgeInsets.all(12.r),
+                        width: double.infinity,
+                        padding: EdgeInsets.all(16.r),
+                        margin: EdgeInsets.only(bottom: 16.h),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8.r),
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12.r),
                           border: Border.all(color: Colors.orange),
                         ),
-                        child: const Text('ยังไม่มีฟาร์ม กรุณาสร้างฟาร์มก่อน'),
+                        child: Column(
+                          children: [
+                            const Icon(Icons.warning_amber_rounded,
+                                color: Colors.orange, size: 40),
+                            SizedBox(height: 8.h),
+                            const Text(
+                              'คุณยังไม่มีข้อมูลฟาร์ม',
+                              style: TextStyle(
+                                  color: Colors.orange,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            const Text('ต้องสร้างฟาร์มก่อนจึงจะเพิ่มวัวได้'),
+                            SizedBox(height: 12.h),
+                            ElevatedButton.icon(
+                              onPressed:
+                                  _showCreateFarmDialog, // เรียกฟังก์ชันที่สร้างไว้
+                              icon: const Icon(Icons.add_home_work),
+                              label: const Text('สร้างฟาร์มใหม่'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.orange,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                       );
                     }
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('ฟาร์ม', style: Theme.of(context).textTheme.labelLarge),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('ฟาร์ม',
+                                style: Theme.of(context).textTheme.labelLarge),
+                            const Text(' *',
+                                style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
                         SizedBox(height: 8.h),
                         DropdownButtonFormField<Farm>(
-                          value: _selectedFarm ?? (farms.isNotEmpty ? farms.first : null),
+                          value: _selectedFarm ??
+                              (farms.isNotEmpty ? farms.first : null),
                           decoration: InputDecoration(
-                            labelText: 'เลือกฟาร์ม',
+                            //labelText: 'เลือกฟาร์ม',
                             prefixIcon: const Icon(Icons.home),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12.r),
@@ -429,7 +602,8 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
                           onChanged: (farm) {
                             setState(() {
                               _selectedFarm = farm;
-                              logger.i('[CowForm] Farm selected: ${farm?.farmName}');
+                              logger.i(
+                                  '[CowForm] Farm selected: ${farm?.farmName}');
                             });
                           },
                           validator: (value) {
@@ -462,48 +636,137 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
             isRequired: true,
           ),
           SizedBox(height: 16.h),
-          _buildStyledTextField(
-            controller: _breedController,
-            label: 'สายพันธุ์',
-            hintText: 'เช่น บราห์มัน, ชาโรเล่ส์',
-            icon: Icons.category,
-            isRequired: true,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('สายพันธุ์',
+                      style: Theme.of(context).textTheme.labelLarge),
+                  const Text(' *', style: TextStyle(color: Colors.red)),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              DropdownButtonFormField<String>(
+                // ตรวจสอบว่าค่าที่มีอยู่ใน controller ตรงกับใน list หรือไม่ เพื่อกัน error
+                value: _breedOptions.contains(_breedController.text)
+                    ? _breedController.text
+                    : null,
+                decoration: InputDecoration(
+                  hintText: 'เลือกสายพันธุ์',
+                  prefixIcon: const Icon(Icons.category),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
+                ),
+                items: _breedOptions.map((breed) {
+                  return DropdownMenuItem(
+                    value: breed,
+                    child: Text(breed),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    // อัปเดตค่าลง Controller เพื่อให้ Logic การ Save เดิมทำงานได้
+                    _breedController.text = value ?? '';
+                    _updateSaveButtonState();
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'กรุณาเลือกสายพันธุ์';
+                  }
+                  return null;
+                },
+              ),
+            ],
           ),
           SizedBox(height: 16.h),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(
-                'วันเกิด: ${MaterialLocalizations.of(context).formatShortDate(_birthDate)}'),
-            leading: Icon(Icons.calendar_today, size: 30.r),
-            trailing: const Icon(Icons.edit_calendar_outlined),
-            onTap: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: _birthDate,
-                firstDate: DateTime(2000),
-                lastDate: DateTime.now(),
-              );
-              if (picked != null && picked != _birthDate) {
-                setState(() => _birthDate = picked);
-              }
-            },
-          ),
-          SizedBox(height: 8.h),
-          DropdownButtonFormField<String>(
-            initialValue: _sex,
-            decoration: InputDecoration(
-              labelText: 'เพศ',
-              prefixIcon: const Icon(Icons.wc),
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
-            ),
-            items: const [
-              DropdownMenuItem(value: 'MALE', child: Text('ผู้')),
-              DropdownMenuItem(value: 'FEMALE', child: Text('เมีย')),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('วันเกิด',
+                      style: Theme.of(context).textTheme.labelLarge),
+                  const Text(' *', style: TextStyle(color: Colors.red)),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              TextFormField(
+                readOnly:
+                    true, // ตั้งเป็นอ่านอย่างเดียว เพื่อไม่ให้คีย์บอร์ดเด้ง
+                // ใช้ key เพื่อให้ Widget รีเฟรชค่าใหม่ทันทีที่ตัวแปร _birthDate เปลี่ยน
+                key: ValueKey(_birthDate),
+                initialValue: MaterialLocalizations.of(context)
+                    .formatShortDate(_birthDate),
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.calendar_today),
+                  suffixIcon: const Icon(
+                      Icons.arrow_drop_down), // เพิ่มลูกศรให้รู้ว่ากดเลือกได้
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
+                ),
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: _birthDate,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime.now(),
+                  );
+                  if (picked != null && picked != _birthDate) {
+                    setState(() => _birthDate = picked);
+                  }
+                },
+              ),
             ],
-            onChanged: (value) {
-              if (value != null) setState(() => _sex = value);
-            },
+          ),
+          SizedBox(height: 16.h),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('เพศ', style: Theme.of(context).textTheme.labelLarge),
+                  const Text(' *', style: TextStyle(color: Colors.red)),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              DropdownButtonFormField<String>(
+                value: _sex, // ใช้ value เพื่อให้แสดงค่าปัจจุบันเสมอ
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.wc),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'MALE', child: Text('ผู้')),
+                  DropdownMenuItem(value: 'FEMALE', child: Text('เมีย')),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _sex = value);
+                  }
+                },
+              ),
+            ],
           ),
         ],
       ),

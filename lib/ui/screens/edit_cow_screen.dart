@@ -129,7 +129,9 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> with SingleTicker
       key: _formKey,
       child: CowDetailWidget(
         title: 'แก้ไขข้อมูล: ${cow.animalName}',
-        imageUrl: cow.facePic,
+        images: [
+          if (cow.facePic != null) cow.facePic!,
+        ],
         tabController: _tabController,
         tabs: const [
           Tab(text: 'ข้อมูลทั่วไป'),

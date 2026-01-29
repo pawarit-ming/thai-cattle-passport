@@ -63,7 +63,7 @@ class AppTheme {
         bodyLarge: TextStyle(fontSize: 16.0, color: _textPrimary),
         bodyMedium: TextStyle(fontSize: 14.0, color: _textSecondary),
         labelLarge: TextStyle(
-            fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.white),
+          fontSize: 16.0, fontWeight: FontWeight.bold, color: _textPrimary),
       ),
 
       dividerColor: _divider,
@@ -72,7 +72,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: _surface,
         elevation: 2,
-        shadowColor: _primary.withOpacity(0.2),
+        shadowColor: _primary.withValues(alpha: 0.2),
         margin: const EdgeInsets.only(bottom: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.0),
@@ -132,10 +132,10 @@ class AppTheme {
         foregroundColor: Colors.white,
       ),
 
-      tabBarTheme: const TabBarThemeData(
-        labelColor: Colors.white,
-        unselectedLabelColor: Colors.white60,
-        indicatorColor: Colors.white,
+      tabBarTheme: TabBarThemeData(
+        labelColor: _textPrimary,
+        unselectedLabelColor: _textSecondary.withOpacity(0.8),
+        indicatorColor: _primary,
       ),
     );
   }

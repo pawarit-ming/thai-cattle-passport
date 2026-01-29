@@ -12,6 +12,14 @@ Future<void> main() async {
     url: SupabaseConfig.url,
     anonKey: SupabaseConfig.anonKey,
   );
+  
+  // If there's already a session when the app starts (e.g., from previous login
+  // or hot restart with session persistence), mark it as recognized so the router
+  // doesn't force a redirect to /login.
+  if (supabase.auth.currentSession != null) {
+    sessionRecognized = true;
+  }
+  
   runApp(const ProviderScope(child: MainApp()));
 }
 

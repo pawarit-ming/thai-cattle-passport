@@ -128,7 +128,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
         color: theme.cardColor,
         boxShadow: [
           BoxShadow(
-            color: colorScheme.primary.withOpacity(0.1),
+            color: colorScheme.primary.withValues(alpha: 0.1),
             blurRadius: 10.r,
             offset: Offset(0, -4.h),
           ),

@@ -8,7 +8,8 @@ import 'package:th_cow_passport/ui/screens/cow_detail_screen.dart';
 import 'package:th_cow_passport/ui/screens/cow_form_screen.dart';
 import 'package:th_cow_passport/ui/screens/cow_list_screen.dart';
 import 'package:th_cow_passport/ui/screens/edit_cow_screen.dart';
-import 'package:th_cow_passport/ui/screens/login_screen.dart'; // เพิ่ม import หน้า Login
+import 'package:th_cow_passport/ui/screens/auth/login_screen.dart'; // เพิ่ม import หน้า Login
+import 'package:th_cow_passport/ui/screens/auth/register_screen.dart'; // เพิ่ม import หน้า Register
 import 'package:th_cow_passport/ui/screens/cow_activity/add_activity_screen.dart';
 import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
 import 'package:th_cow_passport/ui/screens/profile_screen.dart';
@@ -33,15 +34,24 @@ final router = GoRouter(
   redirect: (context, state) {
     final session = supabase.auth.currentSession;
     final isLoggingIn = state.matchedLocation == '/login';
+    final isRegistering = state.matchedLocation == '/register';
 
-    // ถ้ายังไม่ Login และไม่ได้อยู่ที่หน้า Login -> บังคับไป Login
-    if (session == null && !isLoggingIn) {
+    // ถ้ายังไม่ Login และไม่ได้อยู่ที่หน้า Login หรือ Register -> บังคับไป Login
+    if (session == null && !isLoggingIn && !isRegistering) {
       return '/login';
     }
 
     // ถ้า Login แล้ว แต่อยู่ที่หน้า Login -> ให้ไปหน้าแรก (Home)
     if (session != null && isLoggingIn) {
       return '/';
+    }
+
+    // If there is an existing Supabase session restored on hot restart but
+    // the app hasn't recognized it in this runtime, require the user to
+    // explicitly log in again. This prevents the app from silently landing
+    // on the home/profile screens after a hot restart.
+    if (session != null && !sessionRecognized && !isLoggingIn && !isRegistering) {
+      return '/login';
     }
 
     return null; // ไม่มีการ redirect
@@ -52,6 +62,12 @@ final router = GoRouter(
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
+    ),
+
+    // เพิ่ม Route สำหรับหน้า Register
+    GoRoute(
+      path: '/register',
+      builder: (context, state) => const RegisterScreen(),
     ),
 
     GoRoute(

@@ -256,7 +256,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
       decoration: BoxDecoration(
         // จุดที่ต้องเพิ่ม: เปลี่ยนสีพื้นหลังเมื่อถูกเลือก
         color: isSelected
-            ? colorScheme.primaryContainer.withOpacity(0.3)
+            ? colorScheme.primaryContainer.withValues(alpha: 0.3)
             : (theme.cardTheme.color ?? Colors.white),
           borderRadius: BorderRadius.circular(16.r),
           border: isSelected
@@ -264,7 +264,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
               : null,
           boxShadow: [
             BoxShadow(
-              color: colorScheme.primary.withOpacity(0.1),
+              color: colorScheme.primary.withValues(alpha: 0.1),
               blurRadius: 10.r,
               offset: Offset(0, 4.h),
             ),
@@ -303,7 +303,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                       color: theme.scaffoldBackgroundColor,
                       borderRadius: BorderRadius.circular(12.r),
                       border: Border.all(
-                          color: colorScheme.secondary.withOpacity(0.3)),
+                          color: colorScheme.secondary.withValues(alpha: 0.3)),
                       image: cow.facePic != null
                           ? DecorationImage(
                               image: NetworkImage(cow.facePic!),

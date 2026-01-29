@@ -4,11 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:logger/logger.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
+import 'package:th_cow_passport/services/cow_management/farm/farm_service.dart';
+import 'package:th_cow_passport/services/cow_management/farm/model/farm_model.dart';
 import 'package:th_cow_passport/ui/screens/camera_screen.dart';
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
 import 'package:th_cow_passport/ui/widgets/cow_detail_widget.dart';
 import 'package:th_cow_passport/supabase_config.dart';
+
+final logger = Logger();
 
 class CowFormScreen extends ConsumerStatefulWidget {
   const CowFormScreen({super.key});
@@ -39,6 +44,9 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
   late TextEditingController _sireIdController;
   late TextEditingController _sireNameController;
   late TextEditingController _damNameController;
+
+  // Farm selection
+  Farm? _selectedFarm;
 
   // Image files
   File? _faceImage;
@@ -165,7 +173,18 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
 
   void _saveForm() async {
     final isValid = _formKey.currentState?.validate() ?? false;
-    if (!isValid) return;
+    if (!isValid) {
+      logger.w('[CowForm] Form validation failed');
+      return;
+    }
+
+    if (_selectedFarm == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('กรุณาเลือกฟาร์ม')),
+      );
+      logger.w('[CowForm] No farm selected');
+      return;
+    }
 
     final cowService = ref.read(cowDetailServiceProvider);
     
@@ -175,11 +194,12 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('ข้อผิดพลาด: ไม่พบข้อมูลผู้ใช้')),
       );
+      logger.e('[CowForm] User ID not found');
       return;
     }
 
     final newCow = Cow(
-      farmId: 1, // TODO: Replace with actual farm ID selection
+      farmId: _selectedFarm!.id,
       userId: userId,
       nidNumber: _nidNumberController.text,
       animalName: _animalNameController.text,
@@ -197,6 +217,8 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
     );
 
     try {
+      logger.i('[CowForm] Saving cow: ${_animalNameController.text}');
+      
       final success = await cowService.addCow(
         newCow,
         facePic: _faceImage,
@@ -205,16 +227,19 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
       );
 
       if (success && mounted) {
+        logger.i('[CowForm] Cow saved successfully');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('บันทึกข้อมูลวัวเรียบร้อยแล้ว')),
         );
         context.go('/'); // Go to home/list page after success
       } else if (mounted) {
+        logger.e('[CowForm] Failed to save cow');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('เกิดข้อผิดพลาดในการบันทึกข้อมูล')),
         );
       }
     } catch (e) {
+      logger.e('[CowForm] Error saving cow', error: e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
@@ -350,10 +375,77 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTicker
   }
 
   Widget _buildGeneralTab() {
+    final userId = supabase.auth.currentUser?.id;
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(16.r),
       child: Column(
         children: [
+          // Farm Selection Dropdown
+          if (userId != null)
+            Consumer(
+              builder: (context, ref, child) {
+                final farmsAsync = ref.watch(userFarmsProvider(userId));
+
+                return farmsAsync.when(
+                  loading: () => const CircularProgressIndicator(),
+                  error: (error, stack) {
+                    logger.e('[CowForm] Error loading farms', error: error, stackTrace: stack);
+                    return Text('Error loading farms: $error');
+                  },
+                  data: (farms) {
+                    if (farms.isEmpty) {
+                      return Container(
+                        padding: EdgeInsets.all(12.r),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8.r),
+                          border: Border.all(color: Colors.orange),
+                        ),
+                        child: const Text('ยังไม่มีฟาร์ม กรุณาสร้างฟาร์มก่อน'),
+                      );
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('ฟาร์ม', style: Theme.of(context).textTheme.labelLarge),
+                        SizedBox(height: 8.h),
+                        DropdownButtonFormField<Farm>(
+                          value: _selectedFarm ?? (farms.isNotEmpty ? farms.first : null),
+                          decoration: InputDecoration(
+                            labelText: 'เลือกฟาร์ม',
+                            prefixIcon: const Icon(Icons.home),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                          ),
+                          items: farms
+                              .map((farm) => DropdownMenuItem(
+                                    value: farm,
+                                    child: Text(farm.farmName),
+                                  ))
+                              .toList(),
+                          onChanged: (farm) {
+                            setState(() {
+                              _selectedFarm = farm;
+                              logger.i('[CowForm] Farm selected: ${farm?.farmName}');
+                            });
+                          },
+                          validator: (value) {
+                            if (value == null) {
+                              return 'กรุณาเลือกฟาร์ม';
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: 16.h),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
           _buildStyledTextField(
             controller: _nidNumberController,
             label: 'Tag ID (เลขหู)',

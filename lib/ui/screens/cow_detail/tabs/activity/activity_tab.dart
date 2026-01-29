@@ -132,9 +132,9 @@ class ActivityTab extends ConsumerWidget {
                 width: 40.r,
                 height: 40.r,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
-                  border: Border.all(color: color.withOpacity(0.3)),
+                  border: Border.all(color: color.withValues(alpha: 0.3)),
                 ),
                 child: Icon(icon, color: color, size: 20.r),
               ),

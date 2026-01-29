@@ -134,7 +134,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                       padding: EdgeInsets.symmetric(
                           horizontal: 10.w, vertical: 6.h),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
+                        color: Colors.black.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Text(
@@ -162,7 +162,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                             shape: BoxShape.circle,
                             color: _currentImageIndex == entry.key
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.4),
+                                : Colors.white.withValues(alpha: 0.4),
                           ),
                         );
                       }).toList(),
@@ -190,7 +190,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                         padding: EdgeInsets.symmetric(
                             horizontal: 8.w, vertical: 2.h),
                         decoration: BoxDecoration(
-                          color: colorScheme.primary.withOpacity(0.1),
+                          color: colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Text(

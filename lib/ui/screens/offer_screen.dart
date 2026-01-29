@@ -122,7 +122,7 @@ class OfferScreen extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 12.r,
-                  backgroundColor: colorScheme.secondary.withOpacity(0.2),
+                  backgroundColor: colorScheme.secondary.withValues(alpha: 0.2),
                   child: Icon(Icons.person,
                       size: 14.r, color: colorScheme.secondary),
                 ),

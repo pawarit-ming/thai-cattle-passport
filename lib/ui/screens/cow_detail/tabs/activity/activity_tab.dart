@@ -1,99 +1,101 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:th_cow_passport/services/cow_management/cow_activity/activity_service.dart';
+import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
 
-class ActivityTab extends StatelessWidget {
-  const ActivityTab({super.key});
+class ActivityTab extends ConsumerWidget {
+  final int cowId;
+  const ActivityTab({super.key, required this.cowId});
 
   @override
-  Widget build(BuildContext context) {
-    // Mock Data: รายการกิจกรรมที่เกิดขึ้นกับวัวตัวนี้
-    final List<Map<String, dynamic>> activities = [
-      {
-        'date': '15 ต.ค. 2566',
-        'time': '10:30',
-        'title': 'ฉีดวัคซีนปากเท้าเปื่อย',
-        'description': 'ฉีดเข็มกระตุ้น โดย สัตวแพทย์สมชาย',
-        'type': 'vaccine',
-      },
-      {
-        'date': '10 ก.ย. 2566',
-        'time': '09:00',
-        'title': 'บันทึกน้ำหนัก',
-        'description': 'น้ำหนักปัจจุบัน: 450 กก. (+15 กก. จากเดือนที่แล้ว)',
-        'type': 'weight',
-      },
-      {
-        'date': '01 ส.ค. 2566',
-        'time': '14:20',
-        'title': 'ย้ายคอก',
-        'description': 'ย้ายจากคอกอนุบาล ไปยัง คอกขุน 1',
-        'type': 'move',
-      },
-      {
-        'date': '20 ก.ค. 2566',
-        'time': '08:45',
-        'title': 'ตรวจสุขภาพประจำปี',
-        'description': 'สุขภาพแข็งแรงสมบูรณ์ ไม่พบพยาธิ',
-        'type': 'checkup',
-      },
-      {
-        'date': '15 ม.ค. 2566',
-        'time': '11:00',
-        'title': 'ลงทะเบียนวัวใหม่',
-        'description': 'นำเข้าสู่ระบบ Cow Passport',
-        'type': 'register',
-      },
-    ];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activitiesAsync = ref.watch(activitiesProvider(cowId));
 
-    return ListView.builder(
-      padding: EdgeInsets.all(16.r),
-      itemCount: activities.length,
-      itemBuilder: (context, index) {
-        return _buildTimelineItem(context, activities[index],
-            isLast: index == activities.length - 1);
+    return activitiesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stackTrace) => Center(child: Text('Error: $error')),
+      data: (activities) {
+        if (activities.isEmpty) {
+          return const Center(child: Text('ไม่มีกิจกรรม'));
+        }
+        return RefreshIndicator(
+          onRefresh: () => ref.refresh(activitiesProvider(cowId).future),
+          child: ListView.builder(
+            padding: EdgeInsets.all(16.r),
+            itemCount: activities.length,
+            itemBuilder: (context, index) {
+              return _buildTimelineItem(context, activities[index],
+                  isLast: index == activities.length - 1);
+            },
+          ),
+        );
       },
     );
   }
 
-  Widget _buildTimelineItem(BuildContext context, Map<String, dynamic> item,
+  String _getActivityTypeName(ActivityType type) {
+    switch (type) {
+      case ActivityType.VACCINE:
+        return 'ฉีดวัคซีน';
+      case ActivityType.BIRTH:
+        return 'การเกิด';
+      case ActivityType.TREATMENT:
+        return 'การรักษา';
+      case ActivityType.EDIT_LOG:
+        return 'ประวัติการแก้ไข';
+    }
+  }
+
+  String _getTranslatedDataKey(String key) {
+    switch (key) {
+      case 'vaccine_name':
+        return 'ชื่อวัคซีน';
+      case 'calf_gender':
+        return 'เพศลูกวัว';
+      case 'calf_nid':
+        return 'เลขประจำตัวลูกวัว';
+      case 'calf_birth_weight':
+        return 'น้ำหนักแรกเกิด (กก.)';
+      case 'symptoms':
+        return 'อาการ';
+      case 'treatment_details':
+        return 'รายละเอียดการรักษา';
+      default:
+        return key;
+    }
+  }
+
+  Widget _buildTimelineItem(BuildContext context, Activity item,
       {required bool isLast}) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // กำหนดสีและไอคอนตามประเภทกิจกรรม
     IconData icon;
     Color color;
-    switch (item['type']) {
-      case 'vaccine':
+    switch (item.activityType) {
+      case ActivityType.VACCINE:
         icon = Icons.medical_services_outlined;
         color = Colors.blue;
         break;
-      case 'weight':
-        icon = Icons.monitor_weight_outlined;
+      case ActivityType.BIRTH:
+        icon = Icons.child_friendly;
+        color = Colors.pink;
+        break;
+      case ActivityType.TREATMENT:
+        icon = Icons.healing;
         color = Colors.orange;
         break;
-      case 'move':
-        icon = Icons.local_shipping_outlined;
+      case ActivityType.EDIT_LOG:
+        icon = Icons.edit_note;
         color = Colors.purple;
         break;
-      case 'checkup':
-        icon = Icons.health_and_safety_outlined;
-        color = Colors.green;
-        break;
-      case 'register':
-        icon = Icons.app_registration;
-        color = colorScheme.primary;
-        break;
-      default:
-        icon = Icons.circle_outlined;
-        color = Colors.grey;
     }
 
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ส่วนเส้น Timeline ด้านซ้าย
           Column(
             children: [
               Container(
@@ -117,7 +119,6 @@ class ActivityTab extends StatelessWidget {
             ],
           ),
           SizedBox(width: 16.w),
-          // ส่วนเนื้อหา
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(bottom: 24.h),
@@ -127,7 +128,7 @@ class ActivityTab extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        item['date'],
+                        '${item.activityDate.day}/${item.activityDate.month}/${item.activityDate.year}',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: colorScheme.onSurface,
@@ -135,7 +136,7 @@ class ActivityTab extends StatelessWidget {
                       ),
                       SizedBox(width: 8.w),
                       Text(
-                        item['time'],
+                        '${item.activityDate.hour}:${item.activityDate.minute.toString().padLeft(2, '0')}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: Colors.grey,
                         ),
@@ -144,39 +145,84 @@ class ActivityTab extends StatelessWidget {
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    item['title'],
+                    _getActivityTypeName(item.activityType),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: colorScheme.primary,
                     ),
                   ),
-                  SizedBox(height: 4.h),
-                  Container(
-                    padding: EdgeInsets.all(12.r),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(color: Colors.grey.shade200),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.shade100,
-                          blurRadius: 4.r,
-                          offset: Offset(0, 2.h),
+                  if (item.description != null && item.description!.isNotEmpty) ...[
+                    SizedBox(height: 4.h),
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(12.r),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Text(
+                        item.description!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey.shade700,
                         ),
-                      ],
-                    ),
-                    child: Text(
-                      item['description'],
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey.shade700,
                       ),
                     ),
-                  ),
+                  ],
+                  if (item.data.isNotEmpty) ...[
+                    SizedBox(height: 8.h),
+                    _buildDataCard(context, item.data),
+                  ]
                 ],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDataCard(BuildContext context, Map<String, dynamic> data) {
+    final theme = Theme.of(context);
+    final entries = data.entries
+        .where((entry) => entry.value != null && entry.value.toString().isNotEmpty)
+        .toList();
+
+    if (entries.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(12.r),
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: entries.map((entry) {
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: 4.h),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${_getTranslatedDataKey(entry.key)}: ',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold, color: theme.hintColor),
+                ),
+                Expanded(
+                  child: Text(
+                    '${entry.value}',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
       ),
     );
   }

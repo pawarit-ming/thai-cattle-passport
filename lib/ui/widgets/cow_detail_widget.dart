@@ -11,6 +11,7 @@ class CowDetailWidget extends StatelessWidget {
   final List<Widget>? actions;
   final VoidCallback? onBack;
   final Widget? floatingActionButton;
+  final TabController tabController;
 
   const CowDetailWidget({
     super.key,
@@ -18,6 +19,7 @@ class CowDetailWidget extends StatelessWidget {
     this.imageUrl,
     required this.tabs,
     required this.tabViews,
+    required this.tabController,
     this.bottomBar,
     this.actions,
     this.onBack,
@@ -47,69 +49,82 @@ class CowDetailWidget extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return DefaultTabController(
-      length: tabs.length,
-      child: Scaffold(
-        body: NestedScrollView(
-          headerSliverBuilder: (context, innerBoxIsScrolled) {
-            return [
-              // ส่วนหัวที่เลื่อนเก็บได้
-              SliverAppBar(
-                pinned: true,
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                centerTitle: true,
-                title: Text(title,
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                leading: BackButton(onPressed: onBack),
-                actions: actions,
+    return Scaffold(
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            // ส่วนหัวที่เลื่อนเก็บได้
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              centerTitle: true,
+              title: Text(title,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              leading: BackButton(onPressed: onBack),
+              actions: actions,
+            ),
+            // ส่วนรูปภาพวัว
+            SliverToBoxAdapter(
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: _buildImage(imageUrl),
               ),
-              // ส่วนรูปภาพวัว
-              SliverToBoxAdapter(
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: _buildImage(imageUrl),
+            ),
+            // ส่วน TabBar ที่จะค้างอยู่ด้านบน (Sticky)
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _StickyTabBarDelegate(
+                TabBar(
+                  controller: tabController,
+                  labelColor: colorScheme.primary,
+                  unselectedLabelColor: Colors.grey,
+                  indicatorColor: colorScheme.primary,
+                  indicatorWeight: 3.w,
+                  tabs: tabs,
                 ),
+                backgroundColor: theme.scaffoldBackgroundColor,
               ),
-              // ส่วน TabBar ที่จะค้างอยู่ด้านบน (Sticky)
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _StickyTabBarDelegate(
-                  TabBar(
-                    labelColor: colorScheme.primary,
-                    unselectedLabelColor: Colors.grey,
-                    indicatorColor: colorScheme.primary,
-                    indicatorWeight: 3.w,
-                    tabs: tabs,
-                  ),
-                  backgroundColor: theme.scaffoldBackgroundColor,
-                ),
-              ),
-            ];
-          },
-          // ส่วนเนื้อหาที่จะเปลี่ยนไปตาม Tab
-          body: TabBarView(children: tabViews),
+            ),
+          ];
+        },
+        // ส่วนเนื้อหาที่จะเปลี่ยนไปตาม Tab
+        body: TabBarView(
+          controller: tabController,
+          children: tabViews,
         ),
-        bottomNavigationBar: bottomBar,
-        floatingActionButton: floatingActionButton,
       ),
+      bottomNavigationBar: bottomBar,
+      floatingActionButton: floatingActionButton,
     );
   }
 }
 
-// Helper สำหรับทำให้ TabBar ค้างเมื่อเลื่อนขึ้น
+// Helper Class สำหรับ Sticky TabBar
 class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar tabBar;
+  final TabBar _tabBar;
   final Color backgroundColor;
-  _StickyTabBarDelegate(this.tabBar, {required this.backgroundColor});
+
+  _StickyTabBarDelegate(this._tabBar, {required this.backgroundColor});
 
   @override
-  double get minExtent => tabBar.preferredSize.height;
+  double get minExtent => _tabBar.preferredSize.height;
   @override
-  double get maxExtent => tabBar.preferredSize.height;
+  double get maxExtent => _tabBar.preferredSize.height;
+
   @override
-  Widget build(context, shrinkOffset, overlapsContent) =>
-      Container(color: backgroundColor, child: tabBar);
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: backgroundColor,
+      child: _tabBar,
+    );
+  }
+
   @override
-  bool shouldRebuild(_StickyTabBarDelegate oldDelegate) => false;
+  bool shouldRebuild(_StickyTabBarDelegate oldDelegate) {
+    return false;
+  }
 }
+
+

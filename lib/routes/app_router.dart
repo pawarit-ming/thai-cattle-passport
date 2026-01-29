@@ -9,6 +9,8 @@ import 'package:th_cow_passport/ui/screens/cow_form_screen.dart';
 import 'package:th_cow_passport/ui/screens/cow_list_screen.dart';
 import 'package:th_cow_passport/ui/screens/edit_cow_screen.dart';
 import 'package:th_cow_passport/ui/screens/login_screen.dart'; // เพิ่ม import หน้า Login
+import 'package:th_cow_passport/ui/screens/cow_activity/add_activity_screen.dart';
+import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
 import 'package:th_cow_passport/ui/screens/profile_screen.dart';
 import 'package:th_cow_passport/ui/screens/offer_screen.dart';
 import 'package:th_cow_passport/ui/screens/buy_screen.dart';
@@ -71,6 +73,16 @@ final router = GoRouter(
       path: '/form',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const CowFormScreen(),
+    ),
+
+    GoRoute(
+      path: '/add-activity/:cowId',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) {
+        final cowId = int.parse(state.pathParameters['cowId']!);
+        final activityType = state.extra as ActivityType;
+        return AddActivityScreen(cowId: cowId, activityType: activityType);
+      },
     ),
 
     // --- Shell Route (Bottom Navigation) ---

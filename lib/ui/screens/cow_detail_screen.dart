@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
 import 'package:th_cow_passport/ui/screens/camera_screen.dart';
+import 'package:th_cow_passport/ui/screens/cow_detail/add_activity_modal.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/activity/activity_tab.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/general/general_tab.dart';
 import 'package:th_cow_passport/ui/widgets/cow_detail_widget.dart';
@@ -17,13 +18,42 @@ class CowDetailScreen extends ConsumerStatefulWidget {
   ConsumerState<CowDetailScreen> createState() => _CowDetailScreenState();
 }
 
-class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
+class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      setState(() {}); // รีเฟรช UI เมื่อ Tab เปลี่ยน
+    });
     // ดึงข้อมูลเมื่อเข้าหน้าจอ
     Future.microtask(
         () => ref.read(cowDetailServiceProvider).fetchCowById(widget.cowId));
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  void _showAddActivityModal(BuildContext context, int cowId) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (ctx) {
+        return SizedBox(
+          height: 0.4.sh,
+          child: AddActivityModal(cowId: cowId),
+        );
+      },
+    );
   }
 
   @override
@@ -45,6 +75,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
     return CowDetailWidget(
       title: 'ข้อมูลประจำตัววัว',
       imageUrl: cow.fullBodyPic,
+      tabController: _tabController,
       onBack: () {
         if (context.canPop()) {
           context.pop();
@@ -63,11 +94,12 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
         Tab(text: 'ข้อมูลทั่วไป'),
         Tab(text: 'กิจกรรม'),
       ],
-      tabViews: const [
-        GeneralTab(),
-        ActivityTab(),
+      tabViews: [
+        const GeneralTab(),
+        ActivityTab(cowId: cow.animalId!),
       ],
-      bottomBar: _buildBottomBar(context, colorScheme, theme, cow.animalId!),
+      bottomBar:
+          _buildBottomBar(context, colorScheme, theme, cow.animalId!, cow.animalId!),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -87,8 +119,10 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
     );
   }
 
-  Widget _buildBottomBar(
-      BuildContext context, ColorScheme colorScheme, ThemeData theme, int id) {
+  Widget _buildBottomBar(BuildContext context, ColorScheme colorScheme,
+      ThemeData theme, int animalId, int cowId) {
+    final isActivityTab = _tabController.index == 1;
+
     return Container(
       decoration: BoxDecoration(
         color: theme.cardColor,
@@ -104,12 +138,18 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
         child: Padding(
           padding: EdgeInsets.all(16.r),
           child: ElevatedButton.icon(
-            // ส่ง ID ไปหน้าแก้ไขให้ถูกต้อง
-            onPressed: () => context.push('/edit-form/$id'),
-            // เปลี่ยน Icon และข้อความ
-            icon: const Icon(Icons.edit),
-            label: Text('แก้ไขข้อมูล',
-                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+            onPressed: () {
+              if (isActivityTab) {
+                _showAddActivityModal(context, cowId);
+              } else {
+                context.push('/edit-form/$animalId');
+              }
+            },
+            icon: Icon(isActivityTab ? Icons.add : Icons.edit),
+            label: Text(
+              isActivityTab ? 'เพิ่มกิจกรรม' : 'แก้ไขข้อมูล',
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: colorScheme.primary,
               foregroundColor: colorScheme.onPrimary,
@@ -193,29 +233,4 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
   }
 }
 
-// Helper Class สำหรับ Sticky TabBar (คงเดิม)
-class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar _tabBar;
-  final Color backgroundColor;
 
-  _StickyTabBarDelegate(this._tabBar, {required this.backgroundColor});
-
-  @override
-  double get minExtent => _tabBar.preferredSize.height;
-  @override
-  double get maxExtent => _tabBar.preferredSize.height;
-
-  @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: backgroundColor,
-      child: _tabBar,
-    );
-  }
-
-  @override
-  bool shouldRebuild(_StickyTabBarDelegate oldDelegate) {
-    return false;
-  }
-}

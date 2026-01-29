@@ -79,8 +79,8 @@ class Cow {
   }) {
     return Cow(
       animalId: animalId ?? this.animalId,
-      farmId: this.farmId,
-      userId: this.userId,
+      farmId: farmId,
+      userId: userId,
       nidNumber: nidNumber ?? this.nidNumber,
       animalName: animalName ?? this.animalName,
       breed: breed ?? this.breed,

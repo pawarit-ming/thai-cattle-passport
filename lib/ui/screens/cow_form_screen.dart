@@ -16,13 +16,16 @@ class CowFormScreen extends ConsumerStatefulWidget {
   ConsumerState<CowFormScreen> createState() => _CowFormScreenState();
 }
 
-class _CowFormScreenState extends ConsumerState<CowFormScreen> {
+class _CowFormScreenState extends ConsumerState<CowFormScreen> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final ImagePicker _picker = ImagePicker();
 
   // State
   bool _isImagePickerStep = true;
   bool _isSaveButtonEnabled = false;
+
+  // Tab Controller
+  late TabController _tabController;
 
   // Form field controllers
   late TextEditingController _nidNumberController;
@@ -44,9 +47,21 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> {
   DateTime _birthDate = DateTime.now();
   String _sex = 'M'; // Default to Male
 
+  void _updateSaveButtonState() {
+    final isEnabled = _nidNumberController.text.isNotEmpty &&
+        _animalNameController.text.isNotEmpty &&
+        _breedController.text.isNotEmpty;
+    if (_isSaveButtonEnabled != isEnabled) {
+      setState(() {
+        _isSaveButtonEnabled = isEnabled;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _nidNumberController = TextEditingController();
     _animalNameController = TextEditingController();
     _breedController = TextEditingController();
@@ -57,10 +72,18 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> {
     _noseColorController = TextEditingController();
     _damIdController = TextEditingController();
     _sireIdController = TextEditingController();
+
+    _nidNumberController.addListener(_updateSaveButtonState);
+    _animalNameController.addListener(_updateSaveButtonState);
+    _breedController.addListener(_updateSaveButtonState);
   }
 
   @override
   void dispose() {
+    _tabController.dispose();
+    _nidNumberController.removeListener(_updateSaveButtonState);
+    _animalNameController.removeListener(_updateSaveButtonState);
+    _breedController.removeListener(_updateSaveButtonState);
     _nidNumberController.dispose();
     _animalNameController.dispose();
     _breedController.dispose();
@@ -294,101 +317,92 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen> {
 
   Widget _buildFormStep() {
     final cowService = ref.watch(cowDetailServiceProvider);
-    return CowDetailWidget(
-      title: 'เพิ่มวัวใหม่ (ขั้นตอนที่ 2/2)',
-      // Use the first image as the header image
-      imageUrl: _faceImage?.path,
-      tabs: const [
-        Tab(text: 'ข้อมูลทั่วไป'),
-        Tab(text: 'ข้อมูลกายภาพ'),
-      ],
-      tabViews: [
-        _buildGeneralTab(),
-        _buildPhysicalTab(),
-      ],
-      bottomBar: _buildBottomSaveBar(cowService.isLoading),
-      onBack: () => setState(() => _isImagePickerStep = true),
+    return Form(
+      key: _formKey,
+      child: CowDetailWidget(
+        title: 'เพิ่มวัวใหม่ (ขั้นตอนที่ 2/2)',
+        // Use the first image as the header image
+        imageUrl: _faceImage?.path,
+        tabController: _tabController,
+        tabs: const [
+          Tab(text: 'ข้อมูลทั่วไป'),
+          Tab(text: 'ข้อมูลกายภาพ'),
+        ],
+        tabViews: [
+          _buildGeneralTab(),
+          _buildPhysicalTab(),
+        ],
+        bottomBar: _buildBottomSaveBar(cowService.isLoading),
+        onBack: () => setState(() => _isImagePickerStep = true),
+      ),
     );
   }
 
   Widget _buildGeneralTab() {
     return SingleChildScrollView(
       padding: EdgeInsets.all(16.r),
-      child: Form(
-        key: _formKey,
-        onChanged: () {
-          final isEnabled = _nidNumberController.text.isNotEmpty &&
-              _animalNameController.text.isNotEmpty &&
-              _breedController.text.isNotEmpty;
-          if (_isSaveButtonEnabled != isEnabled) {
-            setState(() {
-              _isSaveButtonEnabled = isEnabled;
-            });
-          }
-        },
-        child: Column(
-          children: [
-            _buildStyledTextField(
-              controller: _nidNumberController,
-              label: 'Tag ID (เลขหู)',
-              hintText: 'เช่น 1234567890123',
-              icon: Icons.confirmation_number,
-              isRequired: true,
+      child: Column(
+        children: [
+          _buildStyledTextField(
+            controller: _nidNumberController,
+            label: 'Tag ID (เลขหู)',
+            hintText: 'เช่น 1234567890123',
+            icon: Icons.confirmation_number,
+            isRequired: true,
+          ),
+          SizedBox(height: 16.h),
+          _buildStyledTextField(
+            controller: _animalNameController,
+            label: 'ชื่อวัว',
+            hintText: 'เช่น สมศรี, บุญรอด',
+            icon: Icons.pets,
+            isRequired: true,
+          ),
+          SizedBox(height: 16.h),
+          _buildStyledTextField(
+            controller: _breedController,
+            label: 'สายพันธุ์',
+            hintText: 'เช่น บราห์มัน, ชาโรเล่ส์',
+            icon: Icons.category,
+            isRequired: true,
+          ),
+          SizedBox(height: 16.h),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+                'วันเกิด: ${MaterialLocalizations.of(context).formatShortDate(_birthDate)}'),
+            leading: Icon(Icons.calendar_today, size: 30.r),
+            trailing: const Icon(Icons.edit_calendar_outlined),
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: _birthDate,
+                firstDate: DateTime(2000),
+                lastDate: DateTime.now(),
+              );
+              if (picked != null && picked != _birthDate) {
+                setState(() => _birthDate = picked);
+              }
+            },
+          ),
+          SizedBox(height: 8.h),
+          DropdownButtonFormField<String>(
+            initialValue: _sex,
+            decoration: InputDecoration(
+              labelText: 'เพศ',
+              prefixIcon: const Icon(Icons.wc),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
             ),
-            SizedBox(height: 16.h),
-            _buildStyledTextField(
-              controller: _animalNameController,
-              label: 'ชื่อวัว',
-              hintText: 'เช่น สมศรี, บุญรอด',
-              icon: Icons.pets,
-              isRequired: true,
-            ),
-            SizedBox(height: 16.h),
-            _buildStyledTextField(
-              controller: _breedController,
-              label: 'สายพันธุ์',
-              hintText: 'เช่น บราห์มัน, ชาโรเล่ส์',
-              icon: Icons.category,
-              isRequired: true,
-            ),
-            SizedBox(height: 16.h),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                  'วันเกิด: ${MaterialLocalizations.of(context).formatShortDate(_birthDate)}'),
-              leading: Icon(Icons.calendar_today, size: 30.r),
-              trailing: const Icon(Icons.edit_calendar_outlined),
-              onTap: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: _birthDate,
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime.now(),
-                );
-                if (picked != null && picked != _birthDate) {
-                  setState(() => _birthDate = picked);
-                }
-              },
-            ),
-            SizedBox(height: 8.h),
-            DropdownButtonFormField<String>(
-              value: _sex,
-              decoration: InputDecoration(
-                labelText: 'เพศ',
-                prefixIcon: const Icon(Icons.wc),
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r)),
-              ),
-              items: const [
-                DropdownMenuItem(value: 'M', child: Text('ผู้')),
-                DropdownMenuItem(value: 'F', child: Text('เมีย')),
-              ],
-              onChanged: (value) {
-                if (value != null) setState(() => _sex = value);
-              },
-            ),
-          ],
-        ),
+            items: const [
+              DropdownMenuItem(value: 'M', child: Text('ผู้')),
+              DropdownMenuItem(value: 'F', child: Text('เมีย')),
+            ],
+            onChanged: (value) {
+              if (value != null) setState(() => _sex = value);
+            },
+          ),
+        ],
       ),
     );
   }

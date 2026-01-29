@@ -13,8 +13,11 @@ class EditCowScreen extends ConsumerStatefulWidget {
   ConsumerState<EditCowScreen> createState() => _EditCowScreenState();
 }
 
-class _EditCowScreenState extends ConsumerState<EditCowScreen> {
+class _EditCowScreenState extends ConsumerState<EditCowScreen> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
+
+// Tab Controller
+  late TabController _tabController;
 
 // Controllers สำหรับทุกฟิลด์
   late TextEditingController _nameController;
@@ -36,6 +39,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     // 1. ดึงข้อมูลวัวตัวปัจจุบันจาก Service มาตั้งค่าเริ่มต้น
     final cow = ref.read(cowDetailServiceProvider).currentCow;
 
@@ -59,6 +63,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
 
   @override
   void dispose() {
+    _tabController.dispose();
     // ล้าง Controller เมื่อหน้าจอถูกทำลาย
     _nameController.dispose();
     _nidController.dispose();
@@ -75,7 +80,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
   }
 
   Future<void> _handleSave() async {
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState?.validate() ?? false) {
       final currentCow = ref.read(cowDetailServiceProvider).currentCow;
       if (currentCow == null) return;
 
@@ -95,14 +100,18 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
       );
 
       // 3. ส่งข้อมูลไปบันทึกที่ Supabase ผ่าน Service
-      final success =
+      final errorMessage =
           await ref.read(cowDetailServiceProvider).updateCow(updatedCow);
 
-      if (success && mounted) {
+      if (errorMessage == null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('บันทึกการแก้ไขเรียบร้อยแล้ว')),
         );
         context.pop(); // กลับไปหน้า Detail
+      } else if (errorMessage != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('เกิดข้อผิดพลาด: $errorMessage')),
+        );
       }
     }
   }
@@ -117,61 +126,62 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return CowDetailWidget(
-      title: 'แก้ไขข้อมูล: ${cow.animalName}',
-      imageUrl: cow.facePic,
-      tabs: const [
-        Tab(text: 'ข้อมูลทั่วไป'),
-        Tab(text: 'ข้อมูลกายภาพ'),
-      ],
-      tabViews: [
-        _buildGeneralTab(), // Tab 1
-        _buildPhysicalTab(), // Tab 2
-      ],
-      bottomBar: _buildBottomSaveBar(colorScheme),
-      onBack: () => context.pop(),
+    return Form(
+      key: _formKey,
+      child: CowDetailWidget(
+        title: 'แก้ไขข้อมูล: ${cow.animalName}',
+        imageUrl: cow.facePic,
+        tabController: _tabController,
+        tabs: const [
+          Tab(text: 'ข้อมูลทั่วไป'),
+          Tab(text: 'ข้อมูลกายภาพ'),
+        ],
+        tabViews: [
+          _buildGeneralTab(), // Tab 1
+          _buildPhysicalTab(), // Tab 2
+        ],
+        bottomBar: _buildBottomSaveBar(colorScheme),
+        onBack: () => context.pop(),
+      ),
     );
   }
 
   Widget _buildGeneralTab() {
     return SingleChildScrollView(
       padding: EdgeInsets.all(16.r),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            _buildStyledTextField(
-                label: 'ชื่อวัว',
-                controller: _nameController,
-                icon: Icons.pets,
-                isRequired: true),
-            SizedBox(height: 16.h),
-            _buildStyledTextField(
-                label: 'Tag ID',
-                controller: _nidController,
-                icon: Icons.tag,
-                isRequired: true),
-            SizedBox(height: 16.h),
+      child: Column(
+        children: [
+          _buildStyledTextField(
+              label: 'ชื่อวัว',
+              controller: _nameController,
+              icon: Icons.pets,
+              isRequired: true),
+          SizedBox(height: 16.h),
+          _buildStyledTextField(
+              label: 'Tag ID',
+              controller: _nidController,
+              icon: Icons.tag,
+              isRequired: true),
+          SizedBox(height: 16.h),
 
-            // เพิ่มส่วนเลือกวันที่และเพศเพื่อให้แก้ไขได้ทุกอย่าง
-            ListTile(
-              title: const Text("วันเกิด"),
-              subtitle: Text(
-                  _selectedBirthDate?.toIso8601String().substring(0, 10) ??
-                      "ระบุวันที่"),
-              leading: const Icon(Icons.calendar_today),
-              onTap: () async {
-                final date = await showDatePicker(
-                  context: context,
-                  initialDate: _selectedBirthDate ?? DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime.now(),
-                );
-                if (date != null) setState(() => _selectedBirthDate = date);
-              },
-            ),
-          ],
-        ),
+          // เพิ่มส่วนเลือกวันที่และเพศเพื่อให้แก้ไขได้ทุกอย่าง
+          ListTile(
+            title: const Text("วันเกิด"),
+            subtitle: Text(
+                _selectedBirthDate?.toIso8601String().substring(0, 10) ??
+                    "ระบุวันที่"),
+            leading: const Icon(Icons.calendar_today),
+            onTap: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: _selectedBirthDate ?? DateTime.now(),
+                firstDate: DateTime(2000),
+                lastDate: DateTime.now(),
+              );
+              if (date != null) setState(() => _selectedBirthDate = date);
+            },
+          ),
+        ],
       ),
     );
   }
@@ -285,8 +295,14 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
             if (keyboardType == TextInputType.number &&
                 value != null &&
                 value.isNotEmpty) {
-              if (double.tryParse(value) == null) {
+              final n = double.tryParse(value);
+              if (n == null) {
                 return 'กรุณากรอกตัวเลขที่ถูกต้อง';
+              }
+              // Based on "precision 5, scale 2", the max value is 999.99
+              if ((label.contains('น้ำหนัก') || label.contains('ส่วนสูง')) &&
+                  n >= 1000) {
+                return 'ค่าต้องน้อยกว่า 1,000';
               }
             }
             return null;

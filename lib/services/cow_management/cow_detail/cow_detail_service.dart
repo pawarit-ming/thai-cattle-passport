@@ -41,7 +41,7 @@ class CowDetailService extends ChangeNotifier {
   }
 
   // 2. ฟังก์ชันแก้ไขข้อมูลวัว (Update)
-  Future<bool> updateCow(Cow updatedCow, {File? newFacePic, File? newBodyPic, File? newMarkPic}) async {
+  Future<String?> updateCow(Cow updatedCow, {File? newFacePic, File? newBodyPic, File? newMarkPic}) async {
     _setLoading(true);
     try {
       String? faceUrl = updatedCow.facePic;
@@ -65,7 +65,7 @@ class CowDetailService extends ChangeNotifier {
         'dam_id': updatedCow.damId,
         'sire_id': updatedCow.sireId,
         'mark_number': updatedCow.markNumber,
-        'birth_date': updatedCow.birthDate?.toIso8601String(),
+        'birth_date': updatedCow.birthDate.toIso8601String(),
         'sex': updatedCow.sex,
         'animal_status': updatedCow.animalStatus,
         'face_pic': faceUrl,
@@ -81,10 +81,16 @@ class CowDetailService extends ChangeNotifier {
 
       _currentCow = updatedCow; // อัปเดต State ในแอป
       logger.i("Cow updated successfully: ${updatedCow.animalName}");
-      return true;
+      return null;
+    } on PostgrestException catch (e) {
+      logger.e('Error updating cow: $e');
+      if (e.code == '22003') { // numeric_field_overflow
+        return 'ข้อมูลตัวเลข (เช่น น้ำหนัก, ส่วนสูง) มีค่ามากเกินไป';
+      }
+      return e.message;
     } catch (e) {
       logger.e('Error updating cow: $e');
-      return false;
+      return e.toString();
     } finally {
       _setLoading(false);
     }

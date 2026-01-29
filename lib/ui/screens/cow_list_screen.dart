@@ -19,17 +19,57 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
   RangeValues _weightRange = const RangeValues(0, 1500);
 
   final List<String> _breeds = [
-    'Brahman',
-    'Charolais',
-    'Wagyu',
-    'Angus',
-    'Hindu Brazil',
-    'Native (พื้นเมือง)'
+    'บราห์มัน',
+    'ชาร์โรเลส์',
+    'วากิว',
+    'แองกัส',
+    'ฮินดูบราซิล',
+    'พื้นเมือง'
   ];
 
   bool _isEditMode = false;
   // ใช้ Set เพื่อเก็บ ID ที่เลือก (ป้องกันการซ้ำและหาข้อมูลเร็ว)
   final Set<int> _selectedCowIds = {};
+
+  List<Cow> get _filteredCows {
+    final allCows = ref.read(cowServiceProvider).cows;
+
+    return allCows.where((cow) {
+      // 1. กรองเพศ (Gender)
+      if (_selectedGender != null && cow.sex != _selectedGender) {
+        return false;
+      }
+
+      // 2. กรองสายพันธุ์ (Breeds)
+      // ถ้ามีการเลือกสายพันธุ์ และวัวตัวนั้นไม่ได้อยู่ในสายพันธุ์ที่เลือก
+      if (_selectedBreeds.isNotEmpty && !_selectedBreeds.contains(cow.breed)) {
+        return false;
+      }
+
+      // 3. กรองอายุ (Age)
+      // เช็คก่อนว่ามีวันเกิดไหม ถ้าไม่มี ให้กรองออก (หรือจะ return true ถ้าอยากให้แสดง)
+      if (cow.birthDate == null) {
+        return false;
+      }
+
+      // เมื่อเช็คแล้วว่าไม่ null ให้ใส่ ! ด้านหลังเพื่อยืนยันค่า
+      final age = DateTime.now().difference(cow.birthDate!).inDays / 365;
+
+      if (age < _ageRange.start || age > _ageRange.end) {
+        return false;
+      }
+
+      // 4. กรองน้ำหนัก (Weight)
+      // หมายเหตุ: สมมติว่าใน CowModel มี field 'weight' (double หรือ int)
+      // ถ้าใน Model ชื่ออื่น ให้เปลี่ยน cow.weight เป็นชื่อที่ถูกต้อง
+      final weight = (cow.weight ?? 0).toDouble();
+      if (weight < _weightRange.start || weight > _weightRange.end) {
+        return false;
+      }
+
+      return true;
+    }).toList();
+  }
 
   @override
   void initState() {
@@ -82,7 +122,6 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -201,6 +240,9 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
   }
 
   Widget _buildCowList(CowService cowService) {
+    // ใช้ข้อมูลที่ผ่านการกรองแล้ว
+    final displayCows = _filteredCows;
+
     if (cowService.isLoading && cowService.cows.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -211,12 +253,39 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
       );
     }
 
+    // เพิ่มกรณีที่กรองแล้วไม่เจอกรณีที่มีวัวในระบบแต่ไม่ตรงเงื่อนไข
+    if (displayCows.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+            SizedBox(height: 16.h),
+            const Text('ไม่พบวัวที่ตรงกับเงื่อนไขตัวกรอง'),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _selectedGender = null;
+                  _selectedBreeds.clear();
+                  _ageRange = const RangeValues(0, 20);
+                  _weightRange = const RangeValues(0, 1500);
+                });
+              },
+              child: const Text('ล้างตัวกรอง'),
+            )
+          ],
+        ),
+      );
+    }
+
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: cowService.cows.length,
+      // เปลี่ยน item count เป็นจำนวนที่กรองแล้ว
+      itemCount: displayCows.length,
       itemBuilder: (context, index) {
-        final cow = cowService.cows[index];
+        // ดึงข้อมูลจาก list ที่กรองแล้ว
+        final cow = displayCows[index];
         final isSelected = _selectedCowIds.contains(cow.animalId);
 
         return _buildCowCard(
@@ -247,7 +316,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
   }) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final age = cow.birthDate != null 
+    final age = cow.birthDate != null
         ? DateTime.now().difference(cow.birthDate!).inDays ~/ 365
         : null;
 
@@ -258,136 +327,136 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
         color: isSelected
             ? colorScheme.primaryContainer.withOpacity(0.3)
             : (theme.cardTheme.color ?? Colors.white),
+        borderRadius: BorderRadius.circular(16.r),
+        border: isSelected
+            ? Border.all(color: colorScheme.primary, width: 2.w)
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withOpacity(0.1),
+            blurRadius: 10.r,
+            offset: Offset(0, 4.h),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16.r),
+        child: InkWell(
           borderRadius: BorderRadius.circular(16.r),
-          border: isSelected
-              ? Border.all(color: colorScheme.primary, width: 2.w)
-              : null,
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.primary.withOpacity(0.1),
-              blurRadius: 10.r,
-              offset: Offset(0, 4.h),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(16.r),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16.r),
-            // เมื่ออยู่ในโหมดแก้ไข ให้กดเพื่อเลือกแทนการไปหน้า Detail
-            onTap: isEditMode
-                ? onSelect
-                : () => context.go('/detail/${cow.animalId}'),
-            child: Padding(
-              padding: EdgeInsets.all(12.r),
-              child: Row(
-                children: [
-                  // จุดที่ต้องเพิ่ม: แสดง Checkbox เมื่ออยู่ในโหมดแก้ไข
-                  if (isEditMode)
-                    Padding(
-                      padding: EdgeInsets.only(right: 12.w),
-                      child: Checkbox(
-                        value: isSelected,
-                        onChanged: (val) => onSelect(),
-                        activeColor: colorScheme.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4.r),
-                        ),
+          // เมื่ออยู่ในโหมดแก้ไข ให้กดเพื่อเลือกแทนการไปหน้า Detail
+          onTap: isEditMode
+              ? onSelect
+              : () => context.go('/detail/${cow.animalId}'),
+          child: Padding(
+            padding: EdgeInsets.all(12.r),
+            child: Row(
+              children: [
+                // จุดที่ต้องเพิ่ม: แสดง Checkbox เมื่ออยู่ในโหมดแก้ไข
+                if (isEditMode)
+                  Padding(
+                    padding: EdgeInsets.only(right: 12.w),
+                    child: Checkbox(
+                      value: isSelected,
+                      onChanged: (val) => onSelect(),
+                      activeColor: colorScheme.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4.r),
                       ),
                     ),
-                  Container(
-                    width: 60.r,
-                    height: 60.r,
-                    decoration: BoxDecoration(
-                      color: theme.scaffoldBackgroundColor,
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(
-                          color: colorScheme.secondary.withOpacity(0.3)),
-                      image: cow.facePic != null
-                          ? DecorationImage(
-                              image: NetworkImage(cow.facePic!),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
-                    ),
-                    child: cow.facePic == null
-                        ? Icon(Icons.pets, color: colorScheme.primary, size: 36.r)
+                  ),
+                Container(
+                  width: 60.r,
+                  height: 60.r,
+                  decoration: BoxDecoration(
+                    color: theme.scaffoldBackgroundColor,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                        color: colorScheme.secondary.withOpacity(0.3)),
+                    image: cow.facePic != null
+                        ? DecorationImage(
+                            image: NetworkImage(cow.facePic!),
+                            fit: BoxFit.cover,
+                          )
                         : null,
                   ),
-                  SizedBox(width: 16.w),
+                  child: cow.facePic == null
+                      ? Icon(Icons.pets, color: colorScheme.primary, size: 36.r)
+                      : null,
+                ),
+                SizedBox(width: 16.w),
 
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              cow.animalName,
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                color: colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18.sp,
-                              ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            cow.animalName,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18.sp,
                             ),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 8.w, vertical: 2.h),
-                              decoration: BoxDecoration(
-                                color: colorScheme.primary,
-                                borderRadius: BorderRadius.circular(8.r),
-                              ),
-                              child: Text(
-                                'ID: ${cow.nidNumber}',
-                                style: TextStyle(
-                                    color: colorScheme.onPrimary,
-                                    fontSize: 10.sp,
-                                    fontWeight: FontWeight.bold),
-                              ),
+                          ),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 8.w, vertical: 2.h),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary,
+                              borderRadius: BorderRadius.circular(8.r),
                             ),
-                          ],
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          '${cow.breed ?? '-'} • ${age != null ? '$age ปี' : 'ไม่ทราบ'}',
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                        SizedBox(height: 8.h),
-                        Row(
-                          children: [
-                            _buildMiniTag(
-                              icon: cow.sex == 'MALE' ? Icons.male : Icons.female,
-                              label: cow.sex == 'MALE' ? 'ผู้' : 'เมีย',
-                              color: cow.sex == 'MALE'
+                            child: Text(
+                              'ID: ${cow.nidNumber}',
+                              style: TextStyle(
+                                  color: colorScheme.onPrimary,
+                                  fontSize: 10.sp,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        '${cow.breed ?? '-'} • ${age != null ? '$age ปี' : 'ไม่ทราบ'}',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      SizedBox(height: 8.h),
+                      Row(
+                        children: [
+                          _buildMiniTag(
+                            icon: cow.sex == 'MALE' ? Icons.male : Icons.female,
+                            label: cow.sex == 'MALE' ? 'ผู้' : 'เมีย',
+                            color: cow.sex == 'MALE'
                                 ? Colors.blue.shade100
                                 : Colors.pink.shade100,
-                              textColor: cow.sex == 'MALE'
+                            textColor: cow.sex == 'MALE'
                                 ? Colors.blue.shade800
                                 : Colors.pink.shade800,
-                            ),
-                            SizedBox(width: 8.w),
-                            _buildMiniTag(
-                              icon: Icons.check_circle_outline,
-                              label: 'สมบูรณ์',
-                              color: Colors.green.shade100,
-                              textColor: Colors.green.shade800,
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
+                          ),
+                          SizedBox(width: 8.w),
+                          _buildMiniTag(
+                            icon: Icons.check_circle_outline,
+                            label: 'สมบูรณ์',
+                            color: Colors.green.shade100,
+                            textColor: Colors.green.shade800,
+                          ),
+                        ],
+                      )
+                    ],
                   ),
-                  SizedBox(width: 8.w),
-                  Icon(Icons.arrow_forward_ios,
-                      size: 16.r, color: theme.dividerColor),
-                ],
-              ),
+                ),
+                SizedBox(width: 8.w),
+                Icon(Icons.arrow_forward_ios,
+                    size: 16.r, color: theme.dividerColor),
+              ],
             ),
           ),
         ),
-      );
+      ),
+    );
   }
 
   Widget _buildMiniTag(
@@ -431,8 +500,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
               height: MediaQuery.of(context).size.height * 0.7,
               decoration: BoxDecoration(
                 color: theme.cardColor,
-                borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(24.r)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
               ),
               padding: EdgeInsets.all(24.r),
               child: Column(
@@ -556,10 +624,14 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                       SizedBox(width: 16.w),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () {
+                            Navigator.pop(context); // ปิด Dialog
+                            setState(
+                                () {}); // *** สำคัญ: สั่งให้หน้าจอหลักวาดใหม่ด้วยค่า Filter ล่าสุด ***
+                          },
                           child: const Text('ค้นหา'),
                         ),
-                      ),
+                      )
                     ],
                   ),
                 ],
@@ -603,4 +675,3 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
     );
   }
 }
-

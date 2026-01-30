@@ -34,9 +34,14 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
   final _vaccineNameController = TextEditingController();
 
   // Birth Controllers
+  final _calfNameController = TextEditingController();
   final _calfGenderController = TextEditingController();
+  final _calfBreedController = TextEditingController();
   final _calfNidController = TextEditingController();
   final _calfBirthWeightController = TextEditingController();
+
+  // Weight Update Controllers
+  final _weightController = TextEditingController();
 
   // Treatment Controllers
   final _symptomsController = TextEditingController();
@@ -55,9 +60,12 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
     _activityDateController.dispose();
     _descriptionController.dispose();
     _vaccineNameController.dispose();
+    _calfNameController.dispose();
     _calfGenderController.dispose();
+    _calfBreedController.dispose();
     _calfNidController.dispose();
     _calfBirthWeightController.dispose();
+    _weightController.dispose();
     _symptomsController.dispose();
     _treatmentDetailsController.dispose();
     super.dispose();
@@ -137,7 +145,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
           ActivityType.PREGNANCY_CHECK => _buildGenericForm('ผลการตรวจการตั้งท้อง'),
           ActivityType.BREEDING => _buildGenericForm('รายละเอียดการผสมพันธุ์'),
           ActivityType.DEATH => _buildGenericForm('สาเหตุการตาย'),
-          ActivityType.WEIGHT_UPDATE => _buildGenericForm('ปรับปรุงน้ำหนัก'),
+          ActivityType.WEIGHT_UPDATE => _buildWeightUpdateForm(),
           ActivityType.SOLD => _buildGenericForm('รายละเอียดการขาย'),
         },
         SizedBox(height: 16.h),
@@ -164,9 +172,21 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
   List<Widget> _buildBirthForm() {
     return [
       FormTextField(
+        controller: _calfNameController,
+        labelText: 'ชื่อลูกวัว',
+        hintText: 'ชื่อของลูกวัว',
+      ),
+      SizedBox(height: 16.h),
+      FormTextField(
         controller: _calfGenderController,
         labelText: 'เพศลูกวัว',
         hintText: 'เพศผู้ / เพศเมีย',
+      ),
+      SizedBox(height: 16.h),
+      FormTextField(
+        controller: _calfBreedController,
+        labelText: 'พันธุ์ลูกวัว',
+        hintText: 'พันธุ์ของลูกวัว',
       ),
       SizedBox(height: 16.h),
       FormTextField(
@@ -199,6 +219,16 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
         labelText: 'รายละเอียดการรักษา',
         maxLines: 3,
         hintText: 'ระบุยาและวิธีการรักษา',
+      ),
+    ];
+  }
+
+  List<Widget> _buildWeightUpdateForm() {
+    return [
+      FormTextField(
+        controller: _weightController,
+        labelText: 'น้ำหนักปัจจุบัน (กก.)',
+        hintText: 'เช่น 450.5',
       ),
     ];
   }
@@ -253,7 +283,9 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
         data['vaccine_name'] = _vaccineNameController.text;
         break;
       case ActivityType.BIRTH:
-        data['calf_gender'] = _calfGenderController.text;
+        data['calf_name'] = _calfNameController.text;
+        data['sex'] = _calfGenderController.text;
+        data['breed'] = _calfBreedController.text;
         data['calf_nid'] = _calfNidController.text;
         data['calf_birth_weight'] = double.tryParse(_calfBirthWeightController.text);
         break;
@@ -266,9 +298,9 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
       case ActivityType.BREEDING:
       case ActivityType.DEATH:
       case ActivityType.WEIGHT_UPDATE:
-      case ActivityType.SOLD:
-        // Data is in the main description field
+        data['weight'] = double.tryParse(_weightController.text);
         break;
+      case ActivityType.SOLD:
     }
 
     final newActivity = Activity(

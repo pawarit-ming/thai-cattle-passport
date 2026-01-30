@@ -65,7 +65,7 @@ class AddActivityModal extends StatelessWidget {
               onTap: () => _navigateToForm(context, ActivityType.TREATMENT),
             ),
             _ActivityCard(
-              label: 'ปรับน้ำหนัก',
+              label: 'น้ำหนักใหม่',
               icon: Icons.monitor_weight,
               color: Colors.teal.shade300,
               onTap: () => _navigateToForm(context, ActivityType.WEIGHT_UPDATE),

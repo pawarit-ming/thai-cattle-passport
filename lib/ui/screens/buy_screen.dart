@@ -349,7 +349,7 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
         title: _isSearching
             ?
             // --- 1. ปรับแต่งช่องค้นหา (Search Box) ---
-            Container(
+            SizedBox(
                 height: 40.h, // กำหนดความสูงของช่องค้นหา
                 child: TextField(
                   controller: _searchController,
@@ -362,14 +362,14 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
                     contentPadding: EdgeInsets.symmetric(
                         horizontal: 16.w,
                         vertical: 8.h), // ระยะห่างข้อความข้างใน
-                    prefixIcon: Icon(Icons.search,
+                    prefixIcon: const Icon(Icons.search,
                         color: Colors
                             .grey), // เพิ่มไอคอนแว่นขยายข้างใน (ถ้าต้องการ)
                   ),
                   onChanged: (val) => _applyFilters(),
                 ),
               )
-            : Text(
+            : const Text(
                 'ตลาดซื้อขายวัว',
               ),
         actions: [
@@ -409,7 +409,7 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
           ),
           Expanded(
             child: _filteredItems.isEmpty
-                ? Center(
+                ? const Center(
                     child: Text('ไม่พบวัวที่คุณค้นหา',
                         style: TextStyle(color: Colors.grey)))
                 : ListView.builder(
@@ -508,7 +508,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                               decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(8.r),
-                                  boxShadow: [
+                                  boxShadow: const [
                                     BoxShadow(
                                         blurRadius: 4, color: Colors.black12)
                                   ]),

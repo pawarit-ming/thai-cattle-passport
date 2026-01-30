@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
 import '../../../supabase_config.dart';
 import 'package:logger/logger.dart';

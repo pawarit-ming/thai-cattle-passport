@@ -584,7 +584,7 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
                         ),
                         SizedBox(height: 8.h),
                         DropdownButtonFormField<Farm>(
-                          value: _selectedFarm ??
+                          initialValue: _selectedFarm ??
                               (farms.isNotEmpty ? farms.first : null),
                           decoration: InputDecoration(
                             //labelText: 'เลือกฟาร์ม',
@@ -650,7 +650,7 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
               SizedBox(height: 8.h),
               DropdownButtonFormField<String>(
                 // ตรวจสอบว่าค่าที่มีอยู่ใน controller ตรงกับใน list หรือไม่ เพื่อกัน error
-                value: _breedOptions.contains(_breedController.text)
+                initialValue: _breedOptions.contains(_breedController.text)
                     ? _breedController.text
                     : null,
                 decoration: InputDecoration(
@@ -745,7 +745,7 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
               ),
               SizedBox(height: 8.h),
               DropdownButtonFormField<String>(
-                value: _sex, // ใช้ value เพื่อให้แสดงค่าปัจจุบันเสมอ
+                initialValue: _sex, // ใช้ value เพื่อให้แสดงค่าปัจจุบันเสมอ
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.wc),
                   filled: true,

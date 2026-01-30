@@ -190,7 +190,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> with SingleTicker
           ),
           SizedBox(height: 16.h),
           DropdownButtonFormField<String>(
-            value: _selectedSex,
+            initialValue: _selectedSex,
             decoration: InputDecoration(
               labelText: 'เพศ',
               prefixIcon: const Icon(Icons.wc),
@@ -206,7 +206,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> with SingleTicker
           ),
           SizedBox(height: 16.h),
           DropdownButtonFormField<String>(
-            value: _selectedStatus,
+            initialValue: _selectedStatus,
             decoration: InputDecoration(
               labelText: 'สถานะ',
               prefixIcon: const Icon(Icons.info),

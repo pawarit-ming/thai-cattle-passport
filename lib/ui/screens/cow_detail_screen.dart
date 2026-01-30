@@ -41,17 +41,10 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
   }
 
   void _showAddActivityModal(BuildContext context, int cowId) {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
       builder: (ctx) {
-        return SizedBox(
-          height: 0.4.sh,
-          child: AddActivityModal(cowId: cowId),
-        );
+        return AddActivityModal(cowId: cowId);
       },
     );
   }

@@ -51,7 +51,8 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
   void initState() {
     super.initState();
     _selectedDate = DateTime.now();
-    _activityDateController.text = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    _activityDateController.text =
+        DateFormat('yyyy-MM-dd').format(_selectedDate);
   }
 
   @override
@@ -81,7 +82,8 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
-        _activityDateController.text = DateFormat('yyyy-MM-dd').format(_selectedDate);
+        _activityDateController.text =
+            DateFormat('yyyy-MM-dd').format(_selectedDate);
       });
     }
   }
@@ -90,7 +92,8 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('เพิ่มกิจกรรม: ${_getActivityTypeName(widget.activityType)}'),
+        title:
+            Text('เพิ่มกิจกรรม: ${_getActivityTypeName(widget.activityType)}'),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.r),
@@ -142,7 +145,8 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
           ActivityType.BIRTH => _buildBirthForm(),
           ActivityType.TREATMENT => _buildTreatmentForm(),
           ActivityType.EDIT_LOG => _buildGenericForm('รายละเอียดการแก้ไข'),
-          ActivityType.PREGNANCY_CHECK => _buildGenericForm('ผลการตรวจการตั้งท้อง'),
+          ActivityType.PREGNANCY_CHECK =>
+            _buildGenericForm('ผลการตรวจการตั้งท้อง'),
           ActivityType.BREEDING => _buildGenericForm('รายละเอียดการผสมพันธุ์'),
           ActivityType.DEATH => _buildGenericForm('สาเหตุการตาย'),
           ActivityType.WEIGHT_UPDATE => _buildWeightUpdateForm(),
@@ -235,8 +239,9 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
 
   List<Widget> _buildGenericForm(String label) {
     return [
-       FormTextField(
-        controller: _descriptionController, // Re-using description controller for simplicity
+      FormTextField(
+        controller:
+            _descriptionController, // Re-using description controller for simplicity
         labelText: label,
         maxLines: 5,
       ),
@@ -287,11 +292,12 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
         data['sex'] = _calfGenderController.text;
         data['breed'] = _calfBreedController.text;
         data['calf_nid'] = _calfNidController.text;
-        data['calf_birth_weight'] = double.tryParse(_calfBirthWeightController.text);
+        data['calf_birth_weight'] =
+            double.tryParse(_calfBirthWeightController.text);
         break;
       case ActivityType.TREATMENT:
-         data['symptoms'] = _symptomsController.text;
-         data['treatment_details'] = _treatmentDetailsController.text;
+        data['symptoms'] = _symptomsController.text;
+        data['treatment_details'] = _treatmentDetailsController.text;
         break;
       case ActivityType.EDIT_LOG:
       case ActivityType.PREGNANCY_CHECK:
@@ -313,6 +319,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
 
     try {
       await ref.read(activityServiceProvider).addActivity(newActivity);
+      ref.invalidate(activitiesProvider(widget.cowId));
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -331,6 +338,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
             backgroundColor: Colors.red,
           ),
         );
+        context.pop();
       }
     } finally {
       if (mounted) {

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
-import 'package:th_cow_passport/services/cow_management/farm/model/farm_model.dart';
+import 'package:th_cow_passport/services/farm/model/farm_model.dart';
 import 'package:th_cow_passport/supabase_config.dart';
 
 final logger = Logger();

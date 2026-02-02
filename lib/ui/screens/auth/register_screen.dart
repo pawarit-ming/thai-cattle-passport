@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:logger/logger.dart';
 import 'package:th_cow_passport/services/auth/auth_service.dart';
-import 'package:th_cow_passport/services/cow_management/farm/farm_service.dart';
+import 'package:th_cow_passport/services/farm/farm_service.dart';
 
 final logger = Logger();
 

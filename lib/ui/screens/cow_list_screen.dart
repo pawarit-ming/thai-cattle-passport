@@ -394,7 +394,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            cow.animalName,
+                            cow.nidNumber ?? 'ไม่ระบุหมายเลข',
                             style: theme.textTheme.titleLarge?.copyWith(
                               color: colorScheme.primary,
                               fontWeight: FontWeight.bold,
@@ -409,7 +409,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                               borderRadius: BorderRadius.circular(8.r),
                             ),
                             child: Text(
-                              'ID: ${cow.nidNumber}',
+                              'ชื่อ: ${cow.animalName}',
                               style: TextStyle(
                                   color: colorScheme.onPrimary,
                                   fontSize: 10.sp,
@@ -428,7 +428,6 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                         children: [
                           _buildMiniTag(
                             icon: cow.sex == 'MALE' ? Icons.male : Icons.female,
-                            label: cow.sex == 'MALE' ? 'ผู้' : 'เมีย',
                             color: cow.sex == 'MALE'
                                 ? Colors.blue.shade100
                                 : Colors.pink.shade100,
@@ -461,7 +460,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
 
   Widget _buildMiniTag(
       {required IconData icon,
-      required String label,
+      String? label,
       required Color color,
       required Color textColor}) {
     return Container(
@@ -474,12 +473,14 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 12.r, color: textColor),
+          if (label != null && label.isNotEmpty) ...[
           SizedBox(width: 4.w),
           Text(
             label,
             style: TextStyle(
                 fontSize: 10.sp, color: textColor, fontWeight: FontWeight.bold),
           ),
+        ],
         ],
       ),
     );

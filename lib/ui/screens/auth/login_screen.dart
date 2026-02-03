@@ -102,9 +102,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 controller: _emailController,
                 decoration: InputDecoration(
                   labelText: 'อีเมล *',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
+                  // border: Use theme default
                   prefixIcon: const Icon(Icons.email),
                 ),
                 keyboardType: TextInputType.emailAddress,
@@ -114,9 +112,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 controller: _passwordController,
                 decoration: InputDecoration(
                   labelText: 'รหัสผ่าน *',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
+                  // border: Use theme default
                   prefixIcon: const Icon(Icons.lock),
                 ),
                 obscureText: true,

@@ -58,22 +58,29 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
   }
 
   void _restoreFormData(Map<String, dynamic> data) {
-    if (data.containsKey('vaccine_name'))
+    if (data.containsKey('vaccine_name')) {
       _vaccineNameController.text = data['vaccine_name'];
-    if (data.containsKey('calf_name'))
+    }
+    if (data.containsKey('calf_name')) {
       _calfNameController.text = data['calf_name'];
+    }
     if (data.containsKey('sex')) _calfGenderController.text = data['sex'];
     if (data.containsKey('breed')) _calfBreedController.text = data['breed'];
-    if (data.containsKey('calf_nid'))
+    if (data.containsKey('calf_nid')) {
       _calfNidController.text = data['calf_nid'];
-    if (data.containsKey('calf_birth_weight'))
+    }
+    if (data.containsKey('calf_birth_weight')) {
       _calfBirthWeightController.text = data['calf_birth_weight'].toString();
-    if (data.containsKey('weight'))
+    }
+    if (data.containsKey('weight')) {
       _weightController.text = data['weight'].toString();
-    if (data.containsKey('symptoms'))
+    }
+    if (data.containsKey('symptoms')) {
       _symptomsController.text = data['symptoms'];
-    if (data.containsKey('treatment_details'))
+    }
+    if (data.containsKey('treatment_details')) {
       _treatmentDetailsController.text = data['treatment_details'];
+    }
     if (data.containsKey('details')) _detailsController.text = data['details'];
   }
 
@@ -131,35 +138,45 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
       // Collect Data based on type
       switch (widget.activityType) {
         case ActivityType.VACCINE:
-          if (_vaccineNameController.text.isNotEmpty)
+          if (_vaccineNameController.text.isNotEmpty) {
             data['vaccine_name'] = _vaccineNameController.text;
+          }
           break;
         case ActivityType.BIRTH:
-          if (_calfNameController.text.isNotEmpty)
+          if (_calfNameController.text.isNotEmpty) {
             data['calf_name'] = _calfNameController.text;
-          if (_calfGenderController.text.isNotEmpty)
+          }
+          if (_calfGenderController.text.isNotEmpty) {
             data['sex'] = _calfGenderController.text;
-          if (_calfBreedController.text.isNotEmpty)
+          }
+          if (_calfBreedController.text.isNotEmpty) {
             data['breed'] = _calfBreedController.text;
-          if (_calfNidController.text.isNotEmpty)
+          }
+          if (_calfNidController.text.isNotEmpty) {
             data['calf_nid'] = _calfNidController.text;
-          if (_calfBirthWeightController.text.isNotEmpty)
+          }
+          if (_calfBirthWeightController.text.isNotEmpty) {
             data['calf_birth_weight'] =
                 double.tryParse(_calfBirthWeightController.text);
+          }
           break;
         case ActivityType.TREATMENT:
-          if (_symptomsController.text.isNotEmpty)
+          if (_symptomsController.text.isNotEmpty) {
             data['symptoms'] = _symptomsController.text;
-          if (_treatmentDetailsController.text.isNotEmpty)
+          }
+          if (_treatmentDetailsController.text.isNotEmpty) {
             data['treatment_details'] = _treatmentDetailsController.text;
+          }
           break;
         case ActivityType.WEIGHT_UPDATE:
-          if (_weightController.text.isNotEmpty)
+          if (_weightController.text.isNotEmpty) {
             data['weight'] = double.tryParse(_weightController.text);
+          }
           break;
         default:
-          if (_detailsController.text.isNotEmpty)
+          if (_detailsController.text.isNotEmpty) {
             data['details'] = _detailsController.text;
+          }
       }
 
       widget.onNext(data, _selectedDate, _notesController.text);
@@ -186,7 +203,7 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
 
                   // Date Section
                   Text(
-                    'DATE',
+                    'วันที่',
                     style: WizardStyles.labelLarge.copyWith(color: Colors.grey),
                   ),
                   SizedBox(height: 8.h),
@@ -208,7 +225,7 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Selected Date',
+                                'วันที่เลือก',
                                 style: TextStyle(
                                     color: Colors.grey, fontSize: 12.sp),
                               ),
@@ -233,7 +250,7 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
 
                   // Notes Section
                   Text(
-                    'NOTES',
+                    'บันทึกเพิ่มเติม',
                     style: WizardStyles.labelLarge.copyWith(color: Colors.grey),
                   ),
                   SizedBox(height: 8.h),
@@ -249,7 +266,7 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
                       maxLines: 4,
                       decoration: InputDecoration(
                         hintText:
-                            'Add details about condition, behavior, or feed intake...',
+                            'เพิ่มรายละเอียด เช่น อาการ พฤติกรรม หรือปริมาณอาหาร...',
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.all(16.r),
                       ),
@@ -271,14 +288,14 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
               TextButton(
                 onPressed: widget.onBack,
                 style: WizardStyles.secondaryButtonStyle,
-                child: const Text('Back'),
+                child: const Text('ย้อนกลับ'),
               ),
               ElevatedButton(
                 onPressed: _handleNext,
                 style: WizardStyles.primaryButtonStyle,
                 child: Row(
                   children: [
-                    const Text('Next Step'),
+                    const Text('ถัดไป'),
                     SizedBox(width: 8.w),
                     const Icon(Icons.arrow_forward, size: 16),
                   ],
@@ -334,7 +351,7 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: '0',
-                suffix: Text('kg',
+                suffix: Text('กก.',
                     style: TextStyle(fontSize: 24.sp, color: Colors.grey)),
               ),
             ),

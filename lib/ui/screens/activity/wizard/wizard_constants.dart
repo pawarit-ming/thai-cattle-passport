@@ -17,19 +17,19 @@ class WizardColors {
 }
 
 class WizardStyles {
-  static TextStyle get titleLarge => GoogleFonts.outfit(
+  static TextStyle get titleLarge => GoogleFonts.prompt(
         fontSize: 24.sp,
         fontWeight: FontWeight.bold,
         color: WizardColors.textDark,
       );
 
-  static TextStyle get titleMedium => GoogleFonts.outfit(
+  static TextStyle get titleMedium => GoogleFonts.prompt(
         fontSize: 20.sp,
         fontWeight: FontWeight.w600,
         color: WizardColors.textDark,
       );
 
-  static TextStyle get labelLarge => GoogleFonts.outfit(
+  static TextStyle get labelLarge => GoogleFonts.prompt(
         fontSize: 16.sp,
         fontWeight: FontWeight.w500,
         color: WizardColors.textDark,
@@ -40,7 +40,7 @@ class WizardStyles {
         borderRadius: BorderRadius.circular(24.r), // Very rounded corners
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -54,7 +54,7 @@ class WizardStyles {
           borderRadius: BorderRadius.circular(30.r),
         ),
         padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 32.w),
-        textStyle: GoogleFonts.outfit(
+        textStyle: GoogleFonts.prompt(
           fontSize: 16.sp,
           fontWeight: FontWeight.bold,
         ),
@@ -63,7 +63,7 @@ class WizardStyles {
 
   static ButtonStyle get secondaryButtonStyle => TextButton.styleFrom(
         foregroundColor: WizardColors.textLight,
-        textStyle: GoogleFonts.outfit(
+        textStyle: GoogleFonts.prompt(
           fontSize: 16.sp,
           fontWeight: FontWeight.w600,
         ),

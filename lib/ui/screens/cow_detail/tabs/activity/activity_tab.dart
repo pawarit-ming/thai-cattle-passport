@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:th_cow_passport/services/cow_management/cow_activity/activity_service.dart';
 import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
-import 'package:th_cow_passport/ui/screens/activity/activity_extensions.dart';
 import 'package:th_cow_passport/ui/screens/activity/widgets/activity_card.dart';
 
 class ActivityTab extends ConsumerStatefulWidget {
@@ -116,7 +115,7 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
               ...ActivityType.values
                   .map((type) => DropdownMenuItem<ActivityType>(
                         value: type,
-                        child: Text(type.label),
+                        child: Text(_getActivityLabel(type)),
                       )),
             ],
             onChanged: (value) {
@@ -131,7 +130,10 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
             children: [
               // Month Dropdown
               Expanded(
+                flex: 3,
                 child: DropdownButtonFormField<int>(
+                  isExpanded:
+                      true, // Fix overflow by allowing text to truncate/wrap if needed
                   initialValue: _selectedMonth,
                   decoration: InputDecoration(
                     labelText: 'เดือน',
@@ -150,7 +152,8 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
                     ...List.generate(12, (index) => index + 1)
                         .map((month) => DropdownMenuItem<int>(
                               value: month,
-                              child: Text(_getMonthName(month)),
+                              child: Text(_getMonthName(month),
+                                  overflow: TextOverflow.ellipsis),
                             )),
                   ],
                   onChanged: (value) {
@@ -163,7 +166,9 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
               SizedBox(width: 12.w),
               // Year Dropdown
               Expanded(
+                flex: 2,
                 child: DropdownButtonFormField<int>(
+                  isExpanded: true,
                   initialValue: _selectedYear,
                   decoration: InputDecoration(
                     labelText: 'ปี',
@@ -179,10 +184,11 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
                       value: null,
                       child: Text('ทั้งหมด'),
                     ),
-                    ...List.generate(10, (index) => DateTime.now().year - index)
+                    ...List.generate(5, (index) => DateTime.now().year - index)
                         .map((year) => DropdownMenuItem<int>(
                               value: year,
-                              child: Text(year.toString()),
+                              child: Text(
+                                  (year + 543).toString()), // Buddhist Year
                             )),
                   ],
                   onChanged: (value) {
@@ -223,20 +229,43 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
     );
   }
 
+  String _getActivityLabel(ActivityType type) {
+    switch (type) {
+      case ActivityType.VACCINE:
+        return 'ฉีดวัคซีน';
+      case ActivityType.TREATMENT:
+        return 'รักษาโรค';
+      case ActivityType.BIRTH:
+        return 'การเกิด';
+      case ActivityType.WEIGHT_UPDATE:
+        return 'ชั่งน้ำหนัก';
+      case ActivityType.BREEDING:
+        return 'ผสมพันธุ์';
+      case ActivityType.PREGNANCY_CHECK:
+        return 'ตรวจท้อง';
+      case ActivityType.DEATH:
+        return 'ตาย';
+      case ActivityType.SOLD:
+        return 'ขายออก';
+      case ActivityType.EDIT_LOG:
+        return 'แก้ไขประวัติ';
+    }
+  }
+
   String _getMonthName(int month) {
     const months = [
-      'มกราคม',
-      'กุมภาพันธ์',
-      'มีนาคม',
-      'เมษายน',
-      'พฤษภาคม',
-      'มิถุนายน',
-      'กรกฎาคม',
-      'สิงหาคม',
-      'กันยายน',
-      'ตุลาคม',
-      'พฤศจิกายน',
-      'ธันวาคม'
+      'ม.ค.',
+      'ก.พ.',
+      'มี.ค.',
+      'เม.ย.',
+      'พ.ค.',
+      'มิ.ย.',
+      'ก.ค.',
+      'ส.ค.',
+      'ก.ย.',
+      'ต.ค.',
+      'พ.ย.',
+      'ธ.ค.'
     ];
     return months[month - 1];
   }

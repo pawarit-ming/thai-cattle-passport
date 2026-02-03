@@ -49,8 +49,8 @@ class _AddActivityWizardState extends ConsumerState<AddActivityWizard> {
 
   @override
   Widget build(BuildContext context) {
-    String title = 'New Activity';
-    if (_currentStep == 2) title = 'Summary';
+    String title = 'กิจกรรมใหม่';
+    if (_currentStep == 2) title = 'สรุปข้อมูล';
 
     return Scaffold(
       backgroundColor: WizardColors.background,
@@ -132,7 +132,7 @@ class _AddActivityWizardState extends ConsumerState<AddActivityWizard> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'STEP ${_currentStep + 1} OF $_totalSteps',
+                'ขั้นตอนที่ ${_currentStep + 1} จาก $_totalSteps',
                 style: TextStyle(
                   color: WizardColors.textDark,
                   fontWeight: FontWeight.bold,
@@ -142,7 +142,7 @@ class _AddActivityWizardState extends ConsumerState<AddActivityWizard> {
               ),
               if (_currentStep == 0)
                 Text(
-                  'Category',
+                  'เลือกประเภท',
                   style: TextStyle(
                     color: WizardColors.textLight,
                     fontSize: 12.sp,

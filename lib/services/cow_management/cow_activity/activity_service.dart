@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
 import 'package:th_cow_passport/supabase_config.dart';
@@ -6,6 +7,15 @@ final activityServiceProvider = Provider((ref) => ActivityService());
 
 final activitiesProvider =
     FutureProvider.family<List<Activity>, int>((ref, cowId) async {
+  // Optimization: Keep the provider alive for 5 minutes to cache the data.
+  // This prevents reloading when switching tabs back and forth quickly.
+  final link = ref.keepAlive();
+  // Cancel the link if the provider is not listened to for 5 minutes
+  final timer = Timer(const Duration(minutes: 5), () {
+    link.close();
+  });
+  ref.onDispose(() => timer.cancel());
+
   final activityService = ref.watch(activityServiceProvider);
   return activityService.getActivitiesForCow(cowId);
 });
@@ -40,8 +50,9 @@ class ActivityService {
       if (response.isEmpty) {
         return [];
       }
-      
-      final activities = response.map((item) => Activity.fromMap(item)).toList();
+
+      final activities =
+          response.map((item) => Activity.fromMap(item)).toList();
       return activities;
     } catch (e) {
       throw Exception('Could not fetch activities.');

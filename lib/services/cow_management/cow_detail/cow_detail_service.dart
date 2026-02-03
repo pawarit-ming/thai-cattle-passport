@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
 import '../../../supabase_config.dart';
@@ -82,9 +82,7 @@ class CowDetailService extends ChangeNotifier {
         'weight': updatedCow.weight,
         'height': updatedCow.height,
         'dam_id': updatedCow.damId,
-        'dam_name': updatedCow.damName,
         'sire_id': updatedCow.sireId,
-        'sire_name': updatedCow.sireName,
         'birth_date': updatedCow.birthDate?.toIso8601String(),
         'sex': updatedCow.sex,
         'status': updatedCow.status,

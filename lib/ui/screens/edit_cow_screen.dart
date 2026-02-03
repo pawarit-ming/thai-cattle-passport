@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logger/logger.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
+import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_service.dart';
 import 'package:th_cow_passport/ui/widgets/cow_detail_widget.dart';
+import 'package:th_cow_passport/ui/widgets/cow_selection_field.dart';
 
 class EditCowScreen extends ConsumerStatefulWidget {
   final int cowId;
@@ -15,7 +18,27 @@ class EditCowScreen extends ConsumerStatefulWidget {
 
 class _EditCowScreenState extends ConsumerState<EditCowScreen>
     with SingleTickerProviderStateMixin {
+  final logger = Logger();
   final _formKey = GlobalKey<FormState>();
+
+  final List<String> _breedOptions = [
+    'บราห์มัน',
+    'ชาร์โรเลส์',
+    'วากิว',
+    'แองกัส',
+    'ฮินดูบราซิล',
+    'พื้นเมือง',
+    'อื่น'
+  ];
+
+  final List<String> _colorOptions = [
+    'ขาว',
+    'ดำ',
+    'แดง',
+    'น้ำตาล',
+    'ด่าง',
+    'อื่น'
+  ];
 
 // Tab Controller
   late TabController _tabController;
@@ -27,10 +50,10 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
   late TextEditingController _colorController;
   late TextEditingController _weightController;
   late TextEditingController _heightController;
-  late TextEditingController _damIdController;
-  late TextEditingController _sireIdController;
-  late TextEditingController _sireNameController;
-  late TextEditingController _damNameController;
+
+  // Parent IDs
+  int? _selectedSireId;
+  int? _selectedDamId;
 
   DateTime? _selectedBirthDate;
   String? _selectedSex;
@@ -41,6 +64,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     // 1. ดึงข้อมูลวัวตัวปัจจุบันจาก Service มาตั้งค่าเริ่มต้น
+    logger.i('Initializing EditCowScreen for cowId: ${widget.cowId}');
     final cow = ref.read(cowDetailServiceProvider).currentCow;
 
     //กำหนดค่าเริ่มต้นจากข้อมูลจริง
@@ -50,10 +74,9 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
     _colorController = TextEditingController(text: cow?.color);
     _weightController = TextEditingController(text: cow?.weight?.toString());
     _heightController = TextEditingController(text: cow?.height?.toString());
-    _damIdController = TextEditingController(text: cow?.damId?.toString());
-    _sireIdController = TextEditingController(text: cow?.sireId?.toString());
-    _sireNameController = TextEditingController(text: cow?.sireName);
-    _damNameController = TextEditingController(text: cow?.damName);
+
+    _selectedSireId = cow?.sireId;
+    _selectedDamId = cow?.damId;
 
     _selectedBirthDate = cow?.birthDate;
     _selectedSex = cow?.sex;
@@ -70,17 +93,17 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
     _colorController.dispose();
     _weightController.dispose();
     _heightController.dispose();
-    _damIdController.dispose();
-    _sireIdController.dispose();
-    _sireNameController.dispose();
-    _damNameController.dispose();
     super.dispose();
   }
 
   Future<void> _handleSave() async {
     if (_formKey.currentState?.validate() ?? false) {
+      logger.i('Saving updates for cowId: ${widget.cowId}...');
       final currentCow = ref.read(cowDetailServiceProvider).currentCow;
-      if (currentCow == null) return;
+      if (currentCow == null) {
+        logger.w('Current cow is null, cannot update');
+        return;
+      }
 
       final updatedCow = currentCow.copyWith(
         animalName: _nameController.text,
@@ -89,10 +112,8 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
         color: _colorController.text,
         weight: double.tryParse(_weightController.text),
         height: double.tryParse(_heightController.text),
-        damId: int.tryParse(_damIdController.text),
-        sireId: int.tryParse(_sireIdController.text),
-        sireName: _sireNameController.text,
-        damName: _damNameController.text,
+        damId: _selectedDamId,
+        sireId: _selectedSireId,
         birthDate: _selectedBirthDate,
         sex: _selectedSex,
         status: _selectedStatus,
@@ -103,10 +124,18 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
       final errorMessage =
           await ref.read(cowDetailServiceProvider).updateCow(updatedCow);
 
+      if (errorMessage != null) {
+        logger.e('Error updating cow: $errorMessage');
+      } else {
+        logger.i('Cow updated successfully');
+      }
+
       if (errorMessage == null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('บันทึกการแก้ไขเรียบร้อยแล้ว')),
         );
+        // Force refresh the list so the updated details appear there too.
+        ref.read(cowServiceProvider).fetchCows(forceRefresh: true);
         context.pop(); // กลับไปหน้า Detail
       } else if (errorMessage != null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -165,11 +194,55 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
               icon: Icons.tag,
               isRequired: true),
           SizedBox(height: 16.h),
-          _buildStyledTextField(
-              label: 'สายพันธุ์',
-              controller: _breedController,
-              icon: Icons.category,
-              isRequired: true),
+          SizedBox(height: 16.h),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('สายพันธุ์',
+                      style: Theme.of(context).textTheme.labelLarge),
+                  const Text(' *', style: TextStyle(color: Colors.red)),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              DropdownButtonFormField<String>(
+                initialValue: _breedOptions.contains(_breedController.text)
+                    ? _breedController.text
+                    : null,
+                decoration: InputDecoration(
+                  hintText: 'เลือกสายพันธุ์',
+                  prefixIcon: const Icon(Icons.category),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
+                ),
+                items: _breedOptions.map((breed) {
+                  return DropdownMenuItem(
+                    value: breed,
+                    child: Text(breed),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _breedController.text = value ?? '';
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'กรุณาเลือกสายพันธุ์';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
           SizedBox(height: 16.h),
 
           // เพิ่มส่วนเลือกวันที่และเพศเพื่อให้แก้ไขได้ทุกอย่าง
@@ -242,6 +315,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
                       label: 'น้ำหนัก (กก.)',
                       controller: _weightController,
                       icon: Icons.monitor_weight,
+                      suffixText: 'กก.',
                       keyboardType: TextInputType.number)),
               SizedBox(width: 16.w),
               Expanded(
@@ -249,7 +323,47 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
                       label: 'ส่วนสูง (ซม.)',
                       controller: _heightController,
                       icon: Icons.height,
+                      suffixText: 'ซม.',
                       keyboardType: TextInputType.number)),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('สีตัว', style: Theme.of(context).textTheme.labelLarge),
+              SizedBox(height: 8.h),
+              DropdownButtonFormField<String>(
+                initialValue: _colorOptions.contains(_colorController.text)
+                    ? _colorController.text
+                    : null,
+                decoration: InputDecoration(
+                  hintText: 'เลือกสี',
+                  prefixIcon: const Icon(Icons.palette),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
+                ),
+                items: _colorOptions.map((color) {
+                  return DropdownMenuItem(
+                    value: color,
+                    child: Text(color),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _colorController.text = value ?? '';
+                  });
+                },
+                validator: (value) {
+                  // Optional field check if necessary, or keep standard
+                  return null;
+                },
+              ),
             ],
           ),
           SizedBox(height: 16.h),
@@ -258,27 +372,31 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
               controller: _colorController,
               icon: Icons.palette),
           SizedBox(height: 16.h),
-          _buildStyledTextField(
-              label: 'ชื่อพ่อพันธุ์',
-              controller: _sireNameController,
-              icon: Icons.male),
+
+          // Parent Selection
+          CowSelectionField(
+            label: 'พ่อพันธุ์',
+            icon: Icons.male,
+            initialCowId: _selectedSireId,
+            excludeCowId: widget.cowId,
+            onCowSelected: (cow) {
+              setState(() {
+                _selectedSireId = cow?.animalId;
+              });
+            },
+          ),
           SizedBox(height: 16.h),
-          _buildStyledTextField(
-              label: 'ID พ่อพันธุ์',
-              controller: _sireIdController,
-              icon: Icons.male,
-              keyboardType: TextInputType.number),
-          SizedBox(height: 16.h),
-          _buildStyledTextField(
-              label: 'ชื่อแม่พันธุ์',
-              controller: _damNameController,
-              icon: Icons.female),
-          SizedBox(height: 16.h),
-          _buildStyledTextField(
-              label: 'ID แม่พันธุ์',
-              controller: _damIdController,
-              icon: Icons.female,
-              keyboardType: TextInputType.number),
+          CowSelectionField(
+            label: 'แม่พันธุ์',
+            icon: Icons.female,
+            initialCowId: _selectedDamId,
+            excludeCowId: widget.cowId,
+            onCowSelected: (cow) {
+              setState(() {
+                _selectedDamId = cow?.animalId;
+              });
+            },
+          ),
         ],
       ),
     );
@@ -317,6 +435,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
     required TextEditingController controller,
     required IconData icon,
     String? hintText,
+    String? suffixText,
     bool isRequired = false,
     TextInputType? keyboardType,
   }) {
@@ -357,6 +476,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
           },
           decoration: InputDecoration(
             hintText: hintText ?? label,
+            suffixText: suffixText,
             prefixIcon: Icon(icon),
             filled: true,
             fillColor: Colors.grey.shade50,

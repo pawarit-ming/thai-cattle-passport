@@ -342,8 +342,6 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(
         title: _isSearching
@@ -486,14 +484,16 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                   decoration: BoxDecoration(
                     color: Colors.blue[50], // สีพื้นฟ้าอ่อนจำลองน้ำ/แผนที่
                     borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                    border:
+                        Border.all(color: Colors.blue.withValues(alpha: 0.2)),
                   ),
                   child: Stack(
                     children: [
                       // เส้นตารางจำลองถนน
                       Center(
                         child: Icon(Icons.map_outlined,
-                            size: 100.r, color: Colors.blue.withOpacity(0.1)),
+                            size: 100.r,
+                            color: Colors.blue.withValues(alpha: 0.1)),
                       ),
                       // หมุดปักสถานที่
                       Center(
@@ -551,7 +551,8 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                   children: [
                     CircleAvatar(
                       radius: 28.r,
-                      backgroundColor: colorScheme.primary.withOpacity(0.1),
+                      backgroundColor:
+                          colorScheme.primary.withValues(alpha: 0.1),
                       child: Icon(Icons.person,
                           size: 30.r, color: colorScheme.primary),
                     ),
@@ -633,7 +634,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
     return Card(
       margin: EdgeInsets.only(bottom: 16.h),
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {},
@@ -687,7 +688,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                             shape: BoxShape.circle,
                             color: _currentImageIndex == entry.key
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.4),
+                                : Colors.white.withValues(alpha: 0.4),
                           ),
                         );
                       }).toList(),
@@ -716,7 +717,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                         padding: EdgeInsets.symmetric(
                             horizontal: 8.w, vertical: 2.h),
                         decoration: BoxDecoration(
-                          color: colorScheme.primary.withOpacity(0.1),
+                          color: colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Text(

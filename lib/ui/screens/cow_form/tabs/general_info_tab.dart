@@ -6,7 +6,7 @@ import 'package:th_cow_passport/services/farm/farm_service.dart';
 import 'package:th_cow_passport/services/farm/model/farm_model.dart';
 import 'package:th_cow_passport/supabase_config.dart';
 import 'package:th_cow_passport/ui/screens/cow_form/widgets/create_farm_dialog.dart';
-import 'package:th_cow_passport/ui/screens/cow_form/widgets/styled_text_field.dart';
+import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
 
 class GeneralInfoTab extends ConsumerStatefulWidget {
   final TextEditingController nidNumberController;
@@ -76,7 +76,7 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
                         padding: EdgeInsets.all(16.r),
                         margin: EdgeInsets.only(bottom: 16.h),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.1),
+                          color: Colors.orange.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12.r),
                           border: Border.all(color: Colors.orange),
                         ),

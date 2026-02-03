@@ -157,7 +157,7 @@ class _ImageCarouselState extends State<_ImageCarousel> {
                     shape: BoxShape.circle,
                     color: _currentIndex == entry.key
                         ? Colors.white
-                        : Colors.white.withOpacity(0.5),
+                        : Colors.white.withValues(alpha: 0.5),
                   ),
                 );
               }).toList(),

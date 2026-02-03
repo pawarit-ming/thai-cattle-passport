@@ -12,6 +12,7 @@ import 'package:th_cow_passport/supabase_config.dart';
 import 'package:th_cow_passport/ui/screens/cow_form/steps/image_picker_step.dart';
 import 'package:th_cow_passport/ui/screens/cow_form/tabs/general_info_tab.dart';
 import 'package:th_cow_passport/ui/screens/cow_form/tabs/physical_info_tab.dart';
+import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_service.dart';
 
 final logger = Logger();
 
@@ -50,10 +51,10 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
   late TextEditingController _colorController;
   late TextEditingController _heightController;
   late TextEditingController _weightController;
-  late TextEditingController _damIdController;
-  late TextEditingController _sireIdController;
-  late TextEditingController _sireNameController;
-  late TextEditingController _damNameController;
+
+  // Parent Selection State
+  int? _selectedSireId;
+  int? _selectedDamId;
 
   // Farm selection
   Farm? _selectedFarm;
@@ -87,10 +88,6 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
     _colorController = TextEditingController();
     _heightController = TextEditingController();
     _weightController = TextEditingController();
-    _damIdController = TextEditingController();
-    _sireIdController = TextEditingController();
-    _sireNameController = TextEditingController();
-    _damNameController = TextEditingController();
 
     _nidNumberController.addListener(_updateSaveButtonState);
     _animalNameController.addListener(_updateSaveButtonState);
@@ -109,10 +106,6 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
     _colorController.dispose();
     _heightController.dispose();
     _weightController.dispose();
-    _damIdController.dispose();
-    _sireIdController.dispose();
-    _sireNameController.dispose();
-    _damNameController.dispose();
     super.dispose();
   }
 
@@ -156,12 +149,8 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
       color: _colorController.text,
       height: double.tryParse(_heightController.text),
       weight: double.tryParse(_weightController.text),
-      damId: int.tryParse(_damIdController.text),
-      sireId: int.tryParse(_sireIdController.text),
-      sireName:
-          _sireNameController.text.isNotEmpty ? _sireNameController.text : null,
-      damName:
-          _damNameController.text.isNotEmpty ? _damNameController.text : null,
+      damId: _selectedDamId,
+      sireId: _selectedSireId,
       status: 'ACTIVE',
       facePic: [],
       bodyPic: [],
@@ -178,8 +167,16 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
         markPic: _markImage,
       );
 
+// ... inside _saveForm ...
+
       if (success && mounted) {
         logger.i('[CowForm] Cow saved successfully');
+
+        // Refresh the list
+        await ref.read(cowServiceProvider).fetchCows(forceRefresh: true);
+
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('บันทึกข้อมูลวัวเรียบร้อยแล้ว')),
         );
@@ -205,7 +202,7 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
   Widget build(BuildContext context) {
     return PopScope(
       canPop: _isImagePickerStep,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         setState(() => _isImagePickerStep = true);
       },
@@ -260,10 +257,18 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
             weightController: _weightController,
             heightController: _heightController,
             colorController: _colorController,
-            sireNameController: _sireNameController,
-            sireIdController: _sireIdController,
-            damNameController: _damNameController,
-            damIdController: _damIdController,
+            selectedSireId: _selectedSireId,
+            selectedDamId: _selectedDamId,
+            onSireSelected: (cow) {
+              setState(() {
+                _selectedSireId = cow?.animalId;
+              });
+            },
+            onDamSelected: (cow) {
+              setState(() {
+                _selectedDamId = cow?.animalId;
+              });
+            },
           ),
         ],
         bottomBar: _buildBottomSaveBar(cowService.isLoading),
@@ -305,7 +310,7 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
             disabledBackgroundColor: Colors.grey.shade400,
             minimumSize: Size(double.infinity, 56.h),
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r)),
+                borderRadius: BorderRadius.circular(30.r)),
           ),
         ),
       ),

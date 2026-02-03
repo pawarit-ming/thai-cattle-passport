@@ -8,9 +8,7 @@ class Cow {
   final String sex;
   final DateTime? birthDate;
   final int? sireId;
-  final String? sireName;
   final int? damId;
-  final String? damName;
   final String? color;
   final double? weight;
   final double? height;
@@ -34,9 +32,7 @@ class Cow {
     required this.sex,
     this.birthDate,
     this.sireId,
-    this.sireName,
     this.damId,
-    this.damName,
     this.color,
     this.weight,
     this.height,
@@ -61,9 +57,7 @@ class Cow {
     String? sex,
     DateTime? birthDate,
     int? sireId,
-    String? sireName,
     int? damId,
-    String? damName,
     String? color,
     double? weight,
     double? height,
@@ -86,9 +80,7 @@ class Cow {
       sex: sex ?? this.sex,
       birthDate: birthDate ?? this.birthDate,
       sireId: sireId ?? this.sireId,
-      sireName: sireName ?? this.sireName,
       damId: damId ?? this.damId,
-      damName: damName ?? this.damName,
       color: color ?? this.color,
       weight: weight ?? this.weight,
       height: height ?? this.height,
@@ -117,9 +109,7 @@ class Cow {
       birthDate:
           map['birth_date'] != null ? DateTime.parse(map['birth_date']) : null,
       sireId: map['sire_id'],
-      sireName: map['sire_name'],
       damId: map['dam_id'],
-      damName: map['dam_name'],
       color: map['color'],
       weight: map['weight'] != null ? (map['weight'] as num).toDouble() : null,
       height: map['height'] != null ? (map['height'] as num).toDouble() : null,
@@ -166,9 +156,7 @@ class Cow {
       'sex': sex,
       'birth_date': birthDate?.toIso8601String().substring(0, 10),
       'sire_id': sireId,
-      'sire_name': sireName,
       'dam_id': damId,
-      'dam_name': damName,
       'color': color,
       'weight': weight,
       'height': height,

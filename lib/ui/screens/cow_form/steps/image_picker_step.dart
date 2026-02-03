@@ -193,7 +193,7 @@ class _ImagePickerStepState extends State<ImagePickerStep> {
                 color: isAdded ? colorScheme.primary : Colors.grey.shade300,
                 width: isAdded ? 2.w : 1.w,
               ),
-              borderRadius: BorderRadius.circular(12.r),
+              borderRadius: BorderRadius.circular(24.r),
               image: isAdded
                   ? DecorationImage(
                       image: FileImage(imageFile), fit: BoxFit.cover)

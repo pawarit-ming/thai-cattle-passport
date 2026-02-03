@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logger/logger.dart';
 import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_service.dart';
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
 import 'package:th_cow_passport/ui/screens/cow_list/widgets/cow_card.dart';
@@ -15,6 +16,7 @@ class CowListScreen extends ConsumerStatefulWidget {
 }
 
 class _CowListScreenState extends ConsumerState<CowListScreen> {
+  final logger = Logger();
   String? _selectedGender;
   final List<String> _selectedBreeds = [];
   RangeValues _ageRange = const RangeValues(0, 20);
@@ -72,14 +74,16 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
   void initState() {
     super.initState();
     // Fetch initial data
+    logger.i('Initializing CowListScreen, fetching cows...');
     Future.microtask(() => ref.read(cowServiceProvider).fetchCows());
   }
 
   Future<void> _refreshCows() async {
-    await ref.read(cowServiceProvider).fetchCows();
+    logger.i('Manual refresh triggered');
+    await ref.read(cowServiceProvider).fetchCows(forceRefresh: true);
   }
 
-  Future<void> _confirmBatchDelete(BuildContext context) async {
+  Future<void> _confirmBatchDelete() async {
     final count = _selectedCowIds.length;
     final confirm = await showDialog<bool>(
       context: context,
@@ -103,6 +107,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
     );
 
     if (confirm == true) {
+      logger.w('Batch deleting $count cows: $_selectedCowIds');
       // เรียก Service เพื่อลบแบบ Batch
       for (final id in _selectedCowIds) {
         await ref.read(cowServiceProvider).deleteCow(id);
@@ -186,9 +191,8 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.red),
-              onPressed: _selectedCowIds.isEmpty
-                  ? null
-                  : () => _confirmBatchDelete(context),
+              onPressed:
+                  _selectedCowIds.isEmpty ? null : () => _confirmBatchDelete(),
             ),
           ] else
             IconButton(
@@ -245,7 +249,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                       child: IconButton(
                         icon: const Icon(Icons.filter_list),
                         color: colorScheme.primary,
-                        tooltip: 'Filter Cows',
+                        tooltip: 'กรองข้อมูล',
                         onPressed: _showFilterDialog,
                       ),
                     ),

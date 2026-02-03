@@ -1,35 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AppTheme {
   AppTheme._(); // Private constructor
 
-  // --- 1. กำหนด Palette สีใหม่ (Earth Tone / Brown) ---
-  static const Color _primary = Color(0xFF5D4037); // Brown 700 (สีหลัก)
-  static const Color _primaryLight =
-      Color(0xFF8D6E63); // Brown 400 (สีรอง/Accent)
+  // --- Wizard Colors (Earth Tones) ---
+  static const Color _primary = Color(0xFF795548); // Brown 500
+  static const Color _primaryLight = Color(0xFFD7CCC8); // Brown 100
   static const Color _primaryDark = Color(0xFF3E2723); // Brown 900
-  static const Color _background = Color(0xFFEFEBE9); // Brown 50 (สีพื้นหลัง)
-  static const Color _surface = Colors.white; // สีพื้น Card/Dialog
-
-  static const Color _textPrimary =
-      Color(0xFF3E2723); // ข้อความหลัก (น้ำตาลเข้มเกือบดำ)
-  static const Color _textSecondary =
-      Color(0xFF6D4C41); // ข้อความรอง (น้ำตาลกลาง)
-  static const Color _divider = Color(0xFFA1887F); // เส้นคั่น (Brown 300)
+  static const Color _background = Color(0xFFF5F5F5); // Light Gray/White
+  static const Color _surface = Colors.white;
+  static const Color _textPrimary = Color(0xFF3E2723); // Dark Brown
+  static const Color _textSecondary = Color(0xFF8D6E63); // Light Brown
+  static const Color _divider = Color(0xFFE0E0E0);
 
   static ThemeData get lightTheme {
     return ThemeData(
+      useMaterial3: true,
       // --- Core Color Scheme ---
       primaryColor: _primary,
       primaryColorDark: _primaryDark,
       primaryColorLight: _primaryLight,
-      scaffoldBackgroundColor: _background, // พื้นหลังแอปเป็นสีครีม
+      scaffoldBackgroundColor: _background,
 
       colorScheme: const ColorScheme.light(
         primary: _primary,
-        secondary: _primaryLight, // ใช้สีน้ำตาลอ่อนเป็น Secondary
+        secondary: _primaryLight,
         onPrimary: Colors.white,
-        onSecondary: Colors.white,
+        onSecondary: _textPrimary,
         surface: _surface,
         onSurface: _textPrimary,
         error: Color(0xFFB00020),
@@ -37,33 +36,35 @@ class AppTheme {
       ),
 
       // --- AppBar Theme ---
-      appBarTheme: const AppBarTheme(
-        backgroundColor: _primary,
-        foregroundColor: Colors.white, // สีไอคอนและข้อความ
+      appBarTheme: AppBarTheme(
+        backgroundColor: _background, // Clean look: background color
+        foregroundColor: _textPrimary, // Dark text
         elevation: 0,
-        centerTitle: false,
-        iconTheme: IconThemeData(color: Colors.white),
-        titleTextStyle: TextStyle(
-          color: Colors.white,
-          fontSize: 20.0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: _textPrimary),
+        titleTextStyle: GoogleFonts.prompt(
+          color: _textPrimary,
+          fontSize: 20.sp,
           fontWeight: FontWeight.bold,
         ),
       ),
 
       // --- Typography ---
-      textTheme: const TextTheme(
-        headlineLarge: TextStyle(
-            fontSize: 32.0, fontWeight: FontWeight.bold, color: _primaryDark),
-        headlineMedium: TextStyle(
-            fontSize: 24.0, fontWeight: FontWeight.bold, color: _primary),
-        headlineSmall: TextStyle(
-            fontSize: 20.0, fontWeight: FontWeight.bold, color: _primary),
-        titleLarge: TextStyle(
-            fontSize: 18.0, fontWeight: FontWeight.w600, color: _textPrimary),
-        bodyLarge: TextStyle(fontSize: 16.0, color: _textPrimary),
-        bodyMedium: TextStyle(fontSize: 14.0, color: _textSecondary),
-        labelLarge: TextStyle(
-            fontSize: 16.0, fontWeight: FontWeight.bold, color: _textPrimary),
+      textTheme: TextTheme(
+        headlineLarge: GoogleFonts.prompt(
+            fontSize: 28.sp, fontWeight: FontWeight.bold, color: _primaryDark),
+        headlineMedium: GoogleFonts.prompt(
+            fontSize: 24.sp, fontWeight: FontWeight.bold, color: _primary),
+        headlineSmall: GoogleFonts.prompt(
+            fontSize: 20.sp, fontWeight: FontWeight.bold, color: _textPrimary),
+        titleLarge: GoogleFonts.prompt(
+            fontSize: 20.sp, fontWeight: FontWeight.w600, color: _textPrimary),
+        titleMedium: GoogleFonts.prompt(
+            fontSize: 16.sp, fontWeight: FontWeight.w600, color: _textPrimary),
+        bodyLarge: GoogleFonts.prompt(fontSize: 16.sp, color: _textPrimary),
+        bodyMedium: GoogleFonts.prompt(fontSize: 14.sp, color: _textSecondary),
+        labelLarge: GoogleFonts.prompt(
+            fontSize: 16.sp, fontWeight: FontWeight.bold, color: _textPrimary),
       ),
 
       dividerColor: _divider,
@@ -71,11 +72,11 @@ class AppTheme {
       // --- Card Theme ---
       cardTheme: CardThemeData(
         color: _surface,
-        elevation: 2,
-        shadowColor: _primary.withValues(alpha: 0.2),
-        margin: const EdgeInsets.only(bottom: 12),
+        elevation:
+            0, // Flat with shadow handled by decoration mostly, but let's give it a slight elevation default
+        margin: EdgeInsets.only(bottom: 12.h),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
+          borderRadius: BorderRadius.circular(24.r), // Standardize to 24
         ),
       ),
 
@@ -86,10 +87,13 @@ class AppTheme {
           foregroundColor: Colors.white,
           elevation: 2,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
+            borderRadius: BorderRadius.circular(30.r), // Pill shape
           ),
-          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
-          textStyle: const TextStyle(fontWeight: FontWeight.bold),
+          padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 24.w),
+          textStyle: GoogleFonts.prompt(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
 
@@ -98,44 +102,69 @@ class AppTheme {
           foregroundColor: _primary,
           side: const BorderSide(color: _primary),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
+            borderRadius: BorderRadius.circular(30.r),
           ),
-          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
+          padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 24.w),
+          textStyle: GoogleFonts.prompt(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: _textSecondary,
+          textStyle: GoogleFonts.prompt(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
 
       // --- Input/Form Theme ---
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: _surface,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        fillColor: Colors.white,
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.0),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(16.r),
+          borderSide: BorderSide(color: _divider),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.0),
-          borderSide: const BorderSide(color: Colors.transparent),
+          borderRadius: BorderRadius.circular(16.r),
+          borderSide: BorderSide(color: _divider),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: BorderRadius.circular(16.r),
           borderSide: const BorderSide(color: _primary, width: 2.0),
         ),
-        labelStyle: const TextStyle(color: _textSecondary),
-        floatingLabelStyle: const TextStyle(color: _primary),
+        labelStyle: TextStyle(color: _textSecondary, fontSize: 14.sp),
+        floatingLabelStyle: TextStyle(color: _primary, fontSize: 14.sp),
+        hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14.sp),
       ),
 
       // --- Floating Action Button ---
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: _primary,
         foregroundColor: Colors.white,
+        shape: CircleBorder(), // Or rounded rect if preferred
       ),
 
       tabBarTheme: TabBarThemeData(
-        labelColor: _textPrimary,
-        unselectedLabelColor: _textSecondary.withOpacity(0.8),
+        labelColor: _primary,
+        unselectedLabelColor: _textSecondary,
         indicatorColor: _primary,
+        labelStyle: GoogleFonts.prompt(fontWeight: FontWeight.bold),
+        unselectedLabelStyle: GoogleFonts.prompt(),
+      ),
+
+      // --- Bottom Navigation Bar ---
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        selectedItemColor: _primary,
+        unselectedItemColor: _textSecondary,
+        selectedLabelStyle: GoogleFonts.prompt(fontWeight: FontWeight.bold),
+        unselectedLabelStyle: GoogleFonts.prompt(),
       ),
     );
   }

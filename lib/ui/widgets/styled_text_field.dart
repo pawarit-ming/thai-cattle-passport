@@ -8,6 +8,8 @@ class StyledTextField extends StatelessWidget {
   final String? hintText;
   final bool isRequired;
   final TextInputType? keyboardType;
+  final String? suffixText;
+  final String? Function(String?)? customValidator;
 
   const StyledTextField({
     super.key,
@@ -17,6 +19,8 @@ class StyledTextField extends StatelessWidget {
     this.hintText,
     this.isRequired = false,
     this.keyboardType,
+    this.suffixText,
+    this.customValidator,
   });
 
   @override
@@ -37,21 +41,25 @@ class StyledTextField extends StatelessWidget {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
-          validator: (value) {
-            if (isRequired && (value == null || value.isEmpty)) {
-              return 'กรุณากรอก $label';
-            }
-            if (keyboardType == TextInputType.number &&
-                value != null &&
-                value.isNotEmpty) {
-              if (double.tryParse(value) == null) {
-                return 'กรุณากรอกตัวเลขที่ถูกต้อง';
-              }
-            }
-            return null;
-          },
+          validator: customValidator ??
+              (value) {
+                if (isRequired && (value == null || value.isEmpty)) {
+                  return 'กรุณากรอก $label';
+                }
+                if (keyboardType == TextInputType.number &&
+                    value != null &&
+                    value.isNotEmpty) {
+                  if (double.tryParse(value) == null) {
+                    return 'กรุณากรอกตัวเลขที่ถูกต้อง';
+                  }
+                }
+                return null;
+              },
           decoration: InputDecoration(
             hintText: hintText,
+            suffixText: suffixText,
+            contentPadding: EdgeInsets.symmetric(
+                horizontal: 16.w, vertical: 12.h), // Ensure padding
             prefixIcon: Icon(icon),
             filled: true,
             fillColor: Colors.grey.shade50,

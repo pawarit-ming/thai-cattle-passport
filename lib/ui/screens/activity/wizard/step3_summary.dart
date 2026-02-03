@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:th_cow_passport/services/cow_management/cow_activity/activity_service.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
 import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
@@ -55,7 +54,7 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Saved successfully!'),
+            content: Text('บันทึกเรียบร้อยแล้ว!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -65,7 +64,7 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text('เกิดข้อผิดพลาด: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -93,17 +92,18 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
                         width: 100.r,
                         height: 100.r,
                         decoration: BoxDecoration(
-                          color: WizardColors.primarySpring.withOpacity(0.1),
+                          color:
+                              WizardColors.primarySpring.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(widget.type.icon,
                             size: 48.r, color: WizardColors.primarySpring),
                       ),
                       SizedBox(height: 32.h),
-                      _buildSummaryRow(
-                          'Date', DateFormat('dd/MM/yyyy').format(widget.date)),
+                      _buildSummaryRow('วันที่',
+                          '${widget.date.day}/${widget.date.month}/${widget.date.year + 543}'),
                       Divider(height: 32.h),
-                      _buildSummaryRow('Type', widget.type.label),
+                      _buildSummaryRow('ประเภท', widget.type.label),
                       if (widget.data.isNotEmpty) ...[
                         Divider(height: 32.h),
                         // Display key data
@@ -117,7 +117,7 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
                         Divider(height: 32.h),
                         Align(
                           alignment: Alignment.centerLeft,
-                          child: Text('Notes',
+                          child: Text('บันทึกเพิ่มเติม',
                               style: TextStyle(
                                   color: Colors.grey, fontSize: 14.sp)),
                         ),
@@ -133,7 +133,7 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
                 ),
                 SizedBox(height: 24.h),
                 Text(
-                  'Please review the details above. Once saved, this record will be added to the animal history.',
+                  'กรุณาตรวจสอบรายละเอียดด้านบน เมื่อบันทึกแล้ว ข้อมูลจะถูกเพิ่มในประวัติสัตว์',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.grey, fontSize: 14.sp),
                 ),
@@ -152,14 +152,14 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
                   style: WizardStyles.primaryButtonStyle,
                   child: _isSaving
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Save Record'),
+                      : const Text('บันทึกข้อมูล'),
                 ),
               ),
               SizedBox(height: 16.h),
               TextButton(
                 onPressed: widget.onEdit,
                 style: WizardStyles.secondaryButtonStyle,
-                child: const Text('Edit Details'),
+                child: const Text('แก้ไขข้อมูล'),
               ),
             ],
           ),
@@ -179,8 +179,30 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
   }
 
   String _formatKey(String key) {
-    // Simple formatter, can be expanded
-    return key.replaceAll('_', ' ').capitalize();
+    switch (key) {
+      case 'vaccine_name':
+        return 'ชื่อวัคซีน';
+      case 'calf_name':
+        return 'ชื่อลูกโค';
+      case 'sex':
+        return 'เพศ';
+      case 'breed':
+        return 'สายพันธุ์';
+      case 'calf_nid':
+        return 'NID ลูกโค';
+      case 'calf_birth_weight':
+        return 'น้ำหนักแรกเกิด';
+      case 'weight':
+        return 'น้ำหนัก';
+      case 'symptoms':
+        return 'อาการ';
+      case 'treatment_details':
+        return 'รายละเอียดการรักษา';
+      case 'details':
+        return 'รายละเอียด';
+      default:
+        return key.replaceAll('_', ' ').capitalize();
+    }
   }
 }
 

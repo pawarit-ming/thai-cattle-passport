@@ -32,7 +32,7 @@ class GeneralTab extends ConsumerWidget {
               _buildDetailRow(theme, 'Tag ID:', cow.nidNumber ?? '-'),
               _buildDetailRow(theme, 'ชื่อ:', cow.animalName),
               _buildDetailRow(theme, 'สายพันธุ์:', cow.breed ?? '-'),
-                _buildDetailRow(
+              _buildDetailRow(
                   theme, 'เพศ:', cow.sex == 'MALE' ? 'พ่อพันธุ์' : 'แม่พันธุ์'),
               _buildDetailRow(theme, 'วันเกิด:',
                   cow.birthDate?.toIso8601String().substring(0, 10) ?? '-'),
@@ -41,11 +41,10 @@ class GeneralTab extends ConsumerWidget {
               _buildDetailRow(theme, 'สีตัว:', cow.color ?? '-'),
               Divider(height: 32.h),
               _buildDetailRow(
-                  theme, 'แม่พันธุ์ (Dam):', cow.damName ?? cow.damId?.toString() ?? '-'),
+                  theme, 'แม่พันธุ์ (Dam):', cow.damId?.toString() ?? '-'),
               _buildDetailRow(
-                  theme, 'พ่อพันธุ์ (Sire):', cow.sireName ?? cow.sireId?.toString() ?? '-'),
-              _buildDetailRow(
-                  theme, 'สถานะ:', _getStatusLabel(cow.status)),
+                  theme, 'พ่อพันธุ์ (Sire):', cow.sireId?.toString() ?? '-'),
+              _buildDetailRow(theme, 'สถานะ:', _getStatusLabel(cow.status)),
             ],
           ),
         ),
@@ -63,8 +62,8 @@ class GeneralTab extends ConsumerWidget {
               style: theme.textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.bold, color: Colors.grey[700])),
           Text(value,
-              style:
-                  theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500)),
+              style: theme.textTheme.bodyLarge
+                  ?.copyWith(fontWeight: FontWeight.w500)),
         ],
       ),
     );

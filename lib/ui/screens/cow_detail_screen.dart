@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logger/logger.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
 import 'package:th_cow_passport/ui/screens/camera_screen.dart';
@@ -20,6 +21,7 @@ class CowDetailScreen extends ConsumerStatefulWidget {
 
 class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
     with SingleTickerProviderStateMixin {
+  final logger = Logger();
   late TabController _tabController;
 
   @override
@@ -27,9 +29,13 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
+      if (_tabController.indexIsChanging) {
+        logger.d('Tab changed to index: ${_tabController.index}');
+      }
       setState(() {}); // รีเฟรช UI เมื่อ Tab เปลี่ยน
     });
     // ดึงข้อมูลเมื่อเข้าหน้าจอ
+    logger.i('Fetching details for cow ID: ${widget.cowId}');
     Future.microtask(
         () => ref.read(cowDetailServiceProvider).fetchCowById(widget.cowId));
   }
@@ -74,7 +80,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
       actions: [
         IconButton(
           icon: const Icon(Icons.qr_code_2),
-          tooltip: 'Show QR Code',
+          tooltip: 'แสดง QR Code',
           onPressed: () => _showQrDialog(context, cow.nidNumber ?? 'unknown'),
         ),
       ],
@@ -145,7 +151,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
               padding: EdgeInsets.symmetric(vertical: 16.h),
               elevation: 0,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r)),
+                  borderRadius: BorderRadius.circular(30.r)),
             ),
           ),
         ),
@@ -163,7 +169,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
         return AlertDialog(
           actionsAlignment: MainAxisAlignment.center,
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
           title: Center(
               child: Text('Cow ID: $cowId',
                   style: TextStyle(

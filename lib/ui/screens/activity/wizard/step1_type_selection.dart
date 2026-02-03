@@ -17,7 +17,7 @@ class Step1TypeSelection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'What type of activity?',
+            'บันทึกกิจกรรมอะไรดี?',
             style: WizardStyles.titleLarge,
           ),
           SizedBox(height: 24.h),
@@ -32,8 +32,9 @@ class Step1TypeSelection extends StatelessWidget {
               itemCount: ActivityType.values.length,
               itemBuilder: (context, index) {
                 final type = ActivityType.values[index];
-                if (type == ActivityType.EDIT_LOG)
+                if (type == ActivityType.EDIT_LOG) {
                   return const SizedBox.shrink(); // Skip Edit Log
+                }
 
                 return _buildTypeCard(context, type);
               },

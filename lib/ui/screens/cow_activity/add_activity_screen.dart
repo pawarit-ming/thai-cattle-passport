@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logger/logger.dart';
 import 'package:th_cow_passport/services/cow_management/cow_activity/activity_service.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
 import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
@@ -23,6 +24,7 @@ class AddActivityScreen extends ConsumerStatefulWidget {
 }
 
 class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
+  final logger = Logger();
   final _formKey = GlobalKey<FormState>();
   late DateTime _selectedDate;
   bool _isSaving = false;
@@ -53,7 +55,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
     super.initState();
     _selectedDate = DateTime.now();
     _activityDateController.text =
-        DateFormat('yyyy-MM-dd').format(_selectedDate);
+        DateFormat('yyyy-MM-dd HH:mm').format(_selectedDate);
   }
 
   @override
@@ -74,18 +76,32 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-        _activityDateController.text =
-            DateFormat('yyyy-MM-dd').format(_selectedDate);
-      });
+    if (pickedDate != null) {
+      if (!mounted) return;
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(_selectedDate),
+      );
+
+      if (pickedTime != null) {
+        setState(() {
+          _selectedDate = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          );
+          _activityDateController.text =
+              DateFormat('yyyy-MM-dd HH:mm').format(_selectedDate);
+        });
+      }
     }
   }
 
@@ -136,7 +152,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
       children: [
         DatePickerField(
           controller: _activityDateController,
-          labelText: 'วันที่ทำกิจกรรม',
+          labelText: 'วันที่และเวลาทำกิจกรรม',
           onTap: () => _selectDate(context),
         ),
         SizedBox(height: 16.h),
@@ -278,6 +294,8 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
     }
     _formKey.currentState!.save();
 
+    logger.i('Saving activity: ${widget.activityType}, Date: $_selectedDate');
+
     setState(() {
       _isSaving = true;
     });
@@ -340,6 +358,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
             backgroundColor: Colors.red,
           ),
         );
+        logger.e('Error saving activity: $error', error: error);
         context.pop();
       }
     } finally {

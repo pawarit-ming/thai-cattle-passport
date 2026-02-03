@@ -114,7 +114,7 @@ class _CameraWidgetState extends State<CameraWidget> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: _previewImagePath == null,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (!didPop) {
           _retakePicture();
         }

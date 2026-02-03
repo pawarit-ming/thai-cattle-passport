@@ -31,21 +31,21 @@ class CowCard extends StatelessWidget {
         color: isSelected
             ? colorScheme.primaryContainer.withValues(alpha: 0.3)
             : (theme.cardTheme.color ?? Colors.white),
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(24.r),
         border: isSelected
             ? Border.all(color: colorScheme.primary, width: 2.w)
             : null,
         boxShadow: [
           BoxShadow(
-            color: colorScheme.primary.withOpacity(0.1),
-            blurRadius: 10.r,
-            offset: Offset(0, 4.h),
+            color: colorScheme.primary.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(24.r),
         child: InkWell(
           borderRadius: BorderRadius.circular(16.r),
           onTap: isEditMode
@@ -74,7 +74,7 @@ class CowCard extends StatelessWidget {
                     color: theme.scaffoldBackgroundColor,
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
-                        color: colorScheme.secondary.withOpacity(0.3)),
+                        color: colorScheme.secondary.withValues(alpha: 0.3)),
                     image: (cow.facePic != null && cow.facePic!.isNotEmpty)
                         ? DecorationImage(
                             image: NetworkImage(cow.facePic!.first),

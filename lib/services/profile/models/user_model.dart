@@ -17,6 +17,7 @@ class User {
   final String? mobilePhone;
   final String? address;
   final String? province;
+  final String? citizenId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -30,6 +31,7 @@ class User {
     this.mobilePhone,
     this.address,
     this.province,
+    this.citizenId,
     this.createdAt,
     this.updatedAt,
   });
@@ -46,6 +48,7 @@ class User {
     String? mobilePhone,
     String? address,
     String? province,
+    String? citizenId,
     DateTime? updatedAt,
   }) {
     return User(
@@ -58,6 +61,7 @@ class User {
       mobilePhone: mobilePhone ?? this.mobilePhone,
       address: address ?? this.address,
       province: province ?? this.province,
+      citizenId: citizenId ?? this.citizenId,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -71,12 +75,16 @@ class User {
       title: map['title'],
       firstName: map['first_name'],
       lastName: map['last_name'],
-      birthDate: map['birth_date'] != null ? DateTime.parse(map['birth_date']) : null,
+      birthDate:
+          map['birth_date'] != null ? DateTime.parse(map['birth_date']) : null,
       mobilePhone: map['mobile_phone'],
       address: map['address'],
       province: map['province'],
-      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
-      updatedAt: map['updated_at'] != null ? DateTime.parse(map['updated_at']) : null,
+      citizenId: map['citizen_id'],
+      createdAt:
+          map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
+      updatedAt:
+          map['updated_at'] != null ? DateTime.parse(map['updated_at']) : null,
     );
   }
 
@@ -101,6 +109,7 @@ class User {
       'mobile_phone': mobilePhone,
       'address': address,
       'province': province,
+      'citizen_id': citizenId,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };

@@ -14,9 +14,9 @@ class Cow {
   final String? color;
   final double? weight;
   final double? height;
-  final String? facePic;
-  final String? bodyPic;
-  final String? markPic;
+  final List<String>? facePic;
+  final List<String>? bodyPic;
+  final List<String>? markPic;
   final String? origin;
   final DateTime? importDate;
   final String status;
@@ -67,9 +67,9 @@ class Cow {
     String? color,
     double? weight,
     double? height,
-    String? facePic,
-    String? bodyPic,
-    String? markPic,
+    List<String>? facePic,
+    List<String>? bodyPic,
+    List<String>? markPic,
     String? origin,
     DateTime? importDate,
     String? status,
@@ -114,7 +114,8 @@ class Cow {
       animalName: map['animal_name'],
       breed: map['breed'],
       sex: map['sex'],
-      birthDate: map['birth_date'] != null ? DateTime.parse(map['birth_date']) : null,
+      birthDate:
+          map['birth_date'] != null ? DateTime.parse(map['birth_date']) : null,
       sireId: map['sire_id'],
       sireName: map['sire_name'],
       damId: map['dam_id'],
@@ -122,15 +123,25 @@ class Cow {
       color: map['color'],
       weight: map['weight'] != null ? (map['weight'] as num).toDouble() : null,
       height: map['height'] != null ? (map['height'] as num).toDouble() : null,
-      facePic: map['face_pic'],
-      bodyPic: map['body_pic'],
-      markPic: map['mark_pic'],
+      facePic: map['face_pic'] != null
+          ? List<String>.from(map['face_pic'] as List)
+          : null,
+      bodyPic: map['body_pic'] != null
+          ? List<String>.from(map['body_pic'] as List)
+          : null,
+      markPic: map['mark_pic'] != null
+          ? List<String>.from(map['mark_pic'] as List)
+          : null,
       origin: map['origin'],
-      importDate: map['import_date'] != null ? DateTime.parse(map['import_date']) : null,
+      importDate: map['import_date'] != null
+          ? DateTime.parse(map['import_date'])
+          : null,
       status: map['status'] ?? 'ACTIVE',
       isDeleted: map['is_deleted'] ?? false,
-      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
-      updatedAt: map['updated_at'] != null ? DateTime.parse(map['updated_at']) : null,
+      createdAt:
+          map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
+      updatedAt:
+          map['updated_at'] != null ? DateTime.parse(map['updated_at']) : null,
     );
   }
 

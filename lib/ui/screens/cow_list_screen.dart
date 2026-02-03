@@ -327,64 +327,64 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
         color: isSelected
             ? colorScheme.primaryContainer.withValues(alpha: 0.3)
             : (theme.cardTheme.color ?? Colors.white),
+        borderRadius: BorderRadius.circular(16.r),
+        border: isSelected
+            ? Border.all(color: colorScheme.primary, width: 2.w)
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withOpacity(0.1),
+            blurRadius: 10.r,
+            offset: Offset(0, 4.h),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16.r),
+        child: InkWell(
           borderRadius: BorderRadius.circular(16.r),
-          border: isSelected
-              ? Border.all(color: colorScheme.primary, width: 2.w)
-              : null,
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.primary.withOpacity(0.1),
-              blurRadius: 10.r,
-              offset: Offset(0, 4.h),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(16.r),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16.r),
-            // เมื่ออยู่ในโหมดแก้ไข ให้กดเพื่อเลือกแทนการไปหน้า Detail
-            onTap: isEditMode
-                ? onSelect
-                : () => context.go('/detail/${cow.animalId}'),
-            child: Padding(
-              padding: EdgeInsets.all(12.r),
-              child: Row(
-                children: [
-                  // จุดที่ต้องเพิ่ม: แสดง Checkbox เมื่ออยู่ในโหมดแก้ไข
-                  if (isEditMode)
-                    Padding(
-                      padding: EdgeInsets.only(right: 12.w),
-                      child: Checkbox(
-                        value: isSelected,
-                        onChanged: (val) => onSelect(),
-                        activeColor: colorScheme.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4.r),
-                        ),
+          // เมื่ออยู่ในโหมดแก้ไข ให้กดเพื่อเลือกแทนการไปหน้า Detail
+          onTap: isEditMode
+              ? onSelect
+              : () => context.go('/detail/${cow.animalId}'),
+          child: Padding(
+            padding: EdgeInsets.all(12.r),
+            child: Row(
+              children: [
+                // จุดที่ต้องเพิ่ม: แสดง Checkbox เมื่ออยู่ในโหมดแก้ไข
+                if (isEditMode)
+                  Padding(
+                    padding: EdgeInsets.only(right: 12.w),
+                    child: Checkbox(
+                      value: isSelected,
+                      onChanged: (val) => onSelect(),
+                      activeColor: colorScheme.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4.r),
                       ),
                     ),
-                  Container(
-                    width: 60.r,
-                    height: 60.r,
-                    decoration: BoxDecoration(
-                      color: theme.scaffoldBackgroundColor,
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(
-                          color: colorScheme.secondary.withOpacity(0.3)),
-                      image: cow.facePic != null
-                          ? DecorationImage(
-                              image: NetworkImage(cow.facePic!),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
-                    ),
-                    child: cow.facePic == null
-                        ? Icon(Icons.pets, color: colorScheme.primary, size: 36.r)
+                  ),
+                Container(
+                  width: 60.r,
+                  height: 60.r,
+                  decoration: BoxDecoration(
+                    color: theme.scaffoldBackgroundColor,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                        color: colorScheme.secondary.withOpacity(0.3)),
+                    image: (cow.facePic != null && cow.facePic!.isNotEmpty)
+                        ? DecorationImage(
+                            image: NetworkImage(cow.facePic!.first),
+                            fit: BoxFit.cover,
+                          )
                         : null,
                   ),
-                  SizedBox(width: 16.w),
+                  child: (cow.facePic == null || cow.facePic!.isEmpty)
+                      ? Icon(Icons.pets, color: colorScheme.primary, size: 36.r)
+                      : null,
+                ),
+                SizedBox(width: 16.w),
 
                 Expanded(
                   child: Column(
@@ -474,13 +474,15 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
         children: [
           Icon(icon, size: 12.r, color: textColor),
           if (label != null && label.isNotEmpty) ...[
-          SizedBox(width: 4.w),
-          Text(
-            label,
-            style: TextStyle(
-                fontSize: 10.sp, color: textColor, fontWeight: FontWeight.bold),
-          ),
-        ],
+            SizedBox(width: 4.w),
+            Text(
+              label,
+              style: TextStyle(
+                  fontSize: 10.sp,
+                  color: textColor,
+                  fontWeight: FontWeight.bold),
+            ),
+          ],
         ],
       ),
     );

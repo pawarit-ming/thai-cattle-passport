@@ -68,9 +68,9 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
     return CowDetailWidget(
       title: 'ข้อมูลประจำตัววัว',
       images: [
-        if (cow.facePic != null) cow.facePic!,
-        if (cow.bodyPic != null) cow.bodyPic!,
-        if (cow.markPic != null) cow.markPic!,
+        if (cow.facePic != null) ...cow.facePic!,
+        if (cow.bodyPic != null) ...cow.bodyPic!,
+        if (cow.markPic != null) ...cow.markPic!,
       ],
       tabController: _tabController,
       onBack: () {

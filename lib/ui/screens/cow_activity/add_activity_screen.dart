@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:th_cow_passport/services/cow_management/cow_activity/activity_service.dart';
+import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
 import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
 import 'package:th_cow_passport/ui/screens/cow_activity/widgets/form_widgets.dart';
 
@@ -320,6 +321,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
     try {
       await ref.read(activityServiceProvider).addActivity(newActivity);
       ref.invalidate(activitiesProvider(widget.cowId));
+      ref.invalidate(cowDetailServiceProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

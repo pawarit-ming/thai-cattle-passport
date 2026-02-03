@@ -6,7 +6,8 @@ import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
 import '../../../supabase_config.dart';
 import 'package:logger/logger.dart';
 
-final cowDetailServiceProvider = ChangeNotifierProvider((ref) => CowDetailService());
+final cowDetailServiceProvider =
+    ChangeNotifierProvider((ref) => CowDetailService());
 
 class CowDetailService extends ChangeNotifier {
   final logger = Logger();
@@ -41,18 +42,37 @@ class CowDetailService extends ChangeNotifier {
   }
 
   // 2. ฟังก์ชันแก้ไขข้อมูลวัว (Update)
-  Future<String?> updateCow(Cow updatedCow, {File? newFacePic, File? newBodyPic, File? newMarkPic}) async {
+  Future<String?> updateCow(Cow updatedCow,
+      {File? newFacePic, File? newBodyPic, File? newMarkPic}) async {
     _setLoading(true);
     try {
-      String? faceUrl = updatedCow.facePic;
-      String? bodyUrl = updatedCow.bodyPic;
-      String? markUrl = updatedCow.markPic;
+      // Prepare lists (initially from the model, or empty if null)
+      List<String> faceUrls = List.from(updatedCow.facePic ?? []);
+      List<String> bodyUrls = List.from(updatedCow.bodyPic ?? []);
+      List<String> markUrls = List.from(updatedCow.markPic ?? []);
+
       final nidNumber = updatedCow.nidNumber ?? 'unknown';
 
-      // ถ้ามีการเลือกรูปใหม่ ให้ทำการอัปโหลดก่อน
-      if (newFacePic != null) faceUrl = await _uploadImage(newFacePic, nidNumber, 'face');
-      if (newBodyPic != null) bodyUrl = await _uploadImage(newBodyPic, nidNumber, 'body');
-      if (newMarkPic != null) markUrl = await _uploadImage(newMarkPic, nidNumber, 'mark');
+      // Upload new images and REPLACE the first item if exists (or add if empty)
+      // Since the UI currently supports only one image per category, we treat the first item as the main one.
+      if (newFacePic != null) {
+        final url = await _uploadImage(newFacePic, nidNumber, 'face');
+        if (url != null) {
+          faceUrls = [url]; // Replace with new list containing the new URL
+        }
+      }
+      if (newBodyPic != null) {
+        final url = await _uploadImage(newBodyPic, nidNumber, 'body');
+        if (url != null) {
+          bodyUrls = [url];
+        }
+      }
+      if (newMarkPic != null) {
+        final url = await _uploadImage(newMarkPic, nidNumber, 'mark');
+        if (url != null) {
+          markUrls = [url];
+        }
+      }
 
       final dataToUpdate = {
         'animal_name': updatedCow.animalName,
@@ -68,9 +88,9 @@ class CowDetailService extends ChangeNotifier {
         'birth_date': updatedCow.birthDate?.toIso8601String(),
         'sex': updatedCow.sex,
         'status': updatedCow.status,
-        'face_pic': faceUrl,
-        'body_pic': bodyUrl,
-        'mark_pic': markUrl,
+        'face_pic': faceUrls,
+        'body_pic': bodyUrls,
+        'mark_pic': markUrls,
         'updated_at': DateTime.now().toIso8601String(),
       };
 
@@ -79,12 +99,19 @@ class CowDetailService extends ChangeNotifier {
           .update(dataToUpdate)
           .eq('animal_id', updatedCow.animalId!);
 
-      _currentCow = updatedCow; // อัปเดต State ในแอป
+      // Update local state with the new URLs
+      _currentCow = updatedCow.copyWith(
+        facePic: faceUrls,
+        bodyPic: bodyUrls,
+        markPic: markUrls,
+      );
+
       logger.i("Cow updated successfully: ${updatedCow.animalName}");
       return null;
     } on PostgrestException catch (e) {
       logger.e('Error updating cow: $e');
-      if (e.code == '22003') { // numeric_field_overflow
+      if (e.code == '22003') {
+        // numeric_field_overflow
         return 'ข้อมูลตัวเลข (เช่น น้ำหนัก, ส่วนสูง) มีค่ามากเกินไป';
       }
       return e.message;
@@ -97,51 +124,55 @@ class CowDetailService extends ChangeNotifier {
   }
 
   // 3. ฟังก์ชันเพิ่มวัวใหม่ (Add)
-  Future<bool> addCow(Cow cow, {File? bodyPic, File? facePic, File? markPic}) async {
+  Future<bool> addCow(Cow cow,
+      {File? bodyPic, File? facePic, File? markPic}) async {
     _setLoading(true);
     try {
-      String? bodyPicUrl;
-      String? facePicUrl;
-      String? markPicUrl;
+      List<String>? bodyPicUrls;
+      List<String>? facePicUrls;
+      List<String>? markPicUrls;
       final nidNumber = cow.nidNumber ?? 'unknown';
 
-      // Upload images if provided, using the typed _uploadImage method
+      // Upload images if provided
       if (bodyPic != null) {
-        bodyPicUrl = await _uploadImage(bodyPic, nidNumber, 'body');
+        final url = await _uploadImage(bodyPic, nidNumber, 'body');
+        if (url != null) bodyPicUrls = [url];
       }
       if (facePic != null) {
-        facePicUrl = await _uploadImage(facePic, nidNumber, 'face');
+        final url = await _uploadImage(facePic, nidNumber, 'face');
+        if (url != null) facePicUrls = [url];
       }
       if (markPic != null) {
-        markPicUrl = await _uploadImage(markPic, nidNumber, 'mark');
+        final url = await _uploadImage(markPic, nidNumber, 'mark');
+        if (url != null) markPicUrls = [url];
       }
 
       final cowWithImages = cow.copyWith(
-        bodyPic: bodyPicUrl,
-        facePic: facePicUrl,
-        markPic: markPicUrl,
+        bodyPic: bodyPicUrls,
+        facePic: facePicUrls,
+        markPic: markPicUrls,
       );
 
-      // Assuming the model has a method to convert to a map suitable for insertion
       final data = cowWithImages.toMapForInsert();
       logger.d("Adding new cow with NID: ${cow.nidNumber}");
       await supabase.from('animals').insert(data);
 
       logger.i("Cow added successfully: ${cow.nidNumber}");
       return true;
-
     } catch (e) {
       logger.e('Error adding cow: $e', error: e);
       return false;
     } finally {
-       _setLoading(false);
+      _setLoading(false);
     }
   }
 
   // ฟังก์ชันช่วยอัปโหลดรูป (เหมือนใน CowService)
-  Future<String?> _uploadImage(File imageFile, String cowNid, String type) async {
+  Future<String?> _uploadImage(
+      File imageFile, String cowNid, String type) async {
     try {
-      final fileName = '${type}_${DateTime.now().millisecondsSinceEpoch}.${imageFile.path.split('.').last}';
+      final fileName =
+          '${type}_${DateTime.now().millisecondsSinceEpoch}.${imageFile.path.split('.').last}';
       final String path = '${SupabaseConfig.bucketName}/$cowNid/$fileName';
 
       await supabase.storage.from(SupabaseConfig.bucketName).upload(
@@ -149,7 +180,9 @@ class CowDetailService extends ChangeNotifier {
             imageFile,
             fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
           );
-      return supabase.storage.from(SupabaseConfig.bucketName).getPublicUrl(path);
+      return supabase.storage
+          .from(SupabaseConfig.bucketName)
+          .getPublicUrl(path);
     } catch (e) {
       logger.e('Error uploading image: $e');
       return null;

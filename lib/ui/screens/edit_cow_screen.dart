@@ -13,7 +13,8 @@ class EditCowScreen extends ConsumerStatefulWidget {
   ConsumerState<EditCowScreen> createState() => _EditCowScreenState();
 }
 
-class _EditCowScreenState extends ConsumerState<EditCowScreen> with SingleTickerProviderStateMixin {
+class _EditCowScreenState extends ConsumerState<EditCowScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
 
 // Tab Controller
@@ -130,7 +131,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> with SingleTicker
       child: CowDetailWidget(
         title: 'แก้ไขข้อมูล: ${cow.animalName}',
         images: [
-          if (cow.facePic != null) cow.facePic!,
+          if (cow.facePic != null) ...cow.facePic!,
         ],
         tabController: _tabController,
         tabs: const [
@@ -194,7 +195,8 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> with SingleTicker
             decoration: InputDecoration(
               labelText: 'เพศ',
               prefixIcon: const Icon(Icons.wc),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
             ),
             items: const [
               DropdownMenuItem(value: 'MALE', child: Text('ผู้')),
@@ -210,7 +212,8 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> with SingleTicker
             decoration: InputDecoration(
               labelText: 'สถานะ',
               prefixIcon: const Icon(Icons.info),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
             ),
             items: const [
               DropdownMenuItem(value: 'ACTIVE', child: Text('ใช้งาน')),
@@ -330,8 +333,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> with SingleTicker
             if (!isRequired)
               Text(
                 ' (ไม่บังคับ)',
-                style: TextStyle(
-                    color: Colors.grey.shade600, fontSize: 12.sp),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp),
               ),
           ],
         ),
@@ -363,8 +365,8 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> with SingleTicker
             prefixIcon: Icon(icon),
             filled: true,
             fillColor: Colors.grey.shade50,
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r)),
+            border:
+                OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
           ),
         ),
       ],

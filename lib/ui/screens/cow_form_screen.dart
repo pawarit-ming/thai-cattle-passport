@@ -227,6 +227,9 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
       damName:
           _damNameController.text.isNotEmpty ? _damNameController.text : null,
       status: 'ACTIVE',
+      facePic: [],
+      bodyPic: [],
+      markPic: [],
     );
 
     try {

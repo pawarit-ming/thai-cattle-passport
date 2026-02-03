@@ -10,8 +10,8 @@ import 'package:th_cow_passport/ui/screens/cow_list/cow_list_screen.dart';
 import 'package:th_cow_passport/ui/screens/edit_cow_screen.dart';
 import 'package:th_cow_passport/ui/screens/auth/login_screen.dart'; // เพิ่ม import หน้า Login
 import 'package:th_cow_passport/ui/screens/auth/register_screen.dart'; // เพิ่ม import หน้า Register
-import 'package:th_cow_passport/ui/screens/cow_activity/add_activity_screen.dart';
-import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
+import 'package:th_cow_passport/ui/screens/activity/wizard/add_activity_wizard.dart';
+
 import 'package:th_cow_passport/ui/screens/profile_screen.dart';
 import 'package:th_cow_passport/ui/screens/offer_screen.dart';
 import 'package:th_cow_passport/ui/screens/buy_screen.dart';
@@ -99,8 +99,8 @@ final router = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) {
         final cowId = int.parse(state.pathParameters['cowId']!);
-        final activityType = state.extra as ActivityType;
-        return AddActivityScreen(cowId: cowId, activityType: activityType);
+
+        return AddActivityWizard(cowId: cowId);
       },
     ),
 

@@ -114,7 +114,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         final lastName = _lastNameController.text.trim();
         final citizenId = _citizenIdController.text.trim();
 
-        logger.i('[RegisterScreen] Signing up: $_authEmail, name: $firstName $lastName, citizenId: $citizenId');
+        logger.i(
+            '[RegisterScreen] Signing up: $_authEmail, name: $firstName $lastName, citizenId: $citizenId');
         final authService = AuthService();
         final response = await authService.signUp(
           email: _authEmail,
@@ -124,11 +125,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           citizenId: citizenId,
         );
 
-        logger.i('[RegisterScreen] [SUCCESS] Auth user created: ${response.user!.id}');
+        logger.i(
+            '[RegisterScreen] [SUCCESS] Auth user created: ${response.user!.id}');
 
         if (mounted) {
           setState(() {
-            _currentStep = 1;  // Move to farm step (profile is now done)
+            _currentStep = 1; // Move to farm step (profile is now done)
             _errorMessage = null;
             _isLoading = false;
           });
@@ -170,10 +172,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         await farmService.createFarm(
           farmName: farmName,
           province: _provinceController.text.trim(),
-          address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
-          district: _districtController.text.trim().isEmpty ? null : _districtController.text.trim(),
-          subDistrict: _subDistrictController.text.trim().isEmpty ? null : _subDistrictController.text.trim(),
-          postalCode: _postalCodeController.text.trim().isEmpty ? null : _postalCodeController.text.trim(),
+          address: _addressController.text.trim().isEmpty
+              ? null
+              : _addressController.text.trim(),
+          district: _districtController.text.trim().isEmpty
+              ? null
+              : _districtController.text.trim(),
+          subDistrict: _subDistrictController.text.trim().isEmpty
+              ? null
+              : _subDistrictController.text.trim(),
+          postalCode: _postalCodeController.text.trim().isEmpty
+              ? null
+              : _postalCodeController.text.trim(),
         );
 
         logger.i('[RegisterScreen] [SUCCESS] Farm created');
@@ -268,7 +278,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.error_outline, color: Colors.red.shade600, size: 20.r),
+                    Icon(Icons.error_outline,
+                        color: Colors.red.shade600, size: 20.r),
                     SizedBox(width: 12.w),
                     Expanded(
                       child: Text(
@@ -361,15 +372,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           // ===== Title =====
           Text(
             'สร้างบัญชี',
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 8.h),
           Text(
             'กรุณากรอกข้อมูลส่วนตัวและสร้างบัญชี',
-            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
+            style: theme.textTheme.bodyMedium
+                ?.copyWith(color: Colors.grey.shade600),
           ),
           SizedBox(height: 24.h),
-          
+
           // 1. First Name & Last Name (Side by Side)
           Row(
             children: [
@@ -403,7 +416,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ],
           ),
           SizedBox(height: 16.h),
-          
+
           // 2. Citizen ID
           TextFormField(
             controller: _citizenIdController,
@@ -419,7 +432,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             },
           ),
           SizedBox(height: 16.h),
-          
+
           // 3. Email
           TextFormField(
             controller: _emailController,
@@ -445,7 +458,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             },
           ),
           SizedBox(height: 16.h),
-          
+
           // 4. Password
           TextFormField(
             controller: _passwordController,
@@ -453,19 +466,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               labelText: 'รหัสผ่าน',
               prefixIcon: const Icon(Icons.lock_outlined),
               suffixIcon: IconButton(
-                icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                icon: Icon(
+                    _obscurePassword ? Icons.visibility_off : Icons.visibility),
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
               ),
             ),
             obscureText: _obscurePassword,
             validator: (value) {
               if (value?.isEmpty ?? true) return 'กรุณากรอกรหัสผ่าน';
-              if ((value?.length ?? 0) < 6) return 'รหัสผ่านต้องมี 6 ตัวอักษรขึ้นไป';
+              if ((value?.length ?? 0) < 6)
+                return 'รหัสผ่านต้องมี 6 ตัวอักษรขึ้นไป';
               return null;
             },
           ),
           SizedBox(height: 16.h),
-          
+
           // 5. Confirm Password
           TextFormField(
             controller: _confirmPasswordController,
@@ -473,8 +489,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               labelText: 'รหัสยืนยัน',
               prefixIcon: const Icon(Icons.lock_outlined),
               suffixIcon: IconButton(
-                icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility),
-                onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                icon: Icon(_obscureConfirmPassword
+                    ? Icons.visibility_off
+                    : Icons.visibility),
+                onPressed: () => setState(
+                    () => _obscureConfirmPassword = !_obscureConfirmPassword),
               ),
             ),
             obscureText: _obscureConfirmPassword,
@@ -484,7 +503,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             },
           ),
           SizedBox(height: 16.h),
-          
+
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -515,12 +534,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         children: [
           Text(
             'ข้อมูลฟาร์ม',
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 8.h),
           Text(
             'กรุณากรอกข้อมูลฟาร์มของคุณ',
-            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
+            style: theme.textTheme.bodyMedium
+                ?.copyWith(color: Colors.grey.shade600),
           ),
           SizedBox(height: 24.h),
           TextFormField(
@@ -550,7 +571,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           TextFormField(
             controller: _districtController,
             decoration: const InputDecoration(
-              labelText: 'อำเภอ (ไม่บังคับ)',
+              labelText: 'อำเภอ',
               prefixIcon: Icon(Icons.location_on_outlined),
             ),
           ),
@@ -558,7 +579,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           TextFormField(
             controller: _subDistrictController,
             decoration: const InputDecoration(
-              labelText: 'ตำบล (ไม่บังคับ)',
+              labelText: 'ตำบล',
               prefixIcon: Icon(Icons.location_on_outlined),
             ),
           ),
@@ -566,7 +587,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           TextFormField(
             controller: _addressController,
             decoration: const InputDecoration(
-              labelText: 'ที่อยู่ (ไม่บังคับ)',
+              labelText: 'ที่อยู่',
               prefixIcon: Icon(Icons.location_on_outlined),
             ),
             maxLines: 2,
@@ -575,7 +596,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           TextFormField(
             controller: _postalCodeController,
             decoration: const InputDecoration(
-              labelText: 'รหัสไปรษณีย์ (ไม่บังคับ)',
+              labelText: 'รหัสไปรษณีย์',
               prefixIcon: Icon(Icons.mail_outlined),
             ),
           ),
@@ -618,7 +639,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           SizedBox(height: 8.h),
           Text(
             'กำลังไปยังหน้าแรก...',
-            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
+            style: theme.textTheme.bodyMedium
+                ?.copyWith(color: Colors.grey.shade600),
           ),
         ],
       ),

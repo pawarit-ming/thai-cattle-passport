@@ -30,7 +30,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           password: _passwordController.text.trim(),
         ),
       ).future);
-      
+
       if (mounted) {
         context.go('/');
       }
@@ -101,7 +101,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: 'อีเมล',
+                  labelText: 'อีเมล *',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.r),
                   ),
@@ -113,7 +113,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               TextField(
                 controller: _passwordController,
                 decoration: InputDecoration(
-                  labelText: 'รหัสผ่าน',
+                  labelText: 'รหัสผ่าน *',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.r),
                   ),
@@ -162,4 +162,3 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 }
-

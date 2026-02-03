@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:th_cow_passport/services/cow_management/cow_activity/activity_service.dart';
 import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
+import 'package:th_cow_passport/ui/screens/activity/activity_extensions.dart';
+import 'package:th_cow_passport/ui/screens/activity/widgets/activity_card.dart';
 
 class ActivityTab extends ConsumerStatefulWidget {
   final int cowId;
@@ -34,13 +36,16 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
               child: filteredActivities.isEmpty
                   ? const Center(child: Text('ไม่มีกิจกรรม'))
                   : RefreshIndicator(
-                      onRefresh: () => ref.refresh(activitiesProvider(widget.cowId).future),
+                      onRefresh: () =>
+                          ref.refresh(activitiesProvider(widget.cowId).future),
                       child: ListView.builder(
                         padding: EdgeInsets.all(16.r),
                         itemCount: filteredActivities.length,
                         itemBuilder: (context, index) {
-                          return _buildTimelineItem(context, filteredActivities[index],
-                              isLast: index == filteredActivities.length - 1);
+                          return ActivityCard(
+                            activity: filteredActivities[index],
+                            isLast: index == filteredActivities.length - 1,
+                          );
                         },
                       ),
                     ),
@@ -59,10 +64,12 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
       }
 
       // Filter by month and year
-      if (_selectedMonth != null && activity.activityDate.month != _selectedMonth) {
+      if (_selectedMonth != null &&
+          activity.activityDate.month != _selectedMonth) {
         return false;
       }
-      if (_selectedYear != null && activity.activityDate.year != _selectedYear) {
+      if (_selectedYear != null &&
+          activity.activityDate.year != _selectedYear) {
         return false;
       }
 
@@ -94,7 +101,8 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
             initialValue: _selectedType,
             decoration: InputDecoration(
               labelText: 'ประเภทกิจกรรม',
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8.r),
               ),
@@ -105,10 +113,11 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
                 value: null,
                 child: Text('ทั้งหมด'),
               ),
-              ...ActivityType.values.map((type) => DropdownMenuItem<ActivityType>(
-                    value: type,
-                    child: Text(_getActivityTypeName(type)),
-                  )),
+              ...ActivityType.values
+                  .map((type) => DropdownMenuItem<ActivityType>(
+                        value: type,
+                        child: Text(type.label),
+                      )),
             ],
             onChanged: (value) {
               setState(() {
@@ -126,7 +135,8 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
                   initialValue: _selectedMonth,
                   decoration: InputDecoration(
                     labelText: 'เดือน',
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.r),
                     ),
@@ -137,10 +147,11 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
                       value: null,
                       child: Text('ทั้งหมด'),
                     ),
-                    ...List.generate(12, (index) => index + 1).map((month) => DropdownMenuItem<int>(
-                          value: month,
-                          child: Text(_getMonthName(month)),
-                        )),
+                    ...List.generate(12, (index) => index + 1)
+                        .map((month) => DropdownMenuItem<int>(
+                              value: month,
+                              child: Text(_getMonthName(month)),
+                            )),
                   ],
                   onChanged: (value) {
                     setState(() {
@@ -156,7 +167,8 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
                   initialValue: _selectedYear,
                   decoration: InputDecoration(
                     labelText: 'ปี',
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.r),
                     ),
@@ -167,10 +179,11 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
                       value: null,
                       child: Text('ทั้งหมด'),
                     ),
-                    ...List.generate(10, (index) => DateTime.now().year - index).map((year) => DropdownMenuItem<int>(
-                          value: year,
-                          child: Text(year.toString()),
-                        )),
+                    ...List.generate(10, (index) => DateTime.now().year - index)
+                        .map((year) => DropdownMenuItem<int>(
+                              value: year,
+                              child: Text(year.toString()),
+                            )),
                   ],
                   onChanged: (value) {
                     setState(() {
@@ -181,7 +194,9 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
               ),
             ],
           ),
-          if (_selectedType != null || _selectedMonth != null || _selectedYear != null) ...[
+          if (_selectedType != null ||
+              _selectedMonth != null ||
+              _selectedYear != null) ...[
             SizedBox(height: 8.h),
             Row(
               children: [
@@ -210,232 +225,19 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
 
   String _getMonthName(int month) {
     const months = [
-      'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+      'มกราคม',
+      'กุมภาพันธ์',
+      'มีนาคม',
+      'เมษายน',
+      'พฤษภาคม',
+      'มิถุนายน',
+      'กรกฎาคม',
+      'สิงหาคม',
+      'กันยายน',
+      'ตุลาคม',
+      'พฤศจิกายน',
+      'ธันวาคม'
     ];
     return months[month - 1];
-  }
-
-  String _getActivityTypeName(ActivityType type) {
-    switch (type) {
-      case ActivityType.VACCINE:
-        return 'ฉีดวัคซีน';
-      case ActivityType.BIRTH:
-        return 'การเกิด';
-      case ActivityType.TREATMENT:
-        return 'การรักษา';
-      case ActivityType.EDIT_LOG:
-        return 'ประวัติการแก้ไข';
-      case ActivityType.PREGNANCY_CHECK:
-        return 'ตรวจการตั้งท้อง';
-      case ActivityType.BREEDING:
-        return 'ผสมพันธุ์';
-      case ActivityType.WEIGHT_UPDATE:
-        return 'ปรับปรุงน้ำหนัก';
-      case ActivityType.SOLD:
-        return 'ขาย';
-      case ActivityType.DEATH:
-        return 'ตายแล้ว';
-    }
-  }
-
-  String _getTranslatedDataKey(String key) {
-    switch (key) {
-      case 'vaccine_name':
-        return 'ชื่อวัคซีน';
-      case 'calf_gender':
-        return 'เพศลูกวัว';
-      case 'calf_nid':
-        return 'เลขประจำตัวลูกวัว';
-      case 'calf_birth_weight':
-        return 'น้ำหนักแรกเกิด (กก.)';
-      case 'symptoms':
-        return 'อาการ';
-      case 'treatment_details':
-        return 'รายละเอียดการรักษา';
-      default:
-        return key;
-    }
-  }
-
-  Widget _buildTimelineItem(BuildContext context, Activity item,
-      {required bool isLast}) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    IconData icon;
-    Color color;
-    switch (item.activityType) {
-      case ActivityType.VACCINE:
-        icon = Icons.medical_services_outlined;
-        color = Colors.blue;
-        break;
-      case ActivityType.BIRTH:
-        icon = Icons.child_friendly;
-        color = Colors.pink;
-        break;
-      case ActivityType.TREATMENT:
-        icon = Icons.healing;
-        color = Colors.orange;
-        break;
-      case ActivityType.EDIT_LOG:
-        icon = Icons.edit_note;
-        color = Colors.purple;
-        break;
-      case ActivityType.PREGNANCY_CHECK:
-        icon = Icons.pregnant_woman;
-        color = Colors.green;
-        break;
-      case ActivityType.WEIGHT_UPDATE:
-        icon = Icons.monitor_weight;
-        color = Colors.teal;
-        break;
-      case ActivityType.SOLD:
-        icon = Icons.sell;
-        color = Colors.brown;
-        break;
-      case ActivityType.BREEDING:
-        icon = Icons.favorite;
-        color = Colors.red;
-        break;
-      case ActivityType.DEATH:
-        icon = Icons.close_outlined;
-        color = Colors.grey;
-        break;
-    }
-
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
-            children: [
-              Container(
-                width: 40.r,
-                height: 40.r,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: color.withValues(alpha: 0.3)),
-                ),
-                child: Icon(icon, color: color, size: 20.r),
-              ),
-              if (!isLast)
-                Expanded(
-                  child: Container(
-                    width: 2.w,
-                    color: Colors.grey.shade300,
-                    margin: EdgeInsets.symmetric(vertical: 4.h),
-                  ),
-                ),
-            ],
-          ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: 24.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        '${item.activityDate.day}/${item.activityDate.month}/${item.activityDate.year}',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Text(
-                        '${item.activityDate.hour}:${item.activityDate.minute.toString().padLeft(2, '0')}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    _getActivityTypeName(item.activityType),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                  if (item.description != null && item.description!.isNotEmpty) ...[
-                    SizedBox(height: 4.h),
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(12.r),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: Text(
-                        item.description!,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                    ),
-                  ],
-                  if (item.data.isNotEmpty) ...[
-                    SizedBox(height: 8.h),
-                    _buildDataCard(context, item.data),
-                  ]
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDataCard(BuildContext context, Map<String, dynamic> data) {
-    final theme = Theme.of(context);
-    final entries = data.entries
-        .where((entry) => entry.value != null && entry.value.toString().isNotEmpty)
-        .toList();
-
-    if (entries.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(12.r),
-      decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
-        borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: entries.map((entry) {
-          return Padding(
-            padding: EdgeInsets.symmetric(vertical: 4.h),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${_getTranslatedDataKey(entry.key)}: ',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.bold, color: theme.hintColor),
-                ),
-                Expanded(
-                  child: Text(
-                    '${entry.value}',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
   }
 }

@@ -330,11 +330,6 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
             Text(label, style: theme.textTheme.labelLarge),
             if (isRequired)
               const Text(' *', style: TextStyle(color: Colors.red)),
-            if (!isRequired)
-              Text(
-                ' (ไม่บังคับ)',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp),
-              ),
           ],
         ),
         SizedBox(height: 8.h),

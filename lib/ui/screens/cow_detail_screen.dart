@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
 import 'package:th_cow_passport/ui/screens/camera_screen.dart';
-import 'package:th_cow_passport/ui/screens/cow_detail/add_activity_modal.dart';
+
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/activity/activity_tab.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/general/general_tab.dart';
 import 'package:th_cow_passport/ui/widgets/cow_detail_widget.dart';
@@ -38,15 +38,6 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
-  }
-
-  void _showAddActivityModal(BuildContext context, int cowId) {
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AddActivityModal(cowId: cowId);
-      },
-    );
   }
 
   @override
@@ -136,8 +127,9 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
           padding: EdgeInsets.all(16.r),
           child: ElevatedButton.icon(
             onPressed: () {
+// ... (context handled by tool)
               if (isActivityTab) {
-                _showAddActivityModal(context, cowId);
+                context.push('/add-activity/$cowId');
               } else {
                 context.push('/edit-form/$animalId');
               }

@@ -5,8 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:th_cow_passport/supabase_config.dart'; // import supabase config
 import 'package:th_cow_passport/ui/screens/app_shell.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail_screen.dart';
-import 'package:th_cow_passport/ui/screens/cow_form_screen.dart';
-import 'package:th_cow_passport/ui/screens/cow_list_screen.dart';
+import 'package:th_cow_passport/ui/screens/cow_form/cow_form_screen.dart';
+import 'package:th_cow_passport/ui/screens/cow_list/cow_list_screen.dart';
 import 'package:th_cow_passport/ui/screens/edit_cow_screen.dart';
 import 'package:th_cow_passport/ui/screens/auth/login_screen.dart'; // เพิ่ม import หน้า Login
 import 'package:th_cow_passport/ui/screens/auth/register_screen.dart'; // เพิ่ม import หน้า Register
@@ -50,7 +50,10 @@ final router = GoRouter(
     // the app hasn't recognized it in this runtime, require the user to
     // explicitly log in again. This prevents the app from silently landing
     // on the home/profile screens after a hot restart.
-    if (session != null && !sessionRecognized && !isLoggingIn && !isRegistering) {
+    if (session != null &&
+        !sessionRecognized &&
+        !isLoggingIn &&
+        !isRegistering) {
       return '/login';
     }
 

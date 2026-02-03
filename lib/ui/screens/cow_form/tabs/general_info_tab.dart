@@ -1,0 +1,295 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:logger/logger.dart';
+import 'package:th_cow_passport/services/farm/farm_service.dart';
+import 'package:th_cow_passport/services/farm/model/farm_model.dart';
+import 'package:th_cow_passport/supabase_config.dart';
+import 'package:th_cow_passport/ui/screens/cow_form/widgets/create_farm_dialog.dart';
+import 'package:th_cow_passport/ui/screens/cow_form/widgets/styled_text_field.dart';
+
+class GeneralInfoTab extends ConsumerStatefulWidget {
+  final TextEditingController nidNumberController;
+  final TextEditingController animalNameController;
+  final TextEditingController breedController;
+  final DateTime birthDate;
+  final ValueChanged<DateTime> onBirthDateChanged;
+  final String sex;
+  final ValueChanged<String?> onSexChanged;
+  final Farm? selectedFarm;
+  final ValueChanged<Farm?> onFarmChanged;
+  final List<String> breedOptions;
+
+  const GeneralInfoTab({
+    super.key,
+    required this.nidNumberController,
+    required this.animalNameController,
+    required this.breedController,
+    required this.birthDate,
+    required this.onBirthDateChanged,
+    required this.sex,
+    required this.onSexChanged,
+    required this.selectedFarm,
+    required this.onFarmChanged,
+    required this.breedOptions,
+  });
+
+  @override
+  ConsumerState<GeneralInfoTab> createState() => _GeneralInfoTabState();
+}
+
+class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
+  final _logger = Logger();
+
+  void _showCreateFarmDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => const CreateFarmDialog(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final userId = supabase.auth.currentUser?.id;
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.r),
+      child: Column(
+        children: [
+          // Farm Selection Dropdown
+          if (userId != null)
+            Consumer(
+              builder: (context, ref, child) {
+                final farmsAsync = ref.watch(userFarmsProvider(userId));
+
+                return farmsAsync.when(
+                  loading: () => const CircularProgressIndicator(),
+                  error: (error, stack) {
+                    _logger.e('[CowForm] Error loading farms',
+                        error: error, stackTrace: stack);
+                    return Text('Error loading farms: $error');
+                  },
+                  data: (farms) {
+                    if (farms.isEmpty) {
+                      return Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(16.r),
+                        margin: EdgeInsets.only(bottom: 16.h),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(color: Colors.orange),
+                        ),
+                        child: Column(
+                          children: [
+                            const Icon(Icons.warning_amber_rounded,
+                                color: Colors.orange, size: 40),
+                            SizedBox(height: 8.h),
+                            const Text(
+                              'คุณยังไม่มีข้อมูลฟาร์ม',
+                              style: TextStyle(
+                                  color: Colors.orange,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            const Text('ต้องสร้างฟาร์มก่อนจึงจะเพิ่มวัวได้'),
+                            SizedBox(height: 12.h),
+                            ElevatedButton.icon(
+                              onPressed: _showCreateFarmDialog,
+                              icon: const Icon(Icons.add_home_work),
+                              label: const Text('สร้างฟาร์มใหม่'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.orange,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('ฟาร์ม',
+                                style: Theme.of(context).textTheme.labelLarge),
+                            const Text(' *',
+                                style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                        SizedBox(height: 8.h),
+                        DropdownButtonFormField<Farm>(
+                          initialValue: widget.selectedFarm ??
+                              (farms.isNotEmpty ? farms.first : null),
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(Icons.home),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                          ),
+                          items: farms
+                              .map((farm) => DropdownMenuItem(
+                                    value: farm,
+                                    child: Text(farm.farmName),
+                                  ))
+                              .toList(),
+                          onChanged: widget.onFarmChanged,
+                          validator: (value) {
+                            if (value == null) {
+                              return 'กรุณาเลือกฟาร์ม';
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: 16.h),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          StyledTextField(
+            controller: widget.nidNumberController,
+            label: 'Tag ID (เลขหู)',
+            hintText: 'เช่น 1234567890123',
+            icon: Icons.confirmation_number,
+            isRequired: true,
+          ),
+          SizedBox(height: 16.h),
+          StyledTextField(
+            controller: widget.animalNameController,
+            label: 'ชื่อวัว',
+            hintText: 'เช่น สมศรี, บุญรอด',
+            icon: Icons.pets,
+            isRequired: true,
+          ),
+          SizedBox(height: 16.h),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('สายพันธุ์',
+                      style: Theme.of(context).textTheme.labelLarge),
+                  const Text(' *', style: TextStyle(color: Colors.red)),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              DropdownButtonFormField<String>(
+                initialValue:
+                    widget.breedOptions.contains(widget.breedController.text)
+                        ? widget.breedController.text
+                        : null,
+                decoration: InputDecoration(
+                  hintText: 'เลือกสายพันธุ์',
+                  prefixIcon: const Icon(Icons.category),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
+                ),
+                items: widget.breedOptions.map((breed) {
+                  return DropdownMenuItem(
+                    value: breed,
+                    child: Text(breed),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  widget.breedController.text = value ?? '';
+                  // Force update might be handled by parent listener
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'กรุณาเลือกสายพันธุ์';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('วันเกิด',
+                      style: Theme.of(context).textTheme.labelLarge),
+                  const Text(' *', style: TextStyle(color: Colors.red)),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              TextFormField(
+                readOnly: true,
+                key: ValueKey(widget.birthDate),
+                initialValue: MaterialLocalizations.of(context)
+                    .formatShortDate(widget.birthDate),
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.calendar_today),
+                  suffixIcon: const Icon(Icons.arrow_drop_down),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
+                ),
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: widget.birthDate,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime.now(),
+                  );
+                  if (picked != null) {
+                    widget.onBirthDateChanged(picked);
+                  }
+                },
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('เพศ', style: Theme.of(context).textTheme.labelLarge),
+                  const Text(' *', style: TextStyle(color: Colors.red)),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              DropdownButtonFormField<String>(
+                initialValue: widget.sex,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.wc),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'MALE', child: Text('ผู้')),
+                  DropdownMenuItem(value: 'FEMALE', child: Text('เมีย')),
+                ],
+                onChanged: widget.onSexChanged,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}

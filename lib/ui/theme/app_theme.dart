@@ -63,7 +63,7 @@ class AppTheme {
         bodyLarge: TextStyle(fontSize: 16.0, color: _textPrimary),
         bodyMedium: TextStyle(fontSize: 14.0, color: _textSecondary),
         labelLarge: TextStyle(
-          fontSize: 16.0, fontWeight: FontWeight.bold, color: _textPrimary),
+            fontSize: 16.0, fontWeight: FontWeight.bold, color: _textPrimary),
       ),
 
       dividerColor: _divider,

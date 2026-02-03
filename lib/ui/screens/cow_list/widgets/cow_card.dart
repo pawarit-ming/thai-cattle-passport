@@ -94,14 +94,24 @@ class CowCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            cow.nidNumber ?? 'ไม่ระบุหมายเลข',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18.sp,
+                          // 1. Wrap Text ด้วย Expanded เพื่อให้มันยืดหดได้ ไม่ดันจนล้น
+                          Expanded(
+                            child: Text(
+                              cow.nidNumber ?? 'ไม่ระบุหมายเลข',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18.sp,
+                              ),
+                              // 2. เพิ่ม 2 บรรทัดนี้: ถ้าที่ไ่ม่พอ ให้ตัดเป็นจุดไข่ปลา (...)
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
+
+                          // เพิ่มระยะห่างนิดหน่อย กันตัวหนังสือชนกับป้ายชื่อ
+                          SizedBox(width: 8.w),
+
                           Container(
                             padding: EdgeInsets.symmetric(
                                 horizontal: 8.w, vertical: 2.h),
@@ -109,6 +119,7 @@ class CowCard extends StatelessWidget {
                               color: colorScheme.primary,
                               borderRadius: BorderRadius.circular(8.r),
                             ),
+                            // ป้ายชื่อ (Container) ปล่อยไว้เหมือนเดิม มันจะอยู่ขวาสุด
                             child: Text(
                               'ชื่อ: ${cow.animalName}',
                               style: TextStyle(

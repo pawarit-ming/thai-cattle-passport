@@ -19,7 +19,7 @@ class CowService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Fetch all cows that are not soft-deleted
+  // Fetch only my cows that are not soft-deleted
   Future<void> fetchCows({bool forceRefresh = false}) async {
     // Optimization: If we already have cows and it's not a forced refresh, return immediately.
     if (_cows.isNotEmpty && !forceRefresh) {
@@ -29,15 +29,25 @@ class CowService extends ChangeNotifier {
 
     _setLoading(true);
     try {
+      // 1. ดึง User ID ของผู้ใช้ที่ล็อกอินอยู่ปัจจุบัน
+      final myUserId = supabase.auth.currentUser?.id;
+
+      // ถ้าไม่ได้ล็อกอิน หรือหา ID ไม่เจอ ให้หยุดทำงาน (หรือเคลียร์ลิสต์)
+      if (myUserId == null) {
+        logger.w('User not logged in. Cannot fetch personal cows.');
+        _cows = [];
+        return;
+      }
+
       final response = await supabase
           .from('animals')
-          .select(
-              'animal_id, user_id, farm_id, animal_name, breed, sex, birth_date, color, weight, height, status, face_pic, created_at')
+          .select('animal_id, user_id, farm_id, animal_name, breed, sex, birth_date, color, weight, height, status, face_pic, created_at')
           .eq('is_deleted', false)
+          .eq('user_id', myUserId) // กรองเอาเฉพาะเจ้าของ ID นี้เท่านั้น
           .order('created_at', ascending: false);
 
       _cows = (response as List).map((data) => Cow.fromMap(data)).toList();
-      logger.d("Fetched ${_cows.length} cows.");
+      logger.d("Fetched ${_cows.length} cows for user: $myUserId");
     } catch (e) {
       logger.e('Error fetching cows: $e', error: e);
       // Optionally, set an error state here

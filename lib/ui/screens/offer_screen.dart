@@ -30,7 +30,6 @@ class OfferScreen extends StatelessWidget {
     final cowName = 'Bessie ${index + 1}';
     final cowId = '10${index + 1}';
     final bidderName = 'ฟาร์มโชคชัย ${index + 1}';
-    final price = '${35 + index * 5},000';
     final date = '1$index ต.ค. 2566';
 
     return Card(
@@ -54,7 +53,8 @@ class OfferScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(color: Colors.grey.shade300),
                   ),
-                  child: Icon(Icons.pets, color: colorScheme.primary, size: 30.r),
+                  child:
+                      Icon(Icons.pets, color: colorScheme.primary, size: 30.r),
                 ),
                 SizedBox(width: 12.w),
                 // รายละเอียดวัว
@@ -94,29 +94,12 @@ class OfferScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                // ราคาเสนอ
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'ราคาเสนอ',
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: Colors.grey),
-                    ),
-                    Text(
-                      '฿$price',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20.sp,
-                      ),
-                    ),
-                  ],
-                ),
+                // --- ลบ Column ราคาที่เคยอยู่ตรงนี้ออกไปแล้ว ---
               ],
             ),
             Divider(height: 24.h),
 
+            // ... (ส่วนข้อมูลผู้เสนอราคาและปุ่ม Action ด้านล่างเหมือนเดิม)
             // ข้อมูลผู้เสนอราคา
             Row(
               children: [

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:math';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-// 1. Model: ลบ field price ออก
+// 1. Model สำหรับรายการในตลาด
 class MarketItem {
   final String id;
   final String name;
-  // final int price; // *** ลบออก ***
   final String breed;
   final String sex;
   final DateTime birthDate;
@@ -19,7 +19,6 @@ class MarketItem {
   MarketItem({
     required this.id,
     required this.name,
-    // required this.price, // *** ลบออก ***
     required this.breed,
     required this.sex,
     required this.birthDate,
@@ -28,6 +27,56 @@ class MarketItem {
     required this.location,
     required this.images,
   });
+
+  factory MarketItem.fromJson(Map<String, dynamic> json) {
+    List<String> imgList = [];
+
+    // ฟังก์ชันช่วยดึงรูป (รองรับทั้ง String และ List)
+    void addImage(dynamic value) {
+      if (value == null) return;
+      if (value is List) {
+        for (var v in value) {
+          if (v != null && v.toString().isNotEmpty) imgList.add(v.toString());
+        }
+      } else {
+        if (value.toString().isNotEmpty) imgList.add(value.toString());
+      }
+    }
+
+    addImage(json['face_pic']);
+    addImage(json['body_pic']);
+    addImage(json['mark_pic']);
+
+    // --- จัดการเพศ (Sex Normalization) ---
+    // แปลงค่าจาก DB ให้เป็นมาตรฐาน M/F เพื่อให้ Filter ทำงานได้
+    String rawSex = json['sex']?.toString().toLowerCase() ?? '';
+    String normalizedSex = 'M'; // ค่าเริ่มต้น
+    // เช็คคำที่สื่อถึงตัวเมียทั้งหมด
+    if (rawSex.contains('f') ||
+        rawSex.contains('female') ||
+        rawSex.contains('เมีย') ||
+        rawSex == 'cow') {
+      normalizedSex = 'F';
+    }
+
+    // --- จัดการสายพันธุ์ (Breed) ---
+    // ตัดช่องว่างหน้าหลังออก เพื่อให้การค้นหาแม่นยำขึ้น
+    String normalizedBreed =
+        json['breed']?.toString().trim() ?? 'ไม่ระบุสายพันธุ์';
+
+    return MarketItem(
+      id: json['animal_id']?.toString() ?? '',
+      name: json['animal_name'] ?? 'ไม่มีชื่อ',
+      breed: normalizedBreed,
+      sex: normalizedSex,
+      birthDate: DateTime.tryParse(json['birth_date']?.toString() ?? '') ??
+          DateTime.now(),
+      weight: double.tryParse(json['weight']?.toString() ?? '0') ?? 0.0,
+      seller: 'รหัส: ${json['user_id'] ?? '-'}', // ปัจจุบันโชว์ ID ไปก่อน
+      location: json['origin'] ?? 'ไม่ระบุพิกัด',
+      images: imgList,
+    );
+  }
 }
 
 class BuyScreen extends ConsumerStatefulWidget {
@@ -38,8 +87,11 @@ class BuyScreen extends ConsumerStatefulWidget {
 }
 
 class _BuyScreenState extends ConsumerState<BuyScreen> {
-  final List<MarketItem> _allItems = [];
+  List<MarketItem> _allItems = [];
   List<MarketItem> _filteredItems = [];
+
+  // เพิ่มตัวแปรเช็คสถานะการโหลด
+  bool _isLoading = true;
 
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
@@ -61,7 +113,7 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
   @override
   void initState() {
     super.initState();
-    _generateMockData();
+    _fetchAnimals();
   }
 
   @override
@@ -70,86 +122,78 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
     super.dispose();
   }
 
-  void _generateMockData() {
-    final random = Random();
-    for (int i = 0; i < 20; i++) {
-      String breed = _breeds[random.nextInt(_breeds.length)];
-      List<String> images;
+  Future<void> _fetchAnimals() async {
+    try {
+      final supabase = Supabase.instance.client;
 
-      // เพิ่มรูปภาพให้แต่ละกลุ่มมีหลายรูป (2-3 รูปต่อตัว)
-      if (breed == 'บราห์มัน' || breed == 'ฮินดูบราซิล') {
-        images = [
-          'https://images.unsplash.com/photo-1546445317-29f4545e9d53?q=80&w=400', // รูปหลัก
-          'https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?q=80&w=400', // รูปเสริม 1
-          'https://images.unsplash.com/photo-1627918342289-4b6807490076?q=80&w=400', // รูปเสริม 2
-        ];
-      } else if (breed == 'วากิว' || breed == 'แองกัส') {
-        images = [
-          'https://images.unsplash.com/photo-1527153857715-3908f2bae5e8?q=80&w=400', // รูปหลัก
-          'https://images.unsplash.com/photo-1558452125-9a8435d681c1?q=80&w=400', // รูปเสริม 1
-          'https://images.unsplash.com/photo-1598556776374-0a47353379c9?q=80&w=400', // รูปเสริม 2
-        ];
-      } else {
-        // ชาร์โรเลส์ หรือ พื้นเมือง
-        images = [
-          'https://images.unsplash.com/photo-1596733430284-f7437764b1a9?q=80&w=400', // รูปหลัก
-          'https://images.unsplash.com/photo-1536510233921-8e5043fce771?q=80&w=400', // รูปเสริม 1
-          'https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=400', // รูปเสริม 2
-        ];
+      // 1. หา User ID ของคนปัจจุบันที่ล็อกอินอยู่
+      final myUserId = supabase.auth.currentUser?.id;
+
+      // 2. สร้าง Query พื้นฐาน
+      var query = supabase.from('animals').select();
+
+      // 3. เพิ่มเงื่อนไข: ถ้าล็อกอินอยู่ ให้กรอง User ID ของตัวเองออก
+      if (myUserId != null) {
+        query = query.neq('user_id', myUserId);
       }
 
-      final ageInDays = random.nextInt(365 * 10);
-      final birthDate = DateTime.now().subtract(Duration(days: ageInDays));
-      final weight = 200.0 + random.nextInt(600);
+      // 4. สั่งดึงข้อมูลและเรียงลำดับตามปกติ
+      final data = await query.order('created_at', ascending: false);
 
-      _allItems.add(MarketItem(
-        id: 'cow_$i',
-        name: 'cow ${i + 1}',
-        breed: breed,
-        sex: random.nextBool() ? 'M' : 'F',
-        birthDate: birthDate,
-        weight: weight,
-        seller: 'ฟาร์มลุงแดง ${i + 1}',
-        location: 'นครราชสีมา',
-        images: images, // ใส่ List ที่มีหลายรูป
-      ));
+      setState(() {
+        _allItems =
+            (data as List).map((item) => MarketItem.fromJson(item)).toList();
+        _filteredItems = _allItems;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error fetching data: $e');
+      setState(() => _isLoading = false);
     }
-
-    _filteredItems = List.from(_allItems);
   }
 
   void _applyFilters() {
     setState(() {
-      final query = _searchController.text.toLowerCase();
+      final query = _searchController.text.toLowerCase().trim();
 
       _filteredItems = _allItems.where((item) {
-        // 1. Search Text
+        // 1. Search Logic (ปรับปรุงใหม่)
+        // ให้ค้นหาเจอทั้ง ชื่อวัว, รหัสผู้ขาย, และ สายพันธุ์
         final matchSearch = item.name.toLowerCase().contains(query) ||
-            item.seller.toLowerCase().contains(query);
+            item.seller.toLowerCase().contains(query) ||
+            item.breed.toLowerCase().contains(query);
 
-        // 2. Gender
+        // 2. Filter: Gender
         if (_selectedGender != null && item.sex != _selectedGender) {
           return false;
         }
 
-        // 3. Breed
-        if (_selectedBreeds.isNotEmpty &&
-            !_selectedBreeds.contains(item.breed)) {
-          return false;
+        // 3. Filter: Breed
+        // เช็คแบบแม่นยำขึ้น
+        if (_selectedBreeds.isNotEmpty) {
+          bool isBreedMatch = false;
+          for (var selected in _selectedBreeds) {
+            if (item.breed.contains(selected)) {
+              isBreedMatch = true;
+              break;
+            }
+          }
+          if (!isBreedMatch) return false;
         }
 
-        // 4. Age
+        // 4. Filter: Age
         final age = DateTime.now().difference(item.birthDate).inDays / 365;
         if (age < _ageRange.start || age > _ageRange.end) {
           return false;
         }
 
-        // 5. Weight
+        // 5. Filter: Weight
         if (item.weight < _weightRange.start ||
             item.weight > _weightRange.end) {
           return false;
         }
 
+        // ถ้าผ่านเงื่อนไข Filter ทั้งหมด ให้ดูผลลัพธ์การ Search
         return matchSearch;
       }).toList();
     });
@@ -342,6 +386,8 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: _isSearching
@@ -394,6 +440,7 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
       ),
       body: Column(
         children: [
+          // 1. ส่วนแสดงจำนวนผลลัพธ์ (เหมือนเดิม)
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
             child: Row(
@@ -405,18 +452,25 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
               ],
             ),
           ),
+
+          // 2. ส่วนแสดงรายการ (เพิ่มเช็ค _isLoading)
           Expanded(
-            child: _filteredItems.isEmpty
-                ? const Center(
-                    child: Text('ไม่พบวัวที่คุณค้นหา',
-                        style: TextStyle(color: Colors.grey)))
-                : ListView.builder(
-                    padding: EdgeInsets.all(16.r),
-                    itemCount: _filteredItems.length,
-                    itemBuilder: (context, index) {
-                      return _MarketItemCard(item: _filteredItems[index]);
-                    },
-                  ),
+            child: _isLoading
+                ? Center(
+                    child: CircularProgressIndicator(
+                        color:
+                            theme.colorScheme.primary)) // แสดงหมุนๆ เมื่อโหลด
+                : _filteredItems.isEmpty
+                    ? const Center(
+                        child: Text('ไม่พบวัวที่คุณค้นหา',
+                            style: TextStyle(color: Colors.grey)))
+                    : ListView.builder(
+                        padding: EdgeInsets.all(16.r),
+                        itemCount: _filteredItems.length,
+                        itemBuilder: (context, index) {
+                          return _MarketItemCard(item: _filteredItems[index]);
+                        },
+                      ),
           ),
         ],
       ),
@@ -484,16 +538,14 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                   decoration: BoxDecoration(
                     color: Colors.blue[50], // สีพื้นฟ้าอ่อนจำลองน้ำ/แผนที่
                     borderRadius: BorderRadius.circular(16.r),
-                    border:
-                        Border.all(color: Colors.blue.withValues(alpha: 0.2)),
+                    border: Border.all(color: Colors.blue.withOpacity(0.2)),
                   ),
                   child: Stack(
                     children: [
                       // เส้นตารางจำลองถนน
                       Center(
                         child: Icon(Icons.map_outlined,
-                            size: 100.r,
-                            color: Colors.blue.withValues(alpha: 0.1)),
+                            size: 100.r, color: Colors.blue.withOpacity(0.1)),
                       ),
                       // หมุดปักสถานที่
                       Center(
@@ -551,8 +603,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                   children: [
                     CircleAvatar(
                       radius: 28.r,
-                      backgroundColor:
-                          colorScheme.primary.withValues(alpha: 0.1),
+                      backgroundColor: colorScheme.primary.withOpacity(0.1),
                       child: Icon(Icons.person,
                           size: 30.r, color: colorScheme.primary),
                     ),
@@ -634,7 +685,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
     return Card(
       margin: EdgeInsets.only(bottom: 16.h),
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {},
@@ -688,7 +739,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                             shape: BoxShape.circle,
                             color: _currentImageIndex == entry.key
                                 ? Colors.white
-                                : Colors.white.withValues(alpha: 0.4),
+                                : Colors.white.withOpacity(0.4),
                           ),
                         );
                       }).toList(),
@@ -717,7 +768,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                         padding: EdgeInsets.symmetric(
                             horizontal: 8.w, vertical: 2.h),
                         decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.1),
+                          color: colorScheme.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Text(

@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:th_cow_passport/services/cow_management/cow_activity/activity_service.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
+import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_service.dart';
 import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
 import 'package:th_cow_passport/ui/screens/activity/activity_extensions.dart';
 import 'package:th_cow_passport/ui/screens/activity/wizard/wizard_constants.dart';
+import 'package:logger/logger.dart';
 
 class Step3Summary extends ConsumerStatefulWidget {
   final int cowId;
@@ -50,6 +52,8 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
       await ref.read(activityServiceProvider).addActivity(newActivity);
       ref.invalidate(activitiesProvider(widget.cowId));
       ref.invalidate(cowDetailServiceProvider);
+      // Force refresh the global cow list as well (important for Birth activities)
+      ref.read(cowServiceProvider).fetchCows(forceRefresh: true);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -61,6 +65,7 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
         widget.onSaveSuccess();
       }
     } catch (e) {
+      Logger().e('Error saving activity: $e'); // Log info
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -182,15 +187,15 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
     switch (key) {
       case 'vaccine_name':
         return 'ชื่อวัคซีน';
-      case 'calf_name':
+      case 'animal_name':
         return 'ชื่อลูกโค';
       case 'sex':
         return 'เพศ';
       case 'breed':
         return 'สายพันธุ์';
-      case 'calf_nid':
+      case 'nid_number':
         return 'NID ลูกโค';
-      case 'calf_birth_weight':
+      case 'birth_weight':
         return 'น้ำหนักแรกเกิด';
       case 'weight':
         return 'น้ำหนัก';

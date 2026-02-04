@@ -23,11 +23,18 @@ final currentUserIdProvider = Provider<String?>((ref) {
 });
 
 // Sign up provider
-final signUpProvider = FutureProvider.autoDispose
-    .family<void, ({String email, String password, String firstName, String lastName, String citizenId})>(
+final signUpProvider = FutureProvider.autoDispose.family<
+    void,
+    ({
+      String email,
+      String password,
+      String firstName,
+      String lastName,
+      String citizenId
+    })>(
   (ref, params) async {
     final authService = ref.watch(authServiceProvider);
-    
+
     // Sign up with metadata; Supabase trigger will create the user record
     await authService.signUp(
       email: params.email,
@@ -40,15 +47,27 @@ final signUpProvider = FutureProvider.autoDispose
 );
 
 // Sign in provider
-final signInProvider = FutureProvider.autoDispose
-    .family<void, ({String email, String password})>(
+final signInProvider =
+    FutureProvider.autoDispose.family<void, ({String input, String password})>(
   (ref, params) async {
     final authService = ref.watch(authServiceProvider);
-    
-    await authService.signIn(
-      email: params.email,
-      password: params.password,
-    );
+    final input = params.input.trim();
+
+    // Simple check: if contains '@', assume email. Otherwise assume Citizen ID/Username
+    final isEmail = input.contains('@');
+
+    if (isEmail) {
+      await authService.signIn(
+        email: input,
+        password: params.password,
+      );
+    } else {
+      // Assume citizen ID
+      await authService.signInWithCitizenId(
+        citizenId: input,
+        password: params.password,
+      );
+    }
   },
 );
 

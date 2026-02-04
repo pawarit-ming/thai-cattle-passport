@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:logger/logger.dart';
+import 'package:th_cow_passport/features/address/presentation/widgets/thai_address_picker.dart';
 import 'package:th_cow_passport/services/farm/farm_service.dart';
 import 'package:th_cow_passport/supabase_config.dart';
+import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
 
 class CreateFarmDialog extends ConsumerStatefulWidget {
   const CreateFarmDialog({super.key});
@@ -14,68 +16,79 @@ class CreateFarmDialog extends ConsumerStatefulWidget {
 
 class _CreateFarmDialogState extends ConsumerState<CreateFarmDialog> {
   final _nameController = TextEditingController();
+  final _addressDetailsController = TextEditingController();
   final _provinceController = TextEditingController();
+  final _districtController = TextEditingController();
+  final _subDistrictController = TextEditingController();
+  final _postalCodeController = TextEditingController();
   final _logger = Logger();
 
   @override
   void dispose() {
     _nameController.dispose();
+    _addressDetailsController.dispose();
     _provinceController.dispose();
+    _districtController.dispose();
+    _subDistrictController.dispose();
+    _postalCodeController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final defaultBorder = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12.r),
-      borderSide: BorderSide(color: Colors.grey.shade300),
-    );
-
-    final focusedBorder = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12.r),
-      borderSide:
-          BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5),
-    );
-
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       title: const Text('สร้างฟาร์มใหม่'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('กรุณากรอกข้อมูลเบื้องต้นเพื่อสร้างฟาร์ม'),
-          SizedBox(height: 16.h),
-          TextField(
-            controller: _nameController,
-            autofocus: true,
-            decoration: InputDecoration(
-              labelText: 'ชื่อฟาร์ม *',
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('กรุณากรอกข้อมูลเบื้องต้นเพื่อสร้างฟาร์ม'),
+            SizedBox(height: 16.h),
+            StyledTextField(
+              controller: _nameController,
+              label: 'ชื่อฟาร์ม',
+              icon: Icons.agriculture,
+              isRequired: true,
               hintText: 'เช่น ฟาร์มโชคชัย',
-              filled: true,
-              fillColor: Colors.grey.shade50,
-              border: defaultBorder,
-              enabledBorder: defaultBorder,
-              focusedBorder: focusedBorder,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             ),
-          ),
-          SizedBox(height: 12.h),
-          TextField(
-            controller: _provinceController,
-            decoration: InputDecoration(
-              labelText: 'จังหวัด *',
-              hintText: 'เช่น นครราชสีมา',
-              filled: true,
-              fillColor: Colors.grey.shade50,
-              border: defaultBorder,
-              enabledBorder: defaultBorder,
-              focusedBorder: focusedBorder,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            SizedBox(height: 12.h),
+            StyledTextField(
+              controller: _addressDetailsController,
+              label: 'รายละเอียดที่อยู่',
+              hintText: 'บ้านเลขที่, หมู่, ถนน, ซอย',
+              icon: Icons.home,
+              maxLines: 2,
+              isRequired: true,
             ),
-          ),
-        ],
+            SizedBox(height: 12.h),
+            ThaiAddressPicker(
+              onAddressChanged: (province, district, tambon) {
+                setState(() {
+                  _provinceController.text = province?.nameTh ?? '';
+                  _districtController.text = district?.nameTh ?? '';
+                  _subDistrictController.text = tambon?.nameTh ?? '';
+                  _postalCodeController.text = tambon?.zipCode.toString() ?? '';
+                });
+              },
+            ),
+            // Hidden fields for standard display if needed, but ThaiAddressPicker handles them mostly.
+            // We can optionally show them as read-only fields if standard style prefers transparency.
+            // For now, mirroring RegisterScreen implies reliance on the picker mostly,
+            // but we might want to check if RegisterScreen shows them.
+            // Checking RegisterScreen code again: it doesn't show them explicitly after the picker
+            // in the snippet provided in `task.md` or recent views.
+            // Wait, in RegisterScreen step 2 code:
+            // It has _provinceController etc. but ThaiAddressPicker updates them.
+            // Does RegisterScreen SHOW them?
+            // Looking at `_buildFarmStep` in RegisterScreen:
+            // It shows `StyledTextField` for farm name, addressDetails.
+            // Then `ThaiAddressPicker`.
+            // It DOES NOT show separate text fields for province/district/etc.
+            // ThaiAddressPicker likely contains its own dropdowns.
+            // So we just need to ensure we capture the values.
+          ],
+        ),
       ),
       actions: [
         TextButton(
@@ -99,10 +112,11 @@ class _CreateFarmDialogState extends ConsumerState<CreateFarmDialog> {
     if (userId == null) return;
 
     if (_nameController.text.trim().isEmpty ||
-        _provinceController.text.trim().isEmpty) {
+        _provinceController.text.trim().isEmpty ||
+        _addressDetailsController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('กรุณากรอกชื่อฟาร์มและจังหวัด'),
+          content: Text('กรุณากรอกชื่อฟาร์ม ที่อยู่ และเลือกจังหวัด'),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -110,11 +124,16 @@ class _CreateFarmDialogState extends ConsumerState<CreateFarmDialog> {
     }
 
     try {
-      await supabase.from('farms').insert({
-        'user_id': userId,
-        'farm_name': _nameController.text.trim(),
-        'province': _provinceController.text.trim(),
-      });
+      final farmService = ref.read(farmServiceProvider);
+      await farmService.createFarm(
+        userId: userId,
+        farmName: _nameController.text.trim(),
+        province: _provinceController.text.trim(),
+        address: _addressDetailsController.text.trim(),
+        district: _districtController.text.trim(),
+        subDistrict: _subDistrictController.text.trim(),
+        postalCode: _postalCodeController.text.trim(),
+      );
 
       if (mounted) {
         ref.invalidate(userFarmsProvider(userId));

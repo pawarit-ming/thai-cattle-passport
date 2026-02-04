@@ -42,28 +42,56 @@ class BirthForm extends StatelessWidget {
     return Column(
       children: [
         FormTextField(
+          controller: nidController,
+          labelText: 'เลขประจำตัวลูกวัว (NID)',
+          hintText: 'กรอกเลข NID 13 หลัก',
+          isRequired: true,
+        ),
+        SizedBox(height: 16.h),
+        FormTextField(
           controller: nameController,
           labelText: 'ชื่อลูกวัว',
           hintText: 'ชื่อของลูกวัว',
         ),
         SizedBox(height: 16.h),
-        FormTextField(
-          controller: genderController,
-          labelText: 'เพศลูกวัว',
-          hintText: 'เพศผู้ / เพศเมีย',
+        // Breed Dropdown
+        FormDropdownField<String>(
+          label: 'พันธุ์ลูกวัว',
+          isRequired: true,
+          value: breedController.text.isEmpty ? null : breedController.text,
+          items: [
+            'บราห์มัน',
+            'ชาร์โรเลส์',
+            'วากิว',
+            'แองกัส',
+            'ฮินดูบราซิล',
+            'พื้นเมือง',
+            'อื่นๆ'
+          ]
+              .map(
+                  (breed) => DropdownMenuItem(value: breed, child: Text(breed)))
+              .toList(),
+          onChanged: (val) {
+            if (val != null) {
+              breedController.text = val;
+            }
+          },
         ),
         SizedBox(height: 16.h),
-        FormTextField(
-          controller: breedController,
-          labelText: 'พันธุ์ลูกวัว',
-          hintText: 'พันธุ์ของลูกวัว',
-        ),
-        SizedBox(height: 16.h),
-        FormTextField(
-          controller: nidController,
-          labelText: 'เลขประจำตัวลูกวัว (NID)',
-          hintText: 'กรอกเลข NID 13 หลัก (ถ้ามี)',
-          isRequired: false,
+        // Gender Dropdown
+        FormDropdownField<String>(
+          label: 'เพศลูกวัว',
+          isRequired: true,
+          value: genderController.text.isEmpty ? null : genderController.text,
+          items: const [
+            DropdownMenuItem(value: 'MALE', child: Text('เพศผู้')),
+            DropdownMenuItem(value: 'FEMALE', child: Text('เพศเมีย')),
+          ],
+          onChanged: (val) {
+            if (val != null) {
+              genderController.text = val;
+            }
+          },
         ),
         SizedBox(height: 16.h),
         FormTextField(

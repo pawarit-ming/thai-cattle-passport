@@ -50,7 +50,7 @@ class CowCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16.r),
           onTap: isEditMode
               ? onSelect
-              : () => context.go('/detail/${cow.animalId}'),
+              : () => context.push('/detail/${cow.animalId}'),
           child: Padding(
             padding: EdgeInsets.all(12.r),
             child: Row(
@@ -94,18 +94,12 @@ class CowCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // 1. Wrap Text ด้วย Expanded เพื่อให้มันยืดหดได้ ไม่ดันจนล้น
-                          Expanded(
-                            child: Text(
-                              cow.nidNumber ?? 'ไม่ระบุหมายเลข',
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                color: colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18.sp,
-                              ),
-                              // 2. เพิ่ม 2 บรรทัดนี้: ถ้าที่ไ่ม่พอ ให้ตัดเป็นจุดไข่ปลา (...)
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
+                          Text(
+                            cow.nidNumber,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18.sp,
                             ),
                           ),
 

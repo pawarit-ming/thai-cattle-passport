@@ -61,16 +61,16 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
     if (data.containsKey('vaccine_name')) {
       _vaccineNameController.text = data['vaccine_name'];
     }
-    if (data.containsKey('calf_name')) {
-      _calfNameController.text = data['calf_name'];
+    if (data.containsKey('animal_name')) {
+      _calfNameController.text = data['animal_name'];
     }
     if (data.containsKey('sex')) _calfGenderController.text = data['sex'];
     if (data.containsKey('breed')) _calfBreedController.text = data['breed'];
-    if (data.containsKey('calf_nid')) {
-      _calfNidController.text = data['calf_nid'];
+    if (data.containsKey('nid_number')) {
+      _calfNidController.text = data['nid_number'];
     }
-    if (data.containsKey('calf_birth_weight')) {
-      _calfBirthWeightController.text = data['calf_birth_weight'].toString();
+    if (data.containsKey('birth_weight')) {
+      _calfBirthWeightController.text = data['birth_weight'].toString();
     }
     if (data.containsKey('weight')) {
       _weightController.text = data['weight'].toString();
@@ -143,8 +143,11 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
           }
           break;
         case ActivityType.BIRTH:
+          if (_calfNidController.text.isNotEmpty) {
+            data['nid_number'] = _calfNidController.text;
+          }
           if (_calfNameController.text.isNotEmpty) {
-            data['calf_name'] = _calfNameController.text;
+            data['animal_name'] = _calfNameController.text;
           }
           if (_calfGenderController.text.isNotEmpty) {
             data['sex'] = _calfGenderController.text;
@@ -152,11 +155,8 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
           if (_calfBreedController.text.isNotEmpty) {
             data['breed'] = _calfBreedController.text;
           }
-          if (_calfNidController.text.isNotEmpty) {
-            data['calf_nid'] = _calfNidController.text;
-          }
           if (_calfBirthWeightController.text.isNotEmpty) {
-            data['calf_birth_weight'] =
+            data['birth_weight'] =
                 double.tryParse(_calfBirthWeightController.text);
           }
           break;

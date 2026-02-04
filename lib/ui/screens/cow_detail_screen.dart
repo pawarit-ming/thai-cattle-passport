@@ -9,6 +9,7 @@ import 'package:th_cow_passport/ui/screens/camera_screen.dart';
 
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/activity/activity_tab.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/general/general_tab.dart';
+
 import 'package:th_cow_passport/ui/widgets/cow_detail_widget.dart';
 
 class CowDetailScreen extends ConsumerStatefulWidget {
@@ -59,6 +60,12 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
     }
 
     if (cow == null) {
+      // Auto-refetch if data is missing (e.g., after invalidation)
+      if (!detailState.isLoading) {
+        Future.microtask(() =>
+            ref.read(cowDetailServiceProvider).fetchCowById(widget.cowId));
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      }
       return const Scaffold(body: Center(child: Text("ไม่พบข้อมูลวัว")));
     }
 
@@ -81,7 +88,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
         IconButton(
           icon: const Icon(Icons.qr_code_2),
           tooltip: 'แสดง QR Code',
-          onPressed: () => _showQrDialog(context, cow.nidNumber ?? 'unknown'),
+          onPressed: () => _showQrDialog(context, cow.nidNumber),
         ),
       ],
       tabs: const [

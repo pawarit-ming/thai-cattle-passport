@@ -26,7 +26,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await ref.read(signInProvider(
         (
-          email: _emailController.text.trim(),
+          input: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         ),
       ).future);
@@ -49,10 +49,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   String _parseErrorMessage(String error) {
     if (error.contains('invalid_credentials')) {
-      return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+      return 'อีเมล, เลขบัตรประชาชน หรือรหัสผ่านไม่ถูกต้อง';
     }
     if (error.contains('invalid_email')) {
       return 'รูปแบบอีเมลไม่ถูกต้อง';
+    }
+    if (error.contains('database_error')) {
+      return 'เกิดข้อผิดพลาดจากระบบฐานข้อมูล';
     }
     return 'เกิดข้อผิดพลาด: $error';
   }
@@ -101,17 +104,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: 'อีเมล *',
+                  labelText: 'อีเมลหรือเลขบัตรประชาชน',
                   // border: Use theme default
-                  prefixIcon: const Icon(Icons.email),
+                  prefixIcon: const Icon(Icons.person),
                 ),
-                keyboardType: TextInputType.emailAddress,
+                keyboardType: TextInputType.text,
               ),
               SizedBox(height: 16.h),
               TextField(
                 controller: _passwordController,
                 decoration: InputDecoration(
-                  labelText: 'รหัสผ่าน *',
+                  labelText: 'รหัสผ่าน',
                   // border: Use theme default
                   prefixIcon: const Icon(Icons.lock),
                 ),

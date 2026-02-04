@@ -56,8 +56,7 @@ class _CowSelectionFieldState extends ConsumerState<CowSelectionField> {
           allCows.where((c) => c.animalId == widget.initialCowId).firstOrNull;
       if (initial != null) {
         _selectedCow = initial;
-        _controller.text =
-            "${initial.animalName} (${initial.nidNumber ?? 'No ID'})";
+        _controller.text = "${initial.animalName} (${initial.nidNumber})";
       }
     }
 
@@ -85,7 +84,7 @@ class _CowSelectionFieldState extends ConsumerState<CowSelectionField> {
                 return false;
               }
               final name = cow.animalName.toLowerCase();
-              final nid = (cow.nidNumber ?? '').toLowerCase();
+              final nid = cow.nidNumber.toLowerCase();
               final id = cow.animalId.toString();
               return name.contains(query) ||
                   nid.contains(query) ||
@@ -93,12 +92,12 @@ class _CowSelectionFieldState extends ConsumerState<CowSelectionField> {
             });
           },
           displayStringForOption: (Cow option) =>
-              "${option.animalName} (${option.nidNumber ?? '-'})",
+              "${option.animalName} (${option.nidNumber})",
           onSelected: (Cow selection) {
             setState(() {
               _selectedCow = selection;
               _controller.text =
-                  "${selection.animalName} (${selection.nidNumber ?? '-'})";
+                  "${selection.animalName} (${selection.nidNumber})";
             });
             widget.onCowSelected(selection);
           },
@@ -150,7 +149,7 @@ class _CowSelectionFieldState extends ConsumerState<CowSelectionField> {
                         title: Text(option.animalName,
                             style: GoogleFonts.prompt(
                                 fontWeight: FontWeight.bold)),
-                        subtitle: Text('ID: ${option.nidNumber ?? '-'}'),
+                        subtitle: Text('ID: ${option.nidNumber}'),
                         onTap: () {
                           onSelected(option);
                         },

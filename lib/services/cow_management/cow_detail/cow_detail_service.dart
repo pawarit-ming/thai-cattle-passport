@@ -9,6 +9,12 @@ import 'package:logger/logger.dart';
 final cowDetailServiceProvider =
     ChangeNotifierProvider((ref) => CowDetailService());
 
+final offspringProvider =
+    FutureProvider.family<List<Cow>, int>((ref, cowId) async {
+  final service = ref.watch(cowDetailServiceProvider);
+  return service.getOffspring(cowId);
+});
+
 class CowDetailService extends ChangeNotifier {
   final logger = Logger();
   Cow? _currentCow;
@@ -51,7 +57,7 @@ class CowDetailService extends ChangeNotifier {
       List<String> bodyUrls = List.from(updatedCow.bodyPic ?? []);
       List<String> markUrls = List.from(updatedCow.markPic ?? []);
 
-      final nidNumber = updatedCow.nidNumber ?? 'unknown';
+      final nidNumber = updatedCow.nidNumber;
 
       // Upload new images and REPLACE the first item if exists (or add if empty)
       // Since the UI currently supports only one image per category, we treat the first item as the main one.
@@ -129,7 +135,7 @@ class CowDetailService extends ChangeNotifier {
       List<String>? bodyPicUrls;
       List<String>? facePicUrls;
       List<String>? markPicUrls;
-      final nidNumber = cow.nidNumber ?? 'unknown';
+      final nidNumber = cow.nidNumber;
 
       // Upload images if provided
       if (bodyPic != null) {
@@ -162,6 +168,26 @@ class CowDetailService extends ChangeNotifier {
       return false;
     } finally {
       _setLoading(false);
+    }
+  }
+
+  // 4. Fetch offspring (ลูกโค)
+  Future<List<Cow>> getOffspring(int cowId) async {
+    try {
+      final response = await supabase
+          .from('animals')
+          .select()
+          .or('dam_id.eq.$cowId,sire_id.eq.$cowId')
+          .filter('is_deleted', 'eq', false) // Exclude deleted cows
+          .order('birth_date', ascending: false);
+
+      if (response.isEmpty) {
+        return [];
+      }
+      return (response as List).map((item) => Cow.fromMap(item)).toList();
+    } catch (e) {
+      logger.e('Error fetching offspring: $e');
+      throw Exception('ไม่สามารถดึงข้อมูลลูกโคได้');
     }
   }
 

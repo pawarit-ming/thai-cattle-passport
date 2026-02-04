@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import 'package:th_cow_passport/services/auth/auth_service.dart';
 import 'package:th_cow_passport/services/farm/farm_service.dart';
 import 'package:th_cow_passport/ui/screens/auth/steps/role_selection_step.dart';
 import 'package:th_cow_passport/features/address/presentation/widgets/thai_address_picker.dart';
+import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
 
 final logger = Logger();
 
@@ -32,9 +34,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   late TextEditingController _citizenIdController;
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
-  late TextEditingController _confirmPasswordController;
   bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
   String? _emailError;
 
   // Step 2: Farm (Only for Farmer)
@@ -59,7 +59,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _emailController = TextEditingController();
     _emailError = null;
     _passwordController = TextEditingController();
-    _confirmPasswordController = TextEditingController();
 
     // Farm Controllers
     _farmNameController = TextEditingController();
@@ -77,7 +76,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _citizenIdController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
     _farmNameController.dispose();
     _addressDetailsController.dispose();
     _provinceController.dispose();
@@ -103,67 +101,69 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     // 2. Auth & Profile
     if (_currentStep == 1) {
       if (!_authFormKey.currentState!.validate()) return;
-      if (_passwordController.text != _confirmPasswordController.text) {
-        _showError('รหัสผ่านไม่ตรงกัน');
+
+      // If Farmer, just move to next step (collect Farm info first)
+      if (_selectedRole == 'FARMER') {
+        setState(() => _currentStep = 2);
         return;
       }
 
-      setState(() => _isLoading = true);
-      try {
-        _authEmail = _emailController.text.trim();
-        _authPassword = _passwordController.text;
-
-        final authService = AuthService();
-        await authService.signUp(
-          email: _authEmail,
-          password: _authPassword,
-          firstName: _firstNameController.text.trim(),
-          lastName: _lastNameController.text.trim(),
-          citizenId: _citizenIdController.text.trim(),
-          // role: _selectedRole, // Note: Assuming AuthService handles role via metadata or similar, keeping generic for now
-        );
-
-        if (mounted) {
-          _isLoading = false;
-          // If Farmer -> Go to Farm Step (2)
-          // If Buyer -> Go to Success Step (2, but logically the final)
-          if (_selectedRole == 'FARMER') {
-            setState(() => _currentStep = 2);
-          } else {
-            // Skip Farm Step for Buyer
-            _onSuccess();
-          }
-        }
-      } catch (e) {
-        _handleAuthError(e);
-      }
+      // If Buyer, this is the last step -> Register Now
+      await _performRegistration();
       return;
     }
 
     // 3. Farm Info (Only if Farmer)
     if (_currentStep == 2 && _selectedRole == 'FARMER') {
       if (!_farmFormKey.currentState!.validate()) return;
+      // Register (Auth + Farm)
+      await _performRegistration();
+    }
+  }
 
-      setState(() => _isLoading = true);
-      try {
+  Future<void> _performRegistration() async {
+    setState(() => _isLoading = true);
+    _emailError = null; // Clear previous errors
+
+    try {
+      // 1. Sign Up (Create Auth User)
+      _authEmail = _emailController.text.trim();
+      _authPassword = _passwordController.text;
+
+      final authService = AuthService();
+      final authResponse = await authService.signUp(
+        email: _authEmail,
+        password: _authPassword,
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        citizenId: _citizenIdController.text.trim(),
+      );
+
+      final userId = authResponse.user?.id;
+      if (userId == null) throw Exception('ไม่สามารถสร้างบัญชีผู้ใช้ได้');
+
+      // 2. Create Farm (Only for Farmer)
+      if (_selectedRole == 'FARMER') {
         final farmService = FarmService();
         await farmService.createFarm(
+          userId: userId, // Pass the newly created ID explicitely
           farmName: _farmNameController.text.trim(),
           province: _provinceController.text.trim(),
-          address: _addressDetailsController.text.trim(), // Combined address
+          address: _addressDetailsController.text.trim(),
           district: _districtController.text.trim(),
           subDistrict: _subDistrictController.text.trim(),
           postalCode: _postalCodeController.text.trim(),
         );
-
-        if (mounted) {
-          _isLoading = false;
-          _onSuccess();
-        }
-      } catch (e) {
-        _showError('เกิดข้อผิดพลาดในการสร้างฟาร์ม: $e');
-        if (mounted) setState(() => _isLoading = false);
       }
+
+      if (mounted) {
+        _isLoading = false;
+        _onSuccess();
+      }
+    } catch (e) {
+      _handleAuthError(e);
+      // If error occurs, we might want to stay on the current step or handle cleanup
+      // For now, _handleAuthError stops loading and shows error.
     }
   }
 
@@ -217,67 +217,87 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         title: const Text('ลงทะเบียน'),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(24.r),
-        child: Column(
-          children: [
-            // Progress Bar
-            _buildProgressIndicator(progress, colorScheme),
-            SizedBox(height: 32.h),
-
-            // Error Message
-            if (_errorMessage != null)
-              Container(
-                padding: EdgeInsets.all(12.r),
-                margin: EdgeInsets.only(bottom: 16.h),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  borderRadius:
-                      BorderRadius.circular(16.r), // Standard 16.r for alerts
-                  border: Border.all(color: Colors.red.shade200),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.error_outline, color: Colors.red.shade700),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                        child: Text(_errorMessage!,
-                            style: TextStyle(color: Colors.red.shade700))),
-                  ],
-                ),
-              ),
-
-            // Content
-            if (_currentStep == 0)
-              RoleSelectionStep(
-                  selectedRole: _selectedRole,
-                  onRoleSelected: (role) =>
-                      setState(() => _selectedRole = role)),
-            if (_currentStep == 1) _buildAuthProfileStep(theme),
-            if (_currentStep == 2 && _selectedRole == 'FARMER')
-              _buildFarmStep(theme),
-            // Success Step: If Farmer (Step 3), If Buyer (Step 2)
-            if ((_selectedRole == 'FARMER' && _currentStep == 3) ||
-                (_selectedRole == 'BUYER' && _currentStep == 2))
-              _buildSuccessStep(theme, colorScheme),
-
-            SizedBox(height: 32.h),
-
-            // Navigation Buttons (Hide on Success Step)
-            if (!((_selectedRole == 'FARMER' && _currentStep == 3) ||
-                (_selectedRole == 'BUYER' && _currentStep == 2)))
-              Row(
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(24.r),
+              child: Column(
                 children: [
-                  if (_currentStep > 0)
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _isLoading
-                            ? null
-                            : () => setState(() => _currentStep--),
-                        child: const Text('ย้อนกลับ'),
+                  // Progress Bar
+                  _buildProgressIndicator(progress, colorScheme),
+                  SizedBox(height: 32.h),
+
+                  // Error Message
+                  if (_errorMessage != null)
+                    Container(
+                      padding: EdgeInsets.all(12.r),
+                      margin: EdgeInsets.only(bottom: 16.h),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(
+                            16.r), // Standard 16.r for alerts
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline, color: Colors.red.shade700),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                              child: Text(_errorMessage!,
+                                  style:
+                                      TextStyle(color: Colors.red.shade700))),
+                        ],
                       ),
                     ),
-                  if (_currentStep > 0) SizedBox(width: 12.w),
+
+                  // Content
+                  if (_currentStep == 0)
+                    RoleSelectionStep(
+                        selectedRole: _selectedRole,
+                        onRoleSelected: (role) =>
+                            setState(() => _selectedRole = role)),
+                  if (_currentStep == 1) _buildAuthProfileStep(theme),
+                  if (_currentStep == 2 && _selectedRole == 'FARMER')
+                    _buildFarmStep(theme),
+                  // Success Step: If Farmer (Step 3), If Buyer (Step 2)
+                  if ((_selectedRole == 'FARMER' && _currentStep == 3) ||
+                      (_selectedRole == 'BUYER' && _currentStep == 2))
+                    _buildSuccessStep(theme, colorScheme),
+                ],
+              ),
+            ),
+          ),
+          // Fixed Bottom Buttons
+          if (!((_selectedRole == 'FARMER' && _currentStep == 3) ||
+              (_selectedRole == 'BUYER' && _currentStep == 2)))
+            Container(
+              padding: EdgeInsets.fromLTRB(
+                  16.r, 16.r, 16.r, 32.h), // Added extra bottom padding
+              color: theme.scaffoldBackgroundColor,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () {
+                              if (_currentStep == 0) {
+                                // Step 0: Go back to Login
+                                if (context.canPop()) {
+                                  context.pop();
+                                } else {
+                                  context.go('/login');
+                                }
+                              } else {
+                                // Other steps: Go back one step
+                                setState(() => _currentStep--);
+                              }
+                            },
+                      child: const Text('ย้อนกลับ'),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _handleStepContinue,
@@ -292,8 +312,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ],
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
@@ -343,55 +363,55 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           Row(
             children: [
               Expanded(
-                child: TextFormField(
+                child: StyledTextField(
                   controller: _firstNameController,
-                  decoration: const InputDecoration(
-                      labelText: 'ชื่อ',
-                      hintText: 'กรอกชื่อจริง',
-                      prefixIcon: Icon(Icons.person)),
-                  textInputAction: TextInputAction.next,
-                  validator: (v) => v!.isEmpty ? 'กรุณากรอกชื่อ' : null,
+                  label: 'ชื่อ',
+                  hintText: 'กรอกชื่อจริง',
+                  icon: Icons.person,
+                  isRequired: true,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                        RegExp(r'[a-zA-Z\u0E00-\u0E7F ]'))
+                  ],
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: TextFormField(
+                child: StyledTextField(
                   controller: _lastNameController,
-                  decoration: const InputDecoration(
-                      labelText: 'นามสกุล',
-                      hintText: 'กรอกนามสกุล',
-                      prefixIcon: Icon(Icons.person_outline)),
-                  textInputAction: TextInputAction.next,
-                  validator: (v) => v!.isEmpty ? 'กรุณากรอกนามสกุล' : null,
+                  label: 'นามสกุล',
+                  hintText: 'กรอกนามสกุล',
+                  icon: Icons.person_outline,
+                  isRequired: true,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                        RegExp(r'[a-zA-Z\u0E00-\u0E7F ]'))
+                  ],
                 ),
               ),
             ],
           ),
           SizedBox(height: 16.h),
-          TextFormField(
+          StyledTextField(
             controller: _citizenIdController,
-            decoration: const InputDecoration(
-                labelText: 'เลขบัตรประชาชน',
-                hintText: '1234567890123',
-                prefixIcon: Icon(Icons.credit_card)),
+            label: 'เลขบัตรประชาชน',
+            hintText: '1234567890123',
+            icon: Icons.credit_card,
             keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.next,
+            isRequired: true,
             maxLength: 13,
-            validator: (v) =>
-                v!.length != 13 ? 'กรุณากรอกเลขบัตร 13 หลักให้ถูกต้อง' : null,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
           SizedBox(height: 16.h),
-          TextFormField(
+          StyledTextField(
             controller: _emailController,
-            decoration: InputDecoration(
-                labelText: 'อีเมล',
-                hintText: 'example@email.com',
-                prefixIcon: const Icon(Icons.email),
-                errorText: _emailError),
+            label: 'อีเมล',
+            hintText: 'example@email.com',
+            icon: Icons.email,
             keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.next,
-            onChanged: (_) => setState(() => _emailError = null),
-            validator: (v) =>
+            isRequired: true,
+            errorText: _emailError,
+            customValidator: (v) =>
                 !v!.contains('@') ? 'กรุณากรอกอีเมลให้ถูกต้อง' : null,
           ),
           SizedBox(height: 16.h),
@@ -412,26 +432,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             textInputAction: TextInputAction.next,
             validator: (v) =>
                 v!.length < 6 ? 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร' : null,
-          ),
-          SizedBox(height: 16.h),
-          TextFormField(
-            controller: _confirmPasswordController,
-            decoration: InputDecoration(
-              labelText: 'ยืนยันรหัสผ่าน',
-              hintText: 'กรอกรหัสผ่านอีกครั้ง',
-              prefixIcon: const Icon(Icons.lock_clock),
-              suffixIcon: IconButton(
-                icon: Icon(_obscureConfirmPassword
-                    ? Icons.visibility_off
-                    : Icons.visibility),
-                onPressed: () => setState(
-                    () => _obscureConfirmPassword = !_obscureConfirmPassword),
-              ),
-            ),
-            obscureText: _obscureConfirmPassword,
-            textInputAction: TextInputAction.done,
-            validator: (v) =>
-                v != _passwordController.text ? 'รหัสผ่านไม่ตรงกัน' : null,
           ),
         ],
       ),
@@ -457,26 +457,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               style: TextStyle(color: Colors.grey.shade600)),
           SizedBox(height: 24.h),
 
-          TextFormField(
+          StyledTextField(
             controller: _farmNameController,
-            decoration: const InputDecoration(
-                labelText: 'ชื่อฟาร์ม', prefixIcon: Icon(Icons.agriculture)),
-            validator: (v) => v!.isEmpty ? 'จำเป็น' : null,
+            label: 'ชื่อฟาร์ม',
+            icon: Icons.agriculture,
+            isRequired: true,
           ),
           SizedBox(height: 16.h),
 
           // Simplified Address Field
-          TextFormField(
+          StyledTextField(
             controller: _addressDetailsController,
-            decoration: const InputDecoration(
-              labelText: 'รายละเอียดที่อยู่',
-              hintText: 'บ้านเลขที่, หมู่, ถนน, ซอย',
-              prefixIcon: Icon(Icons.home),
-              alignLabelWithHint: true,
-            ),
+            label: 'รายละเอียดที่อยู่',
+            hintText: 'บ้านเลขที่, หมู่, ถนน, ซอย',
+            icon: Icons.home,
             maxLines: 2,
-            textInputAction: TextInputAction.done,
-            validator: (v) => v!.isEmpty ? 'กรุณากรอกที่อยู่' : null,
+            isRequired: true,
           ),
           SizedBox(height: 16.h),
 

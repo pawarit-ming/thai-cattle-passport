@@ -41,7 +41,8 @@ class CowService extends ChangeNotifier {
 
       final response = await supabase
           .from('animals')
-          .select('animal_id, user_id, farm_id, animal_name, breed, sex, birth_date, color, weight, height, status, face_pic, created_at')
+          .select(
+              'animal_id, user_id, farm_id, nid_number, animal_name, breed, sex, birth_date, color, weight, height, status, face_pic, created_at')
           .eq('is_deleted', false)
           .eq('user_id', myUserId) // กรองเอาเฉพาะเจ้าของ ID นี้เท่านั้น
           .order('created_at', ascending: false);

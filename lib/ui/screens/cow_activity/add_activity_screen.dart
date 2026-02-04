@@ -7,7 +7,7 @@ import 'package:logger/logger.dart';
 import 'package:th_cow_passport/services/cow_management/cow_activity/activity_service.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
 import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
-import 'package:th_cow_passport/ui/screens/cow_activity/widgets/form_widgets.dart';
+import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
 
 class AddActivityScreen extends ConsumerStatefulWidget {
   final int cowId;
@@ -150,9 +150,11 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        DatePickerField(
+        StyledTextField(
           controller: _activityDateController,
-          labelText: 'วันที่และเวลาทำกิจกรรม',
+          label: 'วันที่และเวลาทำกิจกรรม',
+          readOnly: true,
+          icon: Icons.calendar_today,
           onTap: () => _selectDate(context),
         ),
         SizedBox(height: 16.h),
@@ -170,10 +172,11 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
           ActivityType.SOLD => _buildGenericForm('รายละเอียดการขาย'),
         },
         SizedBox(height: 16.h),
-        FormTextField(
+        StyledTextField(
           controller: _descriptionController,
-          labelText: 'หมายเหตุ',
+          label: 'หมายเหตุ',
           maxLines: 3,
+          icon: Icons.note,
           isRequired: false,
         ),
       ],
@@ -182,85 +185,105 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
 
   List<Widget> _buildVaccineForm() {
     return [
-      FormTextField(
+      StyledTextField(
         controller: _vaccineNameController,
-        labelText: 'ชื่อวัคซีน',
+        label: 'ชื่อวัคซีน',
         hintText: 'เช่น วัคซีนป้องกันโรคปากและเท้าเปื่อย',
+        isRequired: true,
+        icon: Icons.vaccines,
       ),
     ];
   }
 
   List<Widget> _buildBirthForm() {
     return [
-      FormTextField(
+      StyledTextField(
         controller: _calfNameController,
-        labelText: 'ชื่อลูกวัว',
+        label: 'ชื่อลูกวัว',
         hintText: 'ชื่อของลูกวัว',
+        isRequired: true,
+        icon: Icons.pets,
       ),
       SizedBox(height: 16.h),
-      FormTextField(
+      StyledTextField(
         controller: _calfGenderController,
-        labelText: 'เพศลูกวัว',
+        label: 'เพศลูกวัว',
         hintText: 'เพศผู้ / เพศเมีย',
+        isRequired: true,
+        icon: Icons.wc,
       ),
       SizedBox(height: 16.h),
-      FormTextField(
+      StyledTextField(
         controller: _calfBreedController,
-        labelText: 'พันธุ์ลูกวัว',
+        label: 'พันธุ์ลูกวัว',
         hintText: 'พันธุ์ของลูกวัว',
+        isRequired: true,
+        icon: Icons.category,
       ),
       SizedBox(height: 16.h),
-      FormTextField(
+      StyledTextField(
         controller: _calfNidController,
-        labelText: 'เลขประจำตัวลูกวัว (NID)',
+        label: 'เลขประจำตัวลูกวัว (NID)',
         hintText: 'กรอกเลข NID 13 หลัก (ถ้ามี)',
-        isRequired: false,
+        icon: Icons.tag,
       ),
       SizedBox(height: 16.h),
-      FormTextField(
+      StyledTextField(
         controller: _calfBirthWeightController,
-        labelText: 'น้ำหนักแรกเกิด (กก.)',
+        label: 'น้ำหนักแรกเกิด (กก.)',
         hintText: 'เช่น 25.5',
-        isRequired: false,
+        keyboardType: TextInputType.number,
+        suffixText: 'กก.',
+        icon: Icons.monitor_weight,
       ),
     ];
   }
 
   List<Widget> _buildTreatmentForm() {
     return [
-      FormTextField(
+      StyledTextField(
         controller: _symptomsController,
-        labelText: 'อาการ',
+        label: 'อาการ',
         maxLines: 3,
         hintText: 'อธิบายอาการป่วยของวัว',
+        isRequired: true,
+        icon: Icons.sick,
       ),
       SizedBox(height: 16.h),
-      FormTextField(
+      StyledTextField(
         controller: _treatmentDetailsController,
-        labelText: 'รายละเอียดการรักษา',
+        label: 'รายละเอียดการรักษา',
         maxLines: 3,
         hintText: 'ระบุยาและวิธีการรักษา',
+        isRequired: true,
+        icon: Icons.healing,
       ),
     ];
   }
 
   List<Widget> _buildWeightUpdateForm() {
     return [
-      FormTextField(
+      StyledTextField(
         controller: _weightController,
-        labelText: 'น้ำหนักปัจจุบัน (กก.)',
+        label: 'น้ำหนักปัจจุบัน (กก.)',
         hintText: 'เช่น 450.5',
+        isRequired: true,
+        keyboardType: TextInputType.number,
+        suffixText: 'กก.',
+        icon: Icons.monitor_weight,
       ),
     ];
   }
 
   List<Widget> _buildGenericForm(String label) {
     return [
-      FormTextField(
+      StyledTextField(
         controller:
             _descriptionController, // Re-using description controller for simplicity
-        labelText: label,
+        label: label,
         maxLines: 5,
+        isRequired: true,
+        icon: Icons.description,
       ),
     ];
   }

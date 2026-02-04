@@ -7,6 +7,7 @@ import 'package:th_cow_passport/services/farm/model/farm_model.dart';
 import 'package:th_cow_passport/supabase_config.dart';
 import 'package:th_cow_passport/ui/screens/cow_form/widgets/create_farm_dialog.dart';
 import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
+import 'package:th_cow_passport/ui/widgets/styled_dropdown_field.dart';
 
 class GeneralInfoTab extends ConsumerStatefulWidget {
   final TextEditingController nidNumberController;
@@ -107,44 +108,25 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
                       );
                     }
 
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('ฟาร์ม',
-                                style: Theme.of(context).textTheme.labelLarge),
-                            const Text(' *',
-                                style: TextStyle(color: Colors.red)),
-                          ],
-                        ),
-                        SizedBox(height: 8.h),
-                        DropdownButtonFormField<Farm>(
-                          initialValue: widget.selectedFarm ??
-                              (farms.isNotEmpty ? farms.first : null),
-                          decoration: InputDecoration(
-                            prefixIcon: const Icon(Icons.home),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                          ),
-                          items: farms
-                              .map((farm) => DropdownMenuItem(
-                                    value: farm,
-                                    child: Text(farm.farmName),
-                                  ))
-                              .toList(),
-                          onChanged: widget.onFarmChanged,
-                          validator: (value) {
-                            if (value == null) {
-                              return 'กรุณาเลือกฟาร์ม';
-                            }
-                            return null;
-                          },
-                        ),
-                        SizedBox(height: 16.h),
-                      ],
+                    return StyledDropdownField<Farm>(
+                      label: 'ฟาร์ม',
+                      isRequired: true,
+                      value: widget.selectedFarm ??
+                          (farms.isNotEmpty ? farms.first : null),
+                      icon: Icons.home,
+                      items: farms
+                          .map((farm) => DropdownMenuItem(
+                                value: farm,
+                                child: Text(farm.farmName),
+                              ))
+                          .toList(),
+                      onChanged: widget.onFarmChanged,
+                      validator: (value) {
+                        if (value == null) {
+                          return 'กรุณาเลือกฟาร์ม';
+                        }
+                        return null;
+                      },
                     );
                   },
                 );
@@ -166,127 +148,62 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
             isRequired: true,
           ),
           SizedBox(height: 16.h),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('สายพันธุ์',
-                      style: Theme.of(context).textTheme.labelLarge),
-                  const Text(' *', style: TextStyle(color: Colors.red)),
-                ],
-              ),
-              SizedBox(height: 8.h),
-              DropdownButtonFormField<String>(
-                initialValue:
-                    widget.breedOptions.contains(widget.breedController.text)
-                        ? widget.breedController.text
-                        : null,
-                decoration: InputDecoration(
-                  hintText: 'เลือกสายพันธุ์',
-                  prefixIcon: const Icon(Icons.category),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
-                ),
-                items: widget.breedOptions.map((breed) {
-                  return DropdownMenuItem(
-                    value: breed,
-                    child: Text(breed),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  widget.breedController.text = value ?? '';
-                  // Force update might be handled by parent listener
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'กรุณาเลือกสายพันธุ์';
-                  }
-                  return null;
-                },
-              ),
-            ],
+          StyledDropdownField<String>(
+            label: 'สายพันธุ์',
+            isRequired: true,
+            value: widget.breedOptions.contains(widget.breedController.text)
+                ? widget.breedController.text
+                : null,
+            hintText: 'เลือกสายพันธุ์',
+            icon: Icons.category,
+            items: widget.breedOptions.map((breed) {
+              return DropdownMenuItem(
+                value: breed,
+                child: Text(breed),
+              );
+            }).toList(),
+            onChanged: (value) {
+              widget.breedController.text = value ?? '';
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'กรุณาเลือกสายพันธุ์';
+              }
+              return null;
+            },
           ),
           SizedBox(height: 16.h),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('วันเกิด',
-                      style: Theme.of(context).textTheme.labelLarge),
-                  const Text(' *', style: TextStyle(color: Colors.red)),
-                ],
-              ),
-              SizedBox(height: 8.h),
-              TextFormField(
-                readOnly: true,
-                key: ValueKey(widget.birthDate),
-                initialValue: MaterialLocalizations.of(context)
-                    .formatShortDate(widget.birthDate),
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.calendar_today),
-                  suffixIcon: const Icon(Icons.arrow_drop_down),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
-                ),
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: widget.birthDate,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime.now(),
-                  );
-                  if (picked != null) {
-                    widget.onBirthDateChanged(picked);
-                  }
-                },
-              ),
-            ],
+          StyledTextField(
+            controller: TextEditingController(
+                text: MaterialLocalizations.of(context)
+                    .formatShortDate(widget.birthDate)),
+            label: 'วันเกิด',
+            isRequired: true,
+            readOnly: true,
+            icon: Icons.calendar_today,
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: widget.birthDate,
+                firstDate: DateTime(2000),
+                lastDate: DateTime.now(),
+              );
+              if (picked != null) {
+                widget.onBirthDateChanged(picked);
+              }
+            },
           ),
           SizedBox(height: 16.h),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('เพศ', style: Theme.of(context).textTheme.labelLarge),
-                  const Text(' *', style: TextStyle(color: Colors.red)),
-                ],
-              ),
-              SizedBox(height: 8.h),
-              DropdownButtonFormField<String>(
-                initialValue: widget.sex,
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.wc),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'MALE', child: Text('ผู้')),
-                  DropdownMenuItem(value: 'FEMALE', child: Text('เมีย')),
-                ],
-                onChanged: widget.onSexChanged,
-              ),
+          StyledDropdownField<String>(
+            label: 'เพศ',
+            isRequired: true,
+            value: widget.sex,
+            icon: Icons.wc,
+            items: const [
+              DropdownMenuItem(value: 'MALE', child: Text('ผู้')),
+              DropdownMenuItem(value: 'FEMALE', child: Text('เมีย')),
             ],
+            onChanged: widget.onSexChanged,
           ),
         ],
       ),

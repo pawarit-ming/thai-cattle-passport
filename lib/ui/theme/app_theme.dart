@@ -139,9 +139,14 @@ class AppTheme {
           borderRadius: BorderRadius.circular(16.r),
           borderSide: const BorderSide(color: _primary, width: 2.0),
         ),
-        labelStyle: TextStyle(color: _textSecondary, fontSize: 14.sp),
-        floatingLabelStyle: TextStyle(color: _primary, fontSize: 14.sp),
-        hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14.sp),
+        labelStyle: GoogleFonts.prompt(color: _textSecondary, fontSize: 14.sp),
+        floatingLabelStyle:
+            GoogleFonts.prompt(color: _primary, fontSize: 14.sp),
+        hintStyle:
+            GoogleFonts.prompt(color: Colors.grey.shade400, fontSize: 14.sp),
+        helperStyle: GoogleFonts.prompt(color: _textSecondary, fontSize: 12.sp),
+        errorStyle:
+            GoogleFonts.prompt(color: const Color(0xFFB00020), fontSize: 12.sp),
       ),
 
       // --- Floating Action Button ---

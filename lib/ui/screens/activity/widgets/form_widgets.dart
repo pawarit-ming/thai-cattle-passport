@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:th_cow_passport/ui/widgets/styled_dropdown_field.dart';
 
 class DatePickerField extends StatelessWidget {
   final TextEditingController controller;
@@ -66,6 +67,40 @@ class FormTextField extends StatelessWidget {
         }
         return null;
       },
+    );
+  }
+}
+
+class FormDropdownField<T> extends StatelessWidget {
+  final String label;
+  final T? value;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?>? onChanged;
+  final String? Function(T?)? validator;
+  final bool isRequired;
+  final String? hintText;
+
+  const FormDropdownField({
+    super.key,
+    required this.label,
+    required this.items,
+    required this.onChanged,
+    this.value,
+    this.validator,
+    this.isRequired = false,
+    this.hintText,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return StyledDropdownField<T>(
+      label: label,
+      items: items,
+      value: value,
+      onChanged: onChanged,
+      validator: validator,
+      isRequired: isRequired,
+      hintText: hintText,
     );
   }
 }

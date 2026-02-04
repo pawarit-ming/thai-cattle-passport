@@ -16,6 +16,7 @@ class StyledDropdownField<T> extends StatelessWidget {
   final IconData? icon;
   final bool isRequired;
   final String? hintText;
+  final String? helperText;
 
   const StyledDropdownField({
     super.key,
@@ -27,6 +28,7 @@ class StyledDropdownField<T> extends StatelessWidget {
     this.icon,
     this.isRequired = false,
     this.hintText,
+    this.helperText,
   });
 
   @override
@@ -51,6 +53,8 @@ class StyledDropdownField<T> extends StatelessWidget {
           initialValue: value,
           decoration: InputDecoration(
             hintText: hintText ?? 'เลือก$label',
+            helperText: helperText,
+            helperMaxLines: 2,
             prefixIcon: icon != null ? Icon(icon) : null,
             filled: true,
             fillColor: Colors.grey.shade50,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
 import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
+import 'package:th_cow_passport/ui/widgets/styled_dropdown_field.dart';
 import 'package:th_cow_passport/ui/widgets/cow_selection_field.dart';
 
 class PhysicalInfoTab extends StatelessWidget {
@@ -54,45 +55,29 @@ class PhysicalInfoTab extends StatelessWidget {
             ],
           ),
           SizedBox(height: 16.h),
-
-          // Color Dropdown
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('สี', style: Theme.of(context).textTheme.labelLarge),
-              SizedBox(height: 8.h),
-              DropdownButtonFormField<String>(
-                initialValue: colorController.text.isNotEmpty &&
-                        ['ขาว', 'ดำ', 'แดง', 'น้ำตาล', 'ด่าง', 'อื่น']
-                            .contains(colorController.text)
-                    ? colorController.text
-                    : null,
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.color_lens),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r)),
-                ),
-                hint: const Text('เลือกสี'),
-                items: ['ขาว', 'ดำ', 'แดง', 'น้ำตาล', 'ด่าง', 'อื่น']
-                    .map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (newValue) {
-                  if (newValue != null) {
-                    colorController.text = newValue;
-                  }
-                },
-              ),
-            ],
+          StyledDropdownField<String>(
+            label: 'สี',
+            value: colorController.text.isNotEmpty &&
+                    ['ขาว', 'ดำ', 'แดง', 'น้ำตาล', 'ด่าง', 'อื่น']
+                        .contains(colorController.text)
+                ? colorController.text
+                : null,
+            hintText: 'เลือกสี',
+            icon: Icons.color_lens,
+            items: ['ขาว', 'ดำ', 'แดง', 'น้ำตาล', 'ด่าง', 'อื่น']
+                .map((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+            onChanged: (newValue) {
+              if (newValue != null) {
+                colorController.text = newValue;
+              }
+            },
           ),
-
           SizedBox(height: 16.h),
-
           CowSelectionField(
             label: 'พ่อพันธุ์',
             icon: Icons.male,

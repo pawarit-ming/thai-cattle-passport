@@ -126,9 +126,26 @@ class _CameraWidgetState extends State<CameraWidget> {
                 : widget.title)),
         body: _buildBody(),
         floatingActionButton: _previewImagePath == null && _cameraError == null
-            ? FloatingActionButton(
-                onPressed: _takePicture,
-                child: const Icon(Icons.camera_alt),
+            ? GestureDetector(
+                onTap: _takePicture,
+                child: Container(
+                  height: 72.r,
+                  width: 72.r,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Theme.of(context).primaryColor,
+                      width: 4.w,
+                    ),
+                  ),
+                  padding: EdgeInsets.all(4.r),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
               )
             : null,
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -152,26 +169,24 @@ class _CameraWidgetState extends State<CameraWidget> {
             child: Image.file(File(_previewImagePath!), fit: BoxFit.contain),
           ),
           Container(
-            color: Colors.black,
-            padding: EdgeInsets.symmetric(vertical: 16.h),
+            color: Colors.white,
+            padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 32.w),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                ElevatedButton(
+                OutlinedButton.icon(
                   onPressed: _retakePicture,
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.red,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    side: BorderSide(color: Colors.red.withOpacity(0.5)),
                   ),
-                  child: const Text('ถ่ายใหม่'),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('ถ่ายใหม่'),
                 ),
-                ElevatedButton(
+                ElevatedButton.icon(
                   onPressed: _confirmPicture,
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.green,
-                  ),
-                  child: const Text('ยืนยัน'),
+                  icon: const Icon(Icons.check),
+                  label: const Text('ยืนยัน'),
                 ),
               ],
             ),

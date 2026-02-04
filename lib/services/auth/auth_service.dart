@@ -18,7 +18,8 @@ class AuthService {
     required String citizenId,
   }) async {
     try {
-      logger.i('[AuthService] Signing up user: $email, name: $firstName $lastName, citizenId: $citizenId');
+      logger.i(
+          '[AuthService] Signing up user: $email, name: $firstName $lastName, citizenId: $citizenId');
       final response = await supabaseClient.auth.signUp(
         email: email,
         password: password,
@@ -29,14 +30,15 @@ class AuthService {
         },
       );
 
-      logger.i('[AuthService.signUp] Sign up returned session: ${supabaseClient.auth.currentSession != null}');
+      logger.i(
+          '[AuthService.signUp] Sign up returned session: ${supabaseClient.auth.currentSession != null}');
       logger.i('[AuthService.signUp] [SUCCESS] Sign up successful for: $email');
-      
+
       // Mark session recognized for this runtime so router allows navigation
       if (response.session != null) {
         sessionRecognized = true;
       }
-      
+
       return response;
     } catch (e) {
       logger.e('[AuthService] Sign up error', error: e);
@@ -53,7 +55,8 @@ class AuthService {
     required String email,
     required UserRole role,
   }) async {
-    logger.i('[AuthService.createUserInDatabase] User record is created automatically by trigger. No manual insert needed.');
+    logger.i(
+        '[AuthService.createUserInDatabase] User record is created automatically by trigger. No manual insert needed.');
   }
 
   // Sign in with email and password
@@ -77,6 +80,43 @@ class AuthService {
     }
   }
 
+  // Sign in with citizen ID and password
+  Future<AuthResponse> signInWithCitizenId({
+    required String citizenId,
+    required String password,
+  }) async {
+    try {
+      logger.i('[AuthService] Attempting lookup for citizenId: $citizenId');
+
+      // 1. Lookup email from users table
+      // Note: This assumes public.users table has an 'email' column populated by trigger.
+      // If not, this needs a different approach (e.g. Edge Function).
+      final data = await supabaseClient
+          .from('users')
+          .select('email')
+          .eq('citizen_id', citizenId)
+          .maybeSingle();
+
+      if (data == null || data['email'] == null) {
+        logger.w('[AuthService] No user found with citizenId: $citizenId');
+        throw 'invalid_credentials'; // Use generic error to match auth errors
+      }
+
+      final email = data['email'] as String;
+      logger.i('[AuthService] Found email for citizenId: $email');
+
+      // 2. Sign in with the found email
+      return await signIn(email: email, password: password);
+    } catch (e) {
+      if (e is PostgrestException) {
+        logger.e('[AuthService] Database error during lookup', error: e);
+        // If column 'email' doesn't exist or other DB error
+        throw 'database_error';
+      }
+      rethrow;
+    }
+  }
+
   // Sign out
   Future<void> signOut() async {
     try {
@@ -95,13 +135,14 @@ class AuthService {
   User? getCurrentUser() {
     final session = supabaseClient.auth.currentSession;
     if (session == null) return null;
-    
+
     // Extract name from email or metadata
-    final nameParts = session.user.userMetadata?['full_name'] as String? ?? 'User';
+    final nameParts =
+        session.user.userMetadata?['full_name'] as String? ?? 'User';
     final nameList = nameParts.split(' ');
     final firstName = nameList.isNotEmpty ? nameList.first : 'User';
     final lastName = nameList.length > 1 ? nameList.skip(1).join(' ') : '';
-    
+
     return User(
       id: session.user.id,
       firstName: firstName,

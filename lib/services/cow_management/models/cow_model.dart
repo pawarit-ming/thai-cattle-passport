@@ -2,7 +2,7 @@ class Cow {
   final int? animalId;
   final String userId;
   final int farmId;
-  final String? nidNumber;
+  final String nidNumber;
   final String animalName;
   final String? breed;
   final String sex;
@@ -26,7 +26,7 @@ class Cow {
     this.animalId,
     required this.userId,
     required this.farmId,
-    this.nidNumber,
+    required this.nidNumber,
     required this.animalName,
     this.breed,
     required this.sex,
@@ -102,7 +102,7 @@ class Cow {
       animalId: map['animal_id'],
       userId: map['user_id'],
       farmId: map['farm_id'],
-      nidNumber: map['nid_number'],
+      nidNumber: map['nid_number'] ?? '',
       animalName: map['animal_name'],
       breed: map['breed'],
       sex: map['sex'],

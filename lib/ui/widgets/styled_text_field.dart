@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class StyledTextField extends StatelessWidget {
@@ -9,7 +10,14 @@ class StyledTextField extends StatelessWidget {
   final bool isRequired;
   final TextInputType? keyboardType;
   final String? suffixText;
+  final String? helperText;
+  final bool readOnly;
+  final VoidCallback? onTap;
+  final int maxLines;
+  final String? errorText;
   final String? Function(String?)? customValidator;
+  final int? maxLength;
+  final List<TextInputFormatter>? inputFormatters;
 
   const StyledTextField({
     super.key,
@@ -20,7 +28,14 @@ class StyledTextField extends StatelessWidget {
     this.isRequired = false,
     this.keyboardType,
     this.suffixText,
+    this.helperText,
+    this.readOnly = false,
+    this.onTap,
+    this.maxLines = 1,
     this.customValidator,
+    this.errorText,
+    this.maxLength,
+    this.inputFormatters,
   });
 
   @override
@@ -41,6 +56,11 @@ class StyledTextField extends StatelessWidget {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          readOnly: readOnly,
+          onTap: onTap,
+          maxLines: maxLines,
+          maxLength: maxLength,
+          inputFormatters: inputFormatters,
           validator: customValidator ??
               (value) {
                 if (isRequired && (value == null || value.isEmpty)) {
@@ -57,6 +77,9 @@ class StyledTextField extends StatelessWidget {
               },
           decoration: InputDecoration(
             hintText: hintText,
+            helperText: helperText,
+            helperMaxLines: 2,
+            errorText: errorText,
             suffixText: suffixText,
             contentPadding: EdgeInsets.symmetric(
                 horizontal: 16.w, vertical: 12.h), // Ensure padding

@@ -7,6 +7,8 @@ import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_se
 import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_service.dart';
 import 'package:th_cow_passport/ui/widgets/cow_detail_widget.dart';
 import 'package:th_cow_passport/ui/widgets/cow_selection_field.dart';
+import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
+import 'package:th_cow_passport/ui/widgets/styled_dropdown_field.dart';
 
 class EditCowScreen extends ConsumerStatefulWidget {
   final int cowId;
@@ -182,76 +184,56 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
       padding: EdgeInsets.all(16.r),
       child: Column(
         children: [
-          _buildStyledTextField(
+          StyledTextField(
               label: 'ชื่อวัว',
               controller: _nameController,
               icon: Icons.pets,
               isRequired: true),
           SizedBox(height: 16.h),
-          _buildStyledTextField(
+          StyledTextField(
               label: 'Tag ID',
               controller: _nidController,
               icon: Icons.tag,
               isRequired: true),
           SizedBox(height: 16.h),
           SizedBox(height: 16.h),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('สายพันธุ์',
-                      style: Theme.of(context).textTheme.labelLarge),
-                  const Text(' *', style: TextStyle(color: Colors.red)),
-                ],
-              ),
-              SizedBox(height: 8.h),
-              DropdownButtonFormField<String>(
-                initialValue: _breedOptions.contains(_breedController.text)
-                    ? _breedController.text
-                    : null,
-                decoration: InputDecoration(
-                  hintText: 'เลือกสายพันธุ์',
-                  prefixIcon: const Icon(Icons.category),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
-                ),
-                items: _breedOptions.map((breed) {
-                  return DropdownMenuItem(
-                    value: breed,
-                    child: Text(breed),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _breedController.text = value ?? '';
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'กรุณาเลือกสายพันธุ์';
-                  }
-                  return null;
-                },
-              ),
-            ],
+          StyledDropdownField<String>(
+            label: 'สายพันธุ์',
+            isRequired: true,
+            hintText: 'เลือกสายพันธุ์',
+            value: _breedOptions.contains(_breedController.text)
+                ? _breedController.text
+                : null,
+            icon: Icons.category,
+            items: _breedOptions.map((breed) {
+              return DropdownMenuItem(
+                value: breed,
+                child: Text(breed),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _breedController.text = value ?? '';
+              });
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'กรุณาเลือกสายพันธุ์';
+              }
+              return null;
+            },
           ),
           SizedBox(height: 16.h),
           SizedBox(height: 16.h),
 
           // เพิ่มส่วนเลือกวันที่และเพศเพื่อให้แก้ไขได้ทุกอย่าง
-          ListTile(
-            title: const Text("วันเกิด"),
-            subtitle: Text(
-                _selectedBirthDate?.toIso8601String().substring(0, 10) ??
+          StyledTextField(
+            label: "วันเกิด",
+            controller: TextEditingController(
+                text: _selectedBirthDate?.toIso8601String().substring(0, 10) ??
                     "ระบุวันที่"),
-            leading: const Icon(Icons.calendar_today),
+            icon: Icons.calendar_today,
+            readOnly: true,
             onTap: () async {
               final date = await showDatePicker(
                 context: context,
@@ -263,14 +245,10 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
             },
           ),
           SizedBox(height: 16.h),
-          DropdownButtonFormField<String>(
-            initialValue: _selectedSex,
-            decoration: InputDecoration(
-              labelText: 'เพศ',
-              prefixIcon: const Icon(Icons.wc),
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
-            ),
+          StyledDropdownField<String>(
+            label: 'เพศ',
+            value: _selectedSex,
+            icon: Icons.wc,
             items: const [
               DropdownMenuItem(value: 'MALE', child: Text('ผู้')),
               DropdownMenuItem(value: 'FEMALE', child: Text('เมีย')),
@@ -280,14 +258,10 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
             },
           ),
           SizedBox(height: 16.h),
-          DropdownButtonFormField<String>(
-            initialValue: _selectedStatus,
-            decoration: InputDecoration(
-              labelText: 'สถานะ',
-              prefixIcon: const Icon(Icons.info),
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
-            ),
+          StyledDropdownField<String>(
+            label: 'สถานะ',
+            value: _selectedStatus,
+            icon: Icons.info,
             items: const [
               DropdownMenuItem(value: 'ACTIVE', child: Text('ใช้งาน')),
               DropdownMenuItem(value: 'SOLD', child: Text('ขายแล้ว')),
@@ -311,7 +285,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
           Row(
             children: [
               Expanded(
-                  child: _buildStyledTextField(
+                  child: StyledTextField(
                       label: 'น้ำหนัก (กก.)',
                       controller: _weightController,
                       icon: Icons.monitor_weight,
@@ -319,7 +293,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
                       keyboardType: TextInputType.number)),
               SizedBox(width: 16.w),
               Expanded(
-                  child: _buildStyledTextField(
+                  child: StyledTextField(
                       label: 'ส่วนสูง (ซม.)',
                       controller: _heightController,
                       icon: Icons.height,
@@ -328,47 +302,28 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
             ],
           ),
           SizedBox(height: 16.h),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('สีตัว', style: Theme.of(context).textTheme.labelLarge),
-              SizedBox(height: 8.h),
-              DropdownButtonFormField<String>(
-                initialValue: _colorOptions.contains(_colorController.text)
-                    ? _colorController.text
-                    : null,
-                decoration: InputDecoration(
-                  hintText: 'เลือกสี',
-                  prefixIcon: const Icon(Icons.palette),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
-                ),
-                items: _colorOptions.map((color) {
-                  return DropdownMenuItem(
-                    value: color,
-                    child: Text(color),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _colorController.text = value ?? '';
-                  });
-                },
-                validator: (value) {
-                  // Optional field check if necessary, or keep standard
-                  return null;
-                },
-              ),
-            ],
+          StyledDropdownField<String>(
+            label: 'สีตัว',
+            hintText: 'เลือกสี',
+            value: _colorOptions.contains(_colorController.text)
+                ? _colorController.text
+                : null,
+            icon: Icons.palette,
+            items: _colorOptions.map((color) {
+              return DropdownMenuItem(
+                value: color,
+                child: Text(color),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _colorController.text = value ?? '';
+              });
+            },
           ),
           SizedBox(height: 16.h),
-          _buildStyledTextField(
-              label: 'สีตัว',
+          StyledTextField(
+              label: 'สีตัว (อื่น ๆ)',
               controller: _colorController,
               icon: Icons.palette),
           SizedBox(height: 16.h),
@@ -427,64 +382,6 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildStyledTextField({
-    required String label,
-    required TextEditingController controller,
-    required IconData icon,
-    String? hintText,
-    String? suffixText,
-    bool isRequired = false,
-    TextInputType? keyboardType,
-  }) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(label, style: theme.textTheme.labelLarge),
-            if (isRequired)
-              const Text(' *', style: TextStyle(color: Colors.red)),
-          ],
-        ),
-        SizedBox(height: 8.h),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          validator: (value) {
-            if (isRequired && (value == null || value.isEmpty)) {
-              return 'กรุณากรอก $label';
-            }
-            if (keyboardType == TextInputType.number &&
-                value != null &&
-                value.isNotEmpty) {
-              final n = double.tryParse(value);
-              if (n == null) {
-                return 'กรุณากรอกตัวเลขที่ถูกต้อง';
-              }
-              // Based on "precision 5, scale 2", the max value is 999.99
-              if ((label.contains('น้ำหนัก') || label.contains('ส่วนสูง')) &&
-                  n >= 1000) {
-                return 'ค่าต้องน้อยกว่า 1,000';
-              }
-            }
-            return null;
-          },
-          decoration: InputDecoration(
-            hintText: hintText ?? label,
-            suffixText: suffixText,
-            prefixIcon: Icon(icon),
-            filled: true,
-            fillColor: Colors.grey.shade50,
-            border:
-                OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
-          ),
-        ),
-      ],
     );
   }
 }

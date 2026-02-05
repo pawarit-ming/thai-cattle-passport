@@ -14,6 +14,7 @@ class MarketItem {
   final String seller;
   final String location;
   final List<String> images;
+  final String sellerId;
 
   MarketItem({
     required this.id,
@@ -25,6 +26,7 @@ class MarketItem {
     required this.seller,
     required this.location,
     required this.images,
+    required this.sellerId,
   });
 
   factory MarketItem.fromJson(Map<String, dynamic> json) {
@@ -47,10 +49,8 @@ class MarketItem {
     addImage(json['mark_pic']);
 
     // --- จัดการเพศ (Sex Normalization) ---
-    // แปลงค่าจาก DB ให้เป็นมาตรฐาน M/F เพื่อให้ Filter ทำงานได้
     String rawSex = json['sex']?.toString().toLowerCase() ?? '';
-    String normalizedSex = 'M'; // ค่าเริ่มต้น
-    // เช็คคำที่สื่อถึงตัวเมียทั้งหมด
+    String normalizedSex = 'M';
     if (rawSex.contains('f') ||
         rawSex.contains('female') ||
         rawSex.contains('เมีย') ||
@@ -58,8 +58,6 @@ class MarketItem {
       normalizedSex = 'F';
     }
 
-    // --- จัดการสายพันธุ์ (Breed) ---
-    // ตัดช่องว่างหน้าหลังออก เพื่อให้การค้นหาแม่นยำขึ้น
     String normalizedBreed =
         json['breed']?.toString().trim() ?? 'ไม่ระบุสายพันธุ์';
 
@@ -71,7 +69,8 @@ class MarketItem {
       birthDate: DateTime.tryParse(json['birth_date']?.toString() ?? '') ??
           DateTime.now(),
       weight: double.tryParse(json['weight']?.toString() ?? '0') ?? 0.0,
-      seller: 'รหัส: ${json['user_id'] ?? '-'}', // ปัจจุบันโชว์ ID ไปก่อน
+      sellerId: json['user_id']?.toString() ?? '',
+      seller: 'รหัส: ${json['user_id'] ?? '-'}',
       location: json['origin'] ?? 'ไม่ระบุพิกัด',
       images: imgList,
     );
@@ -91,6 +90,9 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
 
   // เพิ่มตัวแปรเช็คสถานะการโหลด
   bool _isLoading = true;
+
+  // เพิ่มตัวแปรเก็บ ID วัวที่เราเคยเสนอซื้อไปแล้ว
+  Set<String> _myOfferIds = {};
 
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
@@ -124,31 +126,55 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
   Future<void> _fetchAnimals() async {
     try {
       final supabase = Supabase.instance.client;
-
-      // 1. หา User ID ของคนปัจจุบันที่ล็อกอินอยู่
       final myUserId = supabase.auth.currentUser?.id;
 
-      // 2. สร้าง Query พื้นฐาน
       var query = supabase.from('animals').select();
 
-      // 3. เพิ่มเงื่อนไข: ถ้าล็อกอินอยู่ ให้กรอง User ID ของตัวเองออก
+      // 1. กรอง User ID ตัวเองออก
       if (myUserId != null) {
         query = query.neq('user_id', myUserId);
       }
 
-      // 4. สั่งดึงข้อมูลและเรียงลำดับตามปกติ
+      // 2. กรองวัวที่ขายแล้วออก
+      query = query.neq('status', 'SOLD');
+
       final data = await query.order('created_at', ascending: false);
 
-      setState(() {
-        _allItems =
-            (data as List).map((item) => MarketItem.fromJson(item)).toList();
-        _filteredItems = _allItems;
-        _isLoading = false;
-      });
+      // 3. [เพิ่มใหม่] ดึงข้อมูล Offer ของเรามาเช็คว่าเคยเสนอซื้อตัวไหนไปแล้วบ้าง
+      Set<String> myOffers = {};
+      if (myUserId != null) {
+        final offersData = await supabase
+            .from('offers')
+            .select('animal_id')
+            .eq('buyer_id', myUserId); // ดึงเฉพาะของฉัน
+
+        myOffers =
+            (offersData as List).map((e) => e['animal_id'].toString()).toSet();
+      }
+
+      if (mounted) {
+        setState(() {
+          _allItems =
+              (data as List).map((item) => MarketItem.fromJson(item)).toList();
+
+          // บันทึกรายการที่เสนอซื้อแล้ว
+          _myOfferIds = myOffers;
+
+          _applyFilters();
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       debugPrint('Error fetching data: $e');
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  // ฟังก์ชัน Callback เมื่อมีการกดเสนอซื้อสำเร็จ จะเอา ID ใส่ Set ทันที (ไม่ต้องโหลดใหม่ทั้งหมด)
+  void _handleOfferSubmitted(String animalId) {
+    setState(() {
+      _myOfferIds.add(animalId);
+    });
   }
 
   void _applyFilters() {
@@ -156,19 +182,14 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
       final query = _searchController.text.toLowerCase().trim();
 
       _filteredItems = _allItems.where((item) {
-        // 1. Search Logic (ปรับปรุงใหม่)
-        // ให้ค้นหาเจอทั้ง ชื่อวัว, รหัสผู้ขาย, และ สายพันธุ์
         final matchSearch = item.name.toLowerCase().contains(query) ||
             item.seller.toLowerCase().contains(query) ||
             item.breed.toLowerCase().contains(query);
 
-        // 2. Filter: Gender
         if (_selectedGender != null && item.sex != _selectedGender) {
           return false;
         }
 
-        // 3. Filter: Breed
-        // เช็คแบบแม่นยำขึ้น
         if (_selectedBreeds.isNotEmpty) {
           bool isBreedMatch = false;
           for (var selected in _selectedBreeds) {
@@ -180,19 +201,16 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
           if (!isBreedMatch) return false;
         }
 
-        // 4. Filter: Age
         final age = DateTime.now().difference(item.birthDate).inDays / 365;
         if (age < _ageRange.start || age > _ageRange.end) {
           return false;
         }
 
-        // 5. Filter: Weight
         if (item.weight < _weightRange.start ||
             item.weight > _weightRange.end) {
           return false;
         }
 
-        // ถ้าผ่านเงื่อนไข Filter ทั้งหมด ให้ดูผลลัพธ์การ Search
         return matchSearch;
       }).toList();
     });
@@ -243,7 +261,7 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
           return Container(
             height: MediaQuery.of(context).size.height * 0.75,
             decoration: BoxDecoration(
-              color: theme.cardColor, // ใช้สีเดียวกับ Cow List (สีขาว)
+              color: theme.cardColor,
               borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
             ),
             padding: EdgeInsets.all(24.r),
@@ -390,31 +408,23 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
     return Scaffold(
       appBar: AppBar(
         title: _isSearching
-            ?
-            // --- 1. ปรับแต่งช่องค้นหา (Search Box) ---
-            SizedBox(
-                height: 40.h, // กำหนดความสูงของช่องค้นหา
+            ? SizedBox(
+                height: 40.h,
                 child: TextField(
                   controller: _searchController,
                   autofocus: true,
-                  //style: TextStyle(color: Colors.black, fontSize: 16.sp), // สีและขนาดตัวอักษรที่พิมพ์
                   decoration: InputDecoration(
                     hintText: 'ค้นหาชื่อวัว หรือ ผู้ขาย...',
                     hintStyle: TextStyle(color: Colors.grey[400]),
-                    border: InputBorder.none, // เอาเส้นขอบเดิมออก
-                    contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 8.h), // ระยะห่างข้อความข้างใน
-                    prefixIcon: const Icon(Icons.search,
-                        color: Colors
-                            .grey), // เพิ่มไอคอนแว่นขยายข้างใน (ถ้าต้องการ)
+                    border: InputBorder.none,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
                   ),
                   onChanged: (val) => _applyFilters(),
                 ),
               )
-            : const Text(
-                'ตลาดซื้อขายวัว',
-              ),
+            : const Text('ตลาดซื้อขายวัว'),
         actions: [
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
@@ -439,7 +449,6 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
       ),
       body: Column(
         children: [
-          // 1. ส่วนแสดงจำนวนผลลัพธ์ (เหมือนเดิม)
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
             child: Row(
@@ -451,25 +460,40 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
               ],
             ),
           ),
-
-          // 2. ส่วนแสดงรายการ (เพิ่มเช็ค _isLoading)
           Expanded(
             child: _isLoading
                 ? Center(
                     child: CircularProgressIndicator(
-                        color:
-                            theme.colorScheme.primary)) // แสดงหมุนๆ เมื่อโหลด
-                : _filteredItems.isEmpty
-                    ? const Center(
-                        child: Text('ไม่พบวัวที่คุณค้นหา',
-                            style: TextStyle(color: Colors.grey)))
-                    : ListView.builder(
-                        padding: EdgeInsets.all(16.r),
-                        itemCount: _filteredItems.length,
-                        itemBuilder: (context, index) {
-                          return _MarketItemCard(item: _filteredItems[index]);
-                        },
-                      ),
+                        color: theme.colorScheme.primary))
+                : RefreshIndicator(
+                    onRefresh: _fetchAnimals,
+                    child: _filteredItems.isEmpty
+                        ? ListView(
+                            children: [
+                              SizedBox(height: 100.h),
+                              const Center(
+                                child: Text('ไม่พบวัวที่คุณค้นหา',
+                                    style: TextStyle(color: Colors.grey)),
+                              ),
+                            ],
+                          )
+                        : ListView.builder(
+                            padding: EdgeInsets.all(16.r),
+                            itemCount: _filteredItems.length,
+                            itemBuilder: (context, index) {
+                              final item = _filteredItems[index];
+                              // เช็คว่าไอดีนี้อยู่ใน Set ที่เสนอซื้อแล้วหรือไม่
+                              final hasOffered = _myOfferIds.contains(item.id);
+
+                              return _MarketItemCard(
+                                item: item,
+                                hasOffered: hasOffered, // ส่งค่านี้เข้าไป
+                                onOfferSubmitted: () =>
+                                    _handleOfferSubmitted(item.id),
+                              );
+                            },
+                          ),
+                  ),
           ),
         ],
       ),
@@ -479,8 +503,14 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
 
 class _MarketItemCard extends StatefulWidget {
   final MarketItem item;
+  final bool hasOffered; // เพิ่มตัวแปรนี้
+  final VoidCallback? onOfferSubmitted; // เพิ่ม callback
 
-  const _MarketItemCard({required this.item});
+  const _MarketItemCard({
+    required this.item,
+    required this.hasOffered,
+    this.onOfferSubmitted,
+  });
 
   @override
   State<_MarketItemCard> createState() => _MarketItemCardState();
@@ -489,187 +519,15 @@ class _MarketItemCard extends StatefulWidget {
 class _MarketItemCardState extends State<_MarketItemCard> {
   int _currentImageIndex = 0;
 
-  // ฟังก์ชันแสดงข้อมูลผู้ขายและแผนที่
   void _showSellerDetails(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        final theme = Theme.of(context);
-        final colorScheme = theme.colorScheme;
-
-        return Container(
-          height:
-              MediaQuery.of(context).size.height * 0.7, // ความสูง 70% ของหน้าจอ
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-          ),
-          padding: EdgeInsets.all(24.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ขีดจับด้านบน
-              Center(
-                child: Container(
-                  width: 50.w,
-                  height: 5.h,
-                  decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(10.r)),
-                ),
-              ),
-              SizedBox(height: 20.h),
-
-              // หัวข้อ
-              Text(
-                'ข้อมูลผู้ขายและสถานที่',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                    color: colorScheme.primary, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 16.h),
-
-              // --- 1. ส่วนจำลองแผนที่ ---
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.blue[50], // สีพื้นฟ้าอ่อนจำลองน้ำ/แผนที่
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(color: Colors.blue.withOpacity(0.2)),
-                  ),
-                  child: Stack(
-                    children: [
-                      // เส้นตารางจำลองถนน
-                      Center(
-                        child: Icon(Icons.map_outlined,
-                            size: 100.r, color: Colors.blue.withOpacity(0.1)),
-                      ),
-                      // หมุดปักสถานที่
-                      Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.location_on,
-                                size: 48.r, color: Colors.red),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 8.w, vertical: 4.h),
-                              decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(8.r),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                        blurRadius: 4, color: Colors.black12)
-                                  ]),
-                              child: Text(
-                                widget.item.location,
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12.sp),
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                      // ปุ่มนำทางมุมขวา
-                      Positioned(
-                        bottom: 16.h,
-                        right: 16.w,
-                        child: FloatingActionButton.small(
-                          onPressed: () {},
-                          backgroundColor: Colors.blue,
-                          child:
-                              const Icon(Icons.navigation, color: Colors.white),
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 24.h),
-
-              // --- 2. ส่วนข้อมูลผู้ขาย ---
-              Container(
-                padding: EdgeInsets.all(16.r),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: Colors.grey[200]!),
-                ),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 28.r,
-                      backgroundColor: colorScheme.primary.withOpacity(0.1),
-                      child: Icon(Icons.person,
-                          size: 30.r, color: colorScheme.primary),
-                    ),
-                    SizedBox(width: 16.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.item.seller,
-                            style: theme.textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            'เบอร์โทร: 08x-xxx-xxxx', // ข้อมูลสมมติ
-                            style: theme.textTheme.bodyMedium
-                                ?.copyWith(color: Colors.grey[600]),
-                          ),
-                          Row(
-                            children: [
-                              Icon(Icons.star, size: 14.r, color: Colors.amber),
-                              Text(' 4.8 (รีวิว)',
-                                  style: TextStyle(
-                                      fontSize: 12.sp, color: Colors.grey[600]))
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
-                    // ปุ่มโทร/แชท
-                    Row(
-                      children: [
-                        IconButton.filled(
-                          onPressed: () {},
-                          style: IconButton.styleFrom(
-                              backgroundColor: Colors.green),
-                          icon: const Icon(Icons.phone, color: Colors.white),
-                        ),
-                        SizedBox(width: 8.w),
-                        IconButton.filled(
-                          onPressed: () {},
-                          style: IconButton.styleFrom(
-                              backgroundColor: Colors.blue),
-                          icon: const Icon(Icons.message, color: Colors.white),
-                        ),
-                      ],
-                    )
-                  ],
-                ),
-              ),
-              SizedBox(height: 16.h),
-
-              // ปุ่มปิด (แบบทึบ)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        colorScheme.primary, // สีพื้นหลัง (สีน้ำตาล)
-                    foregroundColor: Colors.white, // สีตัวอักษร (สีขาว)
-                  ),
-                  child: const Text('ปิด'),
-                ),
-              ),
-            ],
-          ),
+        return SellerDetailsSheet(
+          item: widget.item,
+          onOfferSubmitted: widget.onOfferSubmitted, // ส่งต่อ callback
         );
       },
     );
@@ -679,7 +537,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final item = widget.item; // We use this to access our data
+    final item = widget.item;
 
     return Card(
       margin: EdgeInsets.only(bottom: 16.h),
@@ -691,7 +549,6 @@ class _MarketItemCardState extends State<_MarketItemCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- 1. ส่วนรูปภาพ ---
             Container(
               height: 180.h,
               width: double.infinity,
@@ -717,18 +574,12 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                       );
                     },
                   ),
-
-                  // *** FIX 1: Removed price overlay since 'price' is no longer in model ***
-                  // If you want to show something else here, like the ID or status, you can.
-
-                  // Image Indicator (Dots)
                   Positioned(
                     bottom: 8.h,
                     left: 0,
                     right: 0,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      // *** FIX 2: Changed 'images' to 'item.images' ***
                       children: item.images.asMap().entries.map((entry) {
                         return Container(
                           width: 8.w,
@@ -747,14 +598,11 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                 ],
               ),
             ),
-
-            // --- 2. ส่วนรายละเอียด ---
             Padding(
               padding: EdgeInsets.all(16.r),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ... rest of your code (Name, Breed, Sex, etc.) remains the same
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -838,11 +686,24 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                   SizedBox(height: 16.h),
                   SizedBox(
                     width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: () => _showSellerDetails(context),
-                      icon: const Icon(Icons.shopping_bag_outlined),
-                      label: const Text('เสนอซื้อ'),
-                    ),
+                    // 4. Logic เปลี่ยนปุ่ม: ถ้าเสนอซื้อแล้ว ให้ปิดปุ่ม
+                    child: widget.hasOffered
+                        ? FilledButton.icon(
+                            onPressed: null, // ปิดการกด (Disabled)
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Colors.grey.shade300,
+                              foregroundColor: Colors.grey.shade600,
+                            ),
+                            icon: const Icon(Icons.check_circle_outline),
+                            label: const Text('ส่งข้อเสนอแล้ว'),
+                          )
+                        : FilledButton.icon(
+                            onPressed: () {
+                              _showSellerDetails(context);
+                            },
+                            icon: const Icon(Icons.shopping_bag_outlined),
+                            label: const Text('เสนอซื้อ'),
+                          ),
                   ),
                 ],
               ),
@@ -851,5 +712,232 @@ class _MarketItemCardState extends State<_MarketItemCard> {
         ),
       ),
     );
+  }
+}
+
+class SellerDetailsSheet extends StatefulWidget {
+  final MarketItem item;
+  final VoidCallback? onOfferSubmitted; // เพิ่ม callback
+
+  const SellerDetailsSheet({
+    super.key,
+    required this.item,
+    this.onOfferSubmitted,
+  });
+
+  @override
+  State<SellerDetailsSheet> createState() => _SellerDetailsSheetState();
+}
+
+class _SellerDetailsSheetState extends State<SellerDetailsSheet> {
+  bool _isSubmitting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      padding: EdgeInsets.all(24.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 50.w,
+              height: 5.h,
+              decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10.r)),
+            ),
+          ),
+          SizedBox(height: 20.h),
+          Text(
+            'ข้อมูลผู้ขายและสถานที่',
+            style: theme.textTheme.headlineSmall?.copyWith(
+                color: colorScheme.primary, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 16.h),
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: Colors.blue.withOpacity(0.2)),
+              ),
+              child: Stack(
+                children: [
+                  Center(
+                    child: Icon(Icons.map_outlined,
+                        size: 100.r, color: Colors.blue.withOpacity(0.1)),
+                  ),
+                  Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.location_on, size: 48.r, color: Colors.red),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 8.w, vertical: 4.h),
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8.r),
+                              boxShadow: const [
+                                BoxShadow(blurRadius: 4, color: Colors.black12)
+                              ]),
+                          child: Text(
+                            widget.item.location,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 12.sp),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(height: 24.h),
+          Container(
+            padding: EdgeInsets.all(16.r),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 28.r,
+                  backgroundColor: colorScheme.primary.withOpacity(0.1),
+                  child: Icon(Icons.person,
+                      size: 30.r, color: colorScheme.primary),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.item.seller,
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'เบอร์โทร: 08x-xxx-xxxx',
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed:
+                      _isSubmitting ? null : () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    side: BorderSide(color: Colors.grey.shade300),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                  ),
+                  child: Text(
+                    'ยกเลิก',
+                    style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submitOffer,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                  ),
+                  child: _isSubmitting
+                      ? SizedBox(
+                          width: 20.w,
+                          height: 20.w,
+                          child: const CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          'ยืนยันการเสนอซื้อ',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitOffer() async {
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
+    if (user == null) return;
+
+    try {
+      await supabase.from('offers').insert({
+        'animal_id': widget.item.id,
+        'buyer_id': user.id,
+        'seller_id': widget.item.sellerId,
+        'status': 'pending',
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
+      // แจ้งหน้าหลักว่าทำรายการสำเร็จแล้ว (เพื่อให้ปุ่มเปลี่ยนสถานะทันที)
+      widget.onOfferSubmitted?.call();
+
+      if (mounted) navigator.pop();
+
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('ส่งคำเสนอซื้อเรียบร้อยแล้ว'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+        messenger.showSnackBar(
+          SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+        );
+      }
+    }
   }
 }

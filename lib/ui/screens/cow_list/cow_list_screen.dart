@@ -7,6 +7,8 @@ import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_servic
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
 import 'package:th_cow_passport/ui/screens/cow_list/widgets/cow_card.dart';
 import 'package:th_cow_passport/ui/screens/cow_list/widgets/filter_bottom_sheet.dart';
+import 'dart:async';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CowListScreen extends ConsumerStatefulWidget {
   const CowListScreen({super.key});
@@ -70,12 +72,40 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
     }).toList();
   }
 
+  StreamSubscription<AuthState>? _authSubscription;
+
   @override
   void initState() {
     super.initState();
     // Fetch initial data
     logger.i('Initializing CowListScreen, fetching cows...');
     Future.microtask(() => ref.read(cowServiceProvider).fetchCows());
+    _authSubscription =
+        Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final event = data.event;
+
+      if (event == AuthChangeEvent.signedIn) {
+        // กรณี: Login ใหม่ -> บังคับโหลดข้อมูลใหม่ของ User คนนั้น
+        logger.i('User Signed In: Refreshing Data');
+        ref.read(cowServiceProvider).fetchCows(forceRefresh: true);
+
+        // ล้างสถานะการเลือก (Edit Mode)
+        setState(() {
+          _isEditMode = false;
+          _selectedCowIds.clear();
+        });
+      } else if (event == AuthChangeEvent.signedOut) {
+        // กรณี: Logout -> ล้างข้อมูล Provider ทิ้ง (Reset เป็นค่าเริ่มต้น)
+        logger.i('User Signed Out: Invalidating Provider');
+        ref.invalidate(cowServiceProvider);
+
+        // ล้างสถานะหน้าจอ
+        setState(() {
+          _isEditMode = false;
+          _selectedCowIds.clear();
+        });
+      }
+    });
   }
 
   Future<void> _refreshCows() async {

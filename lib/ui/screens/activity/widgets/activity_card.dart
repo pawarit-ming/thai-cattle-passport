@@ -44,7 +44,10 @@ class ActivityCard extends StatelessWidget {
 
     return Container(
       width: 50.w,
-      height: 68.h,
+      // --- แก้ไขจุดที่ 1: เปลี่ยนจาก height ตายตัว เป็น constraints ขั้นต่ำ ---
+      // height: 68.h, // ของเดิมที่ทำให้เกิด Overflow
+      constraints: BoxConstraints(minHeight: 68.h), // ของใหม่: ยืดหยุ่นได้
+      // -------------------------------------------------------------
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12.r),
@@ -52,20 +55,23 @@ class ActivityCard extends StatelessWidget {
       ),
       padding: EdgeInsets.symmetric(vertical: 8.h),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center, // จัดกึ่งกลางแนวตั้ง
         children: [
           Text(
             monthName,
             style: theme.textTheme.bodySmall?.copyWith(
               color: Colors.grey,
               fontWeight: FontWeight.bold,
+              height: 1.0, // คุม Line Height ให้กระชับขึ้น
             ),
           ),
+          SizedBox(height: 2.h), // เพิ่มระยะห่างเล็กน้อย
           Text(
             '${date.day}',
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.primary,
-              height: 1.0,
+              height: 1.0, // คุม Line Height
             ),
           ),
           Text(
@@ -73,6 +79,7 @@ class ActivityCard extends StatelessWidget {
             style: theme.textTheme.bodySmall?.copyWith(
               color: Colors.grey,
               fontSize: 10.sp,
+              height: 1.0,
             ),
           ),
         ],
@@ -131,14 +138,6 @@ class ActivityCard extends StatelessWidget {
           children: [
             // Date Section
             _buildDateSection(theme),
-            SizedBox(width: 8.w),
-
-            // // Vertical Divider
-            // Container(
-            //   width: 1.5.w,
-            //   height: 64.h, // Approximate height to match date box visual
-            //   color: Colors.brown.shade300,
-            // ),
             SizedBox(width: 8.w),
 
             // Content
@@ -367,8 +366,6 @@ class ActivityCard extends StatelessWidget {
       }
       return '$strVal เดือน'; // Fallback for old data or default
     }
-
-    // Format specific values if needed
 
     return strVal;
   }

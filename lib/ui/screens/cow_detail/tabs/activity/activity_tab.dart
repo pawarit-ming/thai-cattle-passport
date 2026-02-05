@@ -234,21 +234,21 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
       case ActivityType.VACCINE:
         return 'ฉีดวัคซีน';
       case ActivityType.TREATMENT:
-        return 'รักษาโรค';
+        return 'การรักษา';
       case ActivityType.BIRTH:
-        return 'การเกิด';
+        return 'คลอดลูก';
       case ActivityType.WEIGHT_UPDATE:
-        return 'ชั่งน้ำหนัก';
+        return 'บันทึกน้ำหนัก';
       case ActivityType.BREEDING:
         return 'ผสมพันธุ์';
       case ActivityType.PREGNANCY_CHECK:
-        return 'ตรวจท้อง';
+        return 'การตรวจครรภ์';
       case ActivityType.DEATH:
         return 'ตาย';
       case ActivityType.SOLD:
-        return 'ขายออก';
+        return 'ขาย';
       case ActivityType.EDIT_LOG:
-        return 'แก้ไขประวัติ';
+        return 'ประวัติการแก้ไข';
     }
   }
 

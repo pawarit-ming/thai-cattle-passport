@@ -40,6 +40,8 @@ class FormTextField extends StatelessWidget {
   final String? hintText;
   final int maxLines;
   final bool isRequired;
+  final TextInputType? keyboardType;
+  final String? suffixText;
 
   const FormTextField({
     super.key,
@@ -48,6 +50,8 @@ class FormTextField extends StatelessWidget {
     this.hintText,
     this.maxLines = 1,
     this.isRequired = true,
+    this.keyboardType,
+    this.suffixText,
   });
 
   @override
@@ -55,11 +59,13 @@ class FormTextField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
+      keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: '$labelText${isRequired ? ' *' : ''}',
         hintText: hintText,
         border: const OutlineInputBorder(),
         alignLabelWithHint: true,
+        suffixText: suffixText,
       ),
       validator: (value) {
         if (isRequired && (value == null || value.isEmpty)) {

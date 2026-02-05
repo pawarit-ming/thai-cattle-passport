@@ -525,9 +525,180 @@ class _MarketItemCardState extends State<_MarketItemCard> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return SellerDetailsSheet(
-          item: widget.item,
-          onOfferSubmitted: widget.onOfferSubmitted, // ส่งต่อ callback
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+
+        return Container(
+          height:
+              MediaQuery.of(context).size.height * 0.7, // ความสูง 70% ของหน้าจอ
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+          ),
+          padding: EdgeInsets.all(24.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ขีดจับด้านบน
+              Center(
+                child: Container(
+                  width: 50.w,
+                  height: 5.h,
+                  decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10.r)),
+                ),
+              ),
+              SizedBox(height: 20.h),
+
+              // หัวข้อ
+              Text(
+                'ข้อมูลผู้ขายและสถานที่',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                    color: colorScheme.primary, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 16.h),
+
+              // --- 1. ส่วนจำลองแผนที่ ---
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50], // สีพื้นฟ้าอ่อนจำลองน้ำ/แผนที่
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                  ),
+                  child: Stack(
+                    children: [
+                      // เส้นตารางจำลองถนน
+                      Center(
+                        child: Icon(Icons.map_outlined,
+                            size: 100.r, color: Colors.blue.withOpacity(0.1)),
+                      ),
+                      // หมุดปักสถานที่
+                      Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.location_on,
+                                size: 48.r, color: Colors.red),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 8.w, vertical: 4.h),
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8.r),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                        blurRadius: 4, color: Colors.black12)
+                                  ]),
+                              child: Text(
+                                widget.item.location,
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12.sp),
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                      // ปุ่มนำทางมุมขวา
+                      Positioned(
+                        bottom: 16.h,
+                        right: 16.w,
+                        child: FloatingActionButton.small(
+                          onPressed: () {},
+                          backgroundColor: Colors.blue,
+                          child:
+                              const Icon(Icons.navigation, color: Colors.white),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 24.h),
+
+              // --- 2. ส่วนข้อมูลผู้ขาย ---
+              Container(
+                padding: EdgeInsets.all(16.r),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(color: Colors.grey[200]!),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 28.r,
+                      backgroundColor: colorScheme.primary.withOpacity(0.1),
+                      child: Icon(Icons.person,
+                          size: 30.r, color: colorScheme.primary),
+                    ),
+                    SizedBox(width: 16.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.item.seller,
+                            style: theme.textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'เบอร์โทร: 08x-xxx-xxxx', // ข้อมูลสมมติ
+                            style: theme.textTheme.bodyMedium
+                                ?.copyWith(color: Colors.grey[600]),
+                          ),
+                          Row(
+                            children: [
+                              Icon(Icons.star, size: 14.r, color: Colors.amber),
+                              Text(' 4.8 (รีวิว)',
+                                  style: TextStyle(
+                                      fontSize: 12.sp, color: Colors.grey[600]))
+                            ],
+                          )
+                        ],
+                      ),
+                    ),
+                    // ปุ่มโทร/แชท
+                    Row(
+                      children: [
+                        IconButton.filled(
+                          onPressed: () {},
+                          style: IconButton.styleFrom(
+                              backgroundColor: Colors.green),
+                          icon: const Icon(Icons.phone, color: Colors.white),
+                        ),
+                        SizedBox(width: 8.w),
+                        IconButton.filled(
+                          onPressed: () {},
+                          style: IconButton.styleFrom(
+                              backgroundColor: Colors.blue),
+                          icon: const Icon(Icons.message, color: Colors.white),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+              SizedBox(height: 16.h),
+
+              // ปุ่มปิด (แบบทึบ)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        colorScheme.primary, // สีพื้นหลัง (สีน้ำตาล)
+                    foregroundColor: Colors.white, // สีตัวอักษร (สีขาว)
+                  ),
+                  child: const Text('ปิด'),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -589,7 +760,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                             shape: BoxShape.circle,
                             color: _currentImageIndex == entry.key
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.4),
+                                : Colors.white.withValues(alpha: 0.4),
                           ),
                         );
                       }).toList(),
@@ -615,7 +786,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                         padding: EdgeInsets.symmetric(
                             horizontal: 8.w, vertical: 2.h),
                         decoration: BoxDecoration(
-                          color: colorScheme.primary.withOpacity(0.1),
+                          color: colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Text(

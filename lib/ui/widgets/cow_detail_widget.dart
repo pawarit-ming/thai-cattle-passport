@@ -39,8 +39,6 @@ class CowDetailWidget extends StatelessWidget {
           return [
             SliverAppBar(
               pinned: true,
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
               centerTitle: true,
               title: Text(title,
                   style: const TextStyle(fontWeight: FontWeight.bold)),

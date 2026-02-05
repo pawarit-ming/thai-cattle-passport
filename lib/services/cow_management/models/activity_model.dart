@@ -1,12 +1,12 @@
 enum ActivityType {
-  VACCINE,
-  TREATMENT,
-  BIRTH,
   WEIGHT_UPDATE,
+  TREATMENT,
+  VACCINE,
   BREEDING,
   PREGNANCY_CHECK,
-  DEATH,
+  BIRTH,
   SOLD,
+  DEATH,
   EDIT_LOG;
 
   String toJson() => name;
@@ -61,7 +61,8 @@ class Activity {
       description: map['description'],
       data: map['data'] != null ? Map<String, dynamic>.from(map['data']) : {},
       activityDate: DateTime.parse(map['activity_date']),
-      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
+      createdAt:
+          map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
     );
   }
 

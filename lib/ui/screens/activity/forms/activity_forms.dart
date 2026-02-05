@@ -24,17 +24,31 @@ class VaccineForm extends StatelessWidget {
 class BirthForm extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController genderController;
-  final TextEditingController breedController;
   final TextEditingController nidController;
   final TextEditingController birthWeightController;
+
+  // Sire Selection
+  final String? sireType;
+  final ValueChanged<String?> onSireTypeChanged;
+  final List<dynamic> farmSires;
+  final int? selectedSireId;
+  final ValueChanged<int?> onSireIdChanged;
+  final TextEditingController otherSireNameController;
+  final TextEditingController otherSireOriginController;
 
   const BirthForm({
     super.key,
     required this.nameController,
     required this.genderController,
-    required this.breedController,
     required this.nidController,
     required this.birthWeightController,
+    required this.sireType,
+    required this.onSireTypeChanged,
+    required this.farmSires,
+    required this.selectedSireId,
+    required this.onSireIdChanged,
+    required this.otherSireNameController,
+    required this.otherSireOriginController,
   });
 
   @override
@@ -54,29 +68,7 @@ class BirthForm extends StatelessWidget {
           hintText: 'ชื่อของลูกวัว',
         ),
         SizedBox(height: 16.h),
-        // Breed Dropdown
-        FormDropdownField<String>(
-          label: 'พันธุ์ลูกวัว',
-          isRequired: true,
-          value: breedController.text.isEmpty ? null : breedController.text,
-          items: [
-            'บราห์มัน',
-            'ชาร์โรเลส์',
-            'วากิว',
-            'แองกัส',
-            'ฮินดูบราซิล',
-            'พื้นเมือง',
-            'อื่นๆ'
-          ]
-              .map(
-                  (breed) => DropdownMenuItem(value: breed, child: Text(breed)))
-              .toList(),
-          onChanged: (val) {
-            if (val != null) {
-              breedController.text = val;
-            }
-          },
-        ),
+        // Gender Dropdown
         SizedBox(height: 16.h),
         // Gender Dropdown
         FormDropdownField<String>(
@@ -94,6 +86,74 @@ class BirthForm extends StatelessWidget {
           },
         ),
         SizedBox(height: 16.h),
+        // Sire Selection Section
+        SizedBox(height: 16.h),
+        FormDropdownField<String>(
+          label: 'พ่อพันธุ์',
+          isRequired: true,
+          value: sireType,
+          items: [
+            DropdownMenuItem(value: 'FARM', child: Text('วัวในฟาร์ม')),
+            const DropdownMenuItem(value: 'UNKNOWN', child: Text('ไม่ทราบ')),
+            const DropdownMenuItem(value: 'OTHER', child: Text('อื่นๆ (ระบุ)')),
+          ],
+          onChanged: onSireTypeChanged,
+        ),
+        SizedBox(height: 16.h),
+
+        if (sireType == 'FARM') ...[
+          FormDropdownField<int>(
+            label: 'เลือกพ่อพันธุ์ในฟาร์ม',
+            isRequired: true,
+            value: selectedSireId,
+            hintText: farmSires.isEmpty ? 'ไม่มีพ่อพันธุ์ในฟาร์ม' : 'เลือกวัว',
+            items: farmSires.map((cow) {
+              return DropdownMenuItem<int>(
+                value: cow.animalId,
+                child: Text('${cow.animalName} (${cow.nidNumber})'),
+              );
+            }).toList(),
+            onChanged: onSireIdChanged,
+          ),
+          SizedBox(height: 16.h),
+        ] else if (sireType == 'OTHER') ...[
+          Container(
+            padding: EdgeInsets.all(12.r),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ข้อมูลพ่อพันธุ์ภายนอก',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade700,
+                    fontSize: 12.sp,
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                FormTextField(
+                  controller: otherSireNameController,
+                  labelText: 'ชื่อพ่อพันธุ์',
+                  hintText: 'ระบุชื่อพ่อพันธุ์',
+                  isRequired: true,
+                ),
+                SizedBox(height: 12.h),
+                FormTextField(
+                  controller: otherSireOriginController,
+                  labelText: 'ที่มา / สังกัด',
+                  hintText: 'เช่น ศูนย์วิจัยฯ, ฟาร์มข้างเคียง',
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 16.h),
+        ],
+
         FormTextField(
           controller: birthWeightController,
           labelText: 'น้ำหนักแรกเกิด (กก.)',
@@ -154,10 +214,234 @@ class WeightForm extends StatelessWidget {
   }
 }
 
+// --- Breeding Form ---
+class BreedingForm extends StatelessWidget {
+  final String? breedingMethod;
+  final ValueChanged<String?> onMethodChanged;
+
+  final String partnerLabel; // Label for Sire/Dam (พ่อพันธุ์/แม่พันธุ์)
+  final String? sireType;
+  final ValueChanged<String?> onSireTypeChanged;
+
+  final List<dynamic> farmSires; // List<Cow>
+  final int? selectedSireId;
+  final ValueChanged<int?> onSireIdChanged;
+
+  final TextEditingController otherSireNameController;
+  final TextEditingController otherSireOriginController;
+
+  const BreedingForm({
+    super.key,
+    required this.breedingMethod,
+    required this.onMethodChanged,
+    required this.partnerLabel,
+    required this.sireType,
+    required this.onSireTypeChanged,
+    required this.farmSires,
+    required this.selectedSireId,
+    required this.onSireIdChanged,
+    required this.otherSireNameController,
+    required this.otherSireOriginController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // 1. Breeding Method
+        FormDropdownField<String>(
+          label: 'วิธีการ',
+          isRequired: true,
+          value: breedingMethod,
+          items: const [
+            DropdownMenuItem(value: 'NATURAL', child: Text('ตามธรรมชาติ')),
+            DropdownMenuItem(value: 'AI', child: Text('ผสมเทียม')),
+          ],
+          onChanged: onMethodChanged,
+        ),
+        SizedBox(height: 16.h),
+
+        // 2. Sire Source (Type)
+        FormDropdownField<String>(
+          label: partnerLabel, // Use dynamic label
+          isRequired: true,
+          value: sireType,
+          items: [
+            DropdownMenuItem(value: 'FARM', child: Text('วัวในฟาร์ม')),
+            const DropdownMenuItem(value: 'UNKNOWN', child: Text('ไม่ทราบ')),
+            const DropdownMenuItem(value: 'OTHER', child: Text('อื่นๆ (ระบุ)')),
+          ],
+          onChanged: onSireTypeChanged,
+        ),
+        SizedBox(height: 16.h),
+
+        // 3. Conditional Inputs
+        if (sireType == 'FARM') ...[
+          FormDropdownField<int>(
+            label: 'เลือก$partnerLabelในฟาร์ม',
+            isRequired: true,
+            value: selectedSireId,
+            hintText:
+                farmSires.isEmpty ? 'ไม่มี$partnerLabelในฟาร์ม' : 'เลือกวัว',
+            items: farmSires.map((cow) {
+              return DropdownMenuItem<int>(
+                value: cow.animalId,
+                child: Text('${cow.animalName} (${cow.nidNumber})'),
+              );
+            }).toList(),
+            onChanged: onSireIdChanged,
+          ),
+        ] else if (sireType == 'OTHER') ...[
+          Container(
+            padding: EdgeInsets.all(12.r),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ข้อมูล$partnerLabelภายนอก',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade700,
+                    fontSize: 12.sp,
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                FormTextField(
+                  controller: otherSireNameController,
+                  labelText: 'ชื่อ$partnerLabel',
+                  hintText: 'ระบุชื่อ$partnerLabel',
+                  isRequired: true,
+                ),
+                SizedBox(height: 12.h),
+                FormTextField(
+                  controller: otherSireOriginController,
+                  labelText: 'ที่มา / สังกัด',
+                  hintText: 'เช่น ศูนย์วิจัยฯ, ฟาร์มข้างเคียง',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class PregnancyCheckForm extends StatelessWidget {
+  final String? checkMethod;
+  final ValueChanged<String?> onMethodChanged;
+  final String? checkResult;
+  final ValueChanged<String?> onResultChanged;
+  final TextEditingController weeksController;
+  final TextEditingController daysController;
+
+  const PregnancyCheckForm({
+    super.key,
+    required this.checkMethod,
+    required this.onMethodChanged,
+    required this.checkResult,
+    required this.onResultChanged,
+    required this.weeksController,
+    required this.daysController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // 1. Check Method
+        FormDropdownField<String>(
+          label: 'วิธีการตรวจ',
+          isRequired: true,
+          value: checkMethod,
+          items: const [
+            DropdownMenuItem(value: 'PALPATION', child: Text('การคลำ')),
+            DropdownMenuItem(value: 'ULTRASOUND', child: Text('อัลตร้าซาวด์')),
+            DropdownMenuItem(value: 'OBSERVATION', child: Text('การสังเกต')),
+            DropdownMenuItem(value: 'BLOOD', child: Text('เจาะเลือด')),
+            DropdownMenuItem(value: 'URINE', child: Text('ตรวจปัสสาวะ')),
+          ],
+          onChanged: onMethodChanged,
+        ),
+        SizedBox(height: 16.h),
+
+        // 2. Check Result
+        FormDropdownField<String>(
+          label: 'ผลการตรวจ',
+          isRequired: true,
+          value: checkResult,
+          items: const [
+            DropdownMenuItem(value: 'PREGNANT', child: Text('ตั้งครรภ์')),
+            DropdownMenuItem(
+                value: 'NOT_PREGNANT', child: Text('ไม่ตั้งครรภ์')),
+            DropdownMenuItem(
+                value: 'RECHECK', child: Text('ตรวจใหม่/ไม่แน่ใจ')),
+          ],
+          onChanged: onResultChanged,
+        ),
+        SizedBox(height: 16.h),
+
+        // 3. Conditional: Age if Pregnant
+        if (checkResult == 'PREGNANT') ...[
+          // Header Label
+          Padding(
+            padding: EdgeInsets.only(bottom: 8.h),
+            child: Row(
+              children: [
+                Text('อายุครรภ์',
+                    style: Theme.of(context).textTheme.labelLarge),
+                const Text(' *', style: TextStyle(color: Colors.red)),
+              ],
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.all(12.r),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.green.shade200),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: FormTextField(
+                    controller: weeksController,
+                    labelText: 'สัปดาห์',
+                    hintText: '0',
+                    isRequired: false,
+                    keyboardType: TextInputType.number,
+                    suffixText: 'สัปดาห์',
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: FormTextField(
+                    controller: daysController,
+                    labelText: 'วัน',
+                    hintText: '0',
+                    isRequired: false,
+                    keyboardType: TextInputType.number,
+                    suffixText: 'วัน',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 // --- Generic Form (for Breeding, Death, Sold, etc.) ---
 class GenericForm extends StatelessWidget {
-  final TextEditingController
-      controller; // Using generic controller passed down
+  final TextEditingController controller;
   final String label;
 
   const GenericForm({
@@ -168,11 +452,6 @@ class GenericForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Note: The original generic form reused the 'description' controller.
-    // Here we assume the parent might pass a specific one or the description one.
-    // If it's just a description, we might not even need this field if the 'Note' field covers it,
-    // but the original had a specific field for it separate from 'Note'.
-    // We'll keep it as a text field.
     return FormTextField(
       controller: controller,
       labelText: label,

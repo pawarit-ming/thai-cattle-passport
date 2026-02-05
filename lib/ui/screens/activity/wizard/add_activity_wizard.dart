@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
+import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
+import 'package:th_cow_passport/services/cow_management/cow_activity/activity_service.dart';
 import 'package:th_cow_passport/ui/screens/activity/wizard/wizard_constants.dart';
 import 'package:th_cow_passport/ui/screens/activity/wizard/step1_type_selection.dart';
 import 'package:th_cow_passport/ui/screens/activity/wizard/step2_form_input.dart';
@@ -27,6 +29,62 @@ class _AddActivityWizardState extends ConsumerState<AddActivityWizard> {
   Map<String, dynamic> _formData = {};
   String? _notes;
 
+  @override
+  void initState() {
+    super.initState();
+    // Ensure we have the correct cow data loaded
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final service = ref.read(cowDetailServiceProvider);
+      if (service.currentCow?.animalId != widget.cowId) {
+        service.fetchCowById(widget.cowId);
+      }
+    });
+  }
+
+  Future<void> _handleTypeSelection(ActivityType type) async {
+    setState(() => _selectedType = type);
+
+    if (type == ActivityType.PREGNANCY_CHECK || type == ActivityType.BIRTH) {
+      // Check for breeding history
+      final activities =
+          await ref.read(activitiesProvider(widget.cowId).future);
+      final hasBreeding = activities
+          .any((activity) => activity.activityType == ActivityType.BREEDING);
+
+      if (!hasBreeding && mounted) {
+        final shouldProceed = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text('ไม่พบประวัติการผสมพันธุ์'),
+            content: const Text(
+              'วัวตัวนี้ยังไม่มีบันทึกการผสมพันธุ์ในระบบ\nคุณต้องการบันทึกข้อมูลต่อหรือไม่?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false), // Cancel
+                style: TextButton.styleFrom(foregroundColor: Colors.grey),
+                child: const Text('ยกเลิก'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true), // Confirm
+                child: const Text('ยืนยัน (บันทึกต่อ)'),
+              ),
+            ],
+          ),
+        );
+
+        if (shouldProceed != true) {
+          // User cancelled, clear selection and stay on Step 1
+          setState(() => _selectedType = null);
+          return;
+        }
+      }
+    }
+
+    _nextStep();
+  }
+
   void _nextStep() {
     if (_currentStep < _totalSteps - 1) {
       setState(() => _currentStep++);
@@ -49,6 +107,19 @@ class _AddActivityWizardState extends ConsumerState<AddActivityWizard> {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Get Cow Data
+    final detailState = ref.watch(cowDetailServiceProvider);
+    final cow = detailState.currentCow;
+
+    // 2. Loading State
+    if (detailState.isLoading || cow == null || cow.animalId != widget.cowId) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final cowSex = cow.sex; // 'MALE' or 'FEMALE'
+
     String title = 'กิจกรรมใหม่';
     if (_currentStep == 2) title = 'สรุปข้อมูล';
 
@@ -75,14 +146,13 @@ class _AddActivityWizardState extends ConsumerState<AddActivityWizard> {
               index: _currentStep,
               children: [
                 Step1TypeSelection(
-                  onTypeSelected: (type) {
-                    setState(() => _selectedType = type);
-                    _nextStep();
-                  },
+                  cowSex: cowSex,
+                  onTypeSelected: _handleTypeSelection,
                 ),
                 // Only build Step 2 if type is selected
                 if (_selectedType != null)
                   Step2FormInput(
+                    cowId: widget.cowId,
                     activityType: _selectedType!,
                     initialData: _formData,
                     initialDate: _selectedDate,

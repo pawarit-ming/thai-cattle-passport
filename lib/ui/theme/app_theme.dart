@@ -63,6 +63,7 @@ class AppTheme {
             fontSize: 16.sp, fontWeight: FontWeight.w600, color: _textPrimary),
         bodyLarge: GoogleFonts.prompt(fontSize: 16.sp, color: _textPrimary),
         bodyMedium: GoogleFonts.prompt(fontSize: 14.sp, color: _textSecondary),
+        bodySmall: GoogleFonts.prompt(fontSize: 12.sp, color: _textSecondary),
         labelLarge: GoogleFonts.prompt(
             fontSize: 16.sp, fontWeight: FontWeight.bold, color: _textPrimary),
       ),

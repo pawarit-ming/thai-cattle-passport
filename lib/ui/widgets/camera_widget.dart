@@ -178,7 +178,7 @@ class _CameraWidgetState extends State<CameraWidget> {
                   onPressed: _retakePicture,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red,
-                    side: BorderSide(color: Colors.red.withOpacity(0.5)),
+                    side: BorderSide(color: Colors.red.withValues(alpha: 0.5)),
                   ),
                   icon: const Icon(Icons.refresh),
                   label: const Text('ถ่ายใหม่'),

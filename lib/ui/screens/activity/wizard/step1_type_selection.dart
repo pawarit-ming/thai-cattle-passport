@@ -6,11 +6,30 @@ import 'package:th_cow_passport/ui/screens/activity/wizard/wizard_constants.dart
 
 class Step1TypeSelection extends StatelessWidget {
   final Function(ActivityType) onTypeSelected;
+  final String cowSex;
 
-  const Step1TypeSelection({super.key, required this.onTypeSelected});
+  const Step1TypeSelection({
+    super.key,
+    required this.onTypeSelected,
+    required this.cowSex,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // Filter activities based on sex
+    final allowedTypes = ActivityType.values.where((type) {
+      if (type == ActivityType.EDIT_LOG) return false;
+
+      // Male cows cannot give birth or be pregnant
+      if (cowSex == 'MALE') {
+        if (type == ActivityType.PREGNANCY_CHECK ||
+            type == ActivityType.BIRTH) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
+
     return Padding(
       padding: EdgeInsets.all(24.r),
       child: Column(
@@ -29,13 +48,9 @@ class Step1TypeSelection extends StatelessWidget {
                 mainAxisSpacing: 16.h,
                 childAspectRatio: 1.0,
               ),
-              itemCount: ActivityType.values.length,
+              itemCount: allowedTypes.length,
               itemBuilder: (context, index) {
-                final type = ActivityType.values[index];
-                if (type == ActivityType.EDIT_LOG) {
-                  return const SizedBox.shrink(); // Skip Edit Log
-                }
-
+                final type = allowedTypes[index];
                 return _buildTypeCard(context, type);
               },
             ),

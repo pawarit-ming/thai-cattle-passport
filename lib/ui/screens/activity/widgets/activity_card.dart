@@ -16,38 +16,21 @@ class ActivityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final color = activity.activityType.color;
-    final icon = activity.activityType.icon;
 
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildTimelineLine(color, icon),
-          SizedBox(width: 16.w),
+          // 1. Timeline Line (Left)
+          _buildTimelineLine(color, theme),
+          SizedBox(width: 12.w),
+
+          // 2. Content Card (Right)
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(bottom: 24.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(theme, colorScheme),
-                  SizedBox(height: 4.h),
-                  Text(
-                    activity.activityType.label,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                  ),
-                  _buildDescription(theme),
-                  if (activity.data.isNotEmpty) ...[
-                    SizedBox(height: 8.h),
-                    _buildDataCard(context, activity.data),
-                  ]
-                ],
-              ),
+              child: _buildContentCard(context, theme, color),
             ),
           ),
         ],
@@ -55,140 +38,329 @@ class ActivityCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTimelineLine(Color color, IconData icon) {
+  Widget _buildDateSection(ThemeData theme) {
+    final date = activity.activityDate;
+    final monthName = _getMonthNameShort(date.month);
+
+    return Container(
+      width: 50.w,
+      height: 68.h,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      padding: EdgeInsets.symmetric(vertical: 8.h),
+      child: Column(
+        children: [
+          Text(
+            monthName,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: Colors.grey,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            '${date.day}',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+              height: 1.0,
+            ),
+          ),
+          Text(
+            '${date.year + 543}',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: Colors.grey,
+              fontSize: 10.sp,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimelineLine(Color color, ThemeData theme) {
     return Column(
       children: [
         Container(
-          width: 40.r,
-          height: 40.r,
+          width: 12.r,
+          height: 12.r,
+          margin: EdgeInsets.only(top: 24.h),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-            border: Border.all(color: color.withValues(alpha: 0.3)),
-          ),
-          child: Icon(icon, color: color, size: 20.r),
+              color: color,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2.w),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                )
+              ]),
         ),
         if (!isLast)
           Expanded(
             child: Container(
               width: 2.w,
-              color: Colors.grey.shade300,
-              margin: EdgeInsets.symmetric(vertical: 4.h),
+              color: Colors.grey.shade200,
             ),
           ),
       ],
     );
   }
 
-  Widget _buildHeader(ThemeData theme, ColorScheme colorScheme) {
-    return Row(
-      children: [
-        Text(
-          '${activity.activityDate.day}/${activity.activityDate.month}/${activity.activityDate.year}',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onSurface,
+  Widget _buildContentCard(BuildContext context, ThemeData theme, Color color) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
+        ],
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(12.r),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Date Section
+            _buildDateSection(theme),
+            SizedBox(width: 8.w),
+
+            // // Vertical Divider
+            // Container(
+            //   width: 1.5.w,
+            //   height: 64.h, // Approximate height to match date box visual
+            //   color: Colors.brown.shade300,
+            // ),
+            SizedBox(width: 8.w),
+
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header: Icon + Title
+                  Row(
+                    children: [
+                      Icon(activity.activityType.icon,
+                          color: color, size: 20.r),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          activity.activityType.label,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Description
+                  if (activity.description != null &&
+                      activity.description!.isNotEmpty) ...[
+                    SizedBox(height: 8.h),
+                    Text(
+                      activity.description!,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+
+                  // Data Grid
+                  if (activity.data.isNotEmpty) ...[
+                    SizedBox(height: 12.h),
+                    _buildDataGrid(theme, activity.data),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ),
-        SizedBox(width: 8.w),
-        Text(
-          '${activity.activityDate.hour}:${activity.activityDate.minute.toString().padLeft(2, '0')}',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: Colors.grey,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _buildDescription(ThemeData theme) {
-    if (activity.description != null && activity.description!.isNotEmpty) {
-      return Padding(
-        padding: EdgeInsets.only(top: 4.h),
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(12.r),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: Text(
-            activity.description!,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.grey.shade700,
-            ),
-          ),
-        ),
-      );
-    }
-    return const SizedBox.shrink();
-  }
-
-  Widget _buildDataCard(BuildContext context, Map<String, dynamic> data) {
-    final theme = Theme.of(context);
-    final entries = data.entries
-        .where(
-            (entry) => entry.value != null && entry.value.toString().isNotEmpty)
+  Widget _buildDataGrid(ThemeData theme, Map<String, dynamic> data) {
+    final validEntries = data.entries
+        .where((e) => e.value != null && e.value.toString().isNotEmpty)
         .toList();
 
-    if (entries.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (validEntries.isEmpty) return const SizedBox.shrink();
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(12.r),
-      decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
-        borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: entries.map((entry) {
-          return Padding(
-            padding: EdgeInsets.symmetric(vertical: 4.h),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${_getTranslatedDataKey(entry.key)}: ',
+    return Column(
+      children: validEntries.map((entry) {
+        return Padding(
+          padding: EdgeInsets.symmetric(vertical: 4.h),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Key
+              Expanded(
+                flex: 4,
+                child: Text(
+                  _getTranslatedDataKey(entry.key),
                   style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.bold, color: theme.hintColor),
-                ),
-                Expanded(
-                  child: Text(
-                    '${entry.value}',
-                    style: theme.textTheme.bodySmall,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
+              ),
+              // Value
+              Expanded(
+                flex: 6,
+                child: Text(
+                  _formatValue(entry.key, entry.value),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
+  }
+
+  // --- Helpers ---
+
+  String _getMonthNameShort(int month) {
+    const months = [
+      'ม.ค.',
+      'ก.พ.',
+      'มี.ค.',
+      'เม.ย.',
+      'พ.ค.',
+      'มิ.ย.',
+      'ก.ค.',
+      'ส.ค.',
+      'ก.ย.',
+      'ต.ค.',
+      'พ.ย.',
+      'ธ.ค.'
+    ];
+    return months[month - 1];
   }
 
   String _getTranslatedDataKey(String key) {
     switch (key) {
+      // Vaccine
       case 'vaccine_name':
         return 'ชื่อวัคซีน';
-      case 'calf_gender':
-        return 'เพศลูกวัว';
-      case 'calf_nid':
-        return 'เลขประจำตัวลูกวัว';
-      case 'calf_birth_weight':
+
+      // Birth (Calf info)
+      case 'animal_name':
+        return 'ชื่อลูกโค';
+      case 'sex':
+        return 'เพศ';
+      case 'breed':
+        return 'สายพันธุ์';
+      case 'nid_number':
+        return 'เลข NID';
+      case 'birth_weight':
         return 'น้ำหนักแรกเกิด (กก.)';
+
+      // Weight
+      case 'weight':
+        return 'น้ำหนัก (กก.)';
+
+      // Treatment
       case 'symptoms':
         return 'อาการ';
       case 'treatment_details':
-        return 'รายละเอียดการรักษา';
+        return 'การรักษา';
+
+      // Breeding
+      case 'breeding_method':
+        return 'วิธีผสม';
+      case 'sire_type':
+        return 'แหล่งพ่อพันธุ์';
+      case 'sire_id':
+        return 'พ่อพันธุ์ (ฟาร์ม)';
+      case 'other_sire_name':
+        return 'ชื่อพ่อพันธุ์';
+      case 'other_sire_origin':
+        return 'ที่มา';
+
+      // Pregnancy Check
+      case 'check_method':
+        return 'วิธีการตรวจ';
+      case 'check_result':
+        return 'ผลการตรวจ';
+      case 'estimated_age':
+        return 'อายุครรภ์';
+
+      // Generic
       case 'details':
         return 'รายละเอียด';
+
       default:
         return key;
     }
+  }
+
+  String _formatValue(String key, dynamic value) {
+    if (value == null) return '-';
+    final strVal = value.toString();
+
+    // Enum Translations
+    if (key == 'breeding_method') {
+      if (strVal == 'NATURAL') return 'ธรรมชาติ';
+      if (strVal == 'AI') return 'ผสมเทียม';
+    }
+    if (key == 'sire_type') {
+      if (strVal == 'FARM') return 'ในฟาร์ม';
+      if (strVal == 'UNKNOWN') return 'ไม่ทราบ';
+      if (strVal == 'OTHER') return 'ภายนอก';
+    }
+    if (key == 'sex') {
+      if (strVal == 'MALE') return 'เพศผู้';
+      if (strVal == 'FEMALE') return 'เพศเมีย';
+    }
+
+    // Pregnancy Check Translations
+    if (key == 'check_method') {
+      if (strVal == 'PALPATION') return 'การคลำ';
+      if (strVal == 'ULTRASOUND') return 'อัลตร้าซาวด์';
+      if (strVal == 'OBSERVATION') return 'สังเกต';
+      if (strVal == 'BLOOD') return 'ตรวจเลือด';
+      if (strVal == 'URINE') return 'ตรวจปัสสาวะ';
+    }
+    if (key == 'check_result') {
+      if (strVal == 'PREGNANT') return 'ตั้งครรภ์';
+      if (strVal == 'NOT_PREGNANT') return 'ไม่ตั้งครรภ์';
+      if (strVal == 'RECHECK') return 'ตรวจใหม่';
+    }
+
+    if (key == 'estimated_age') {
+      if (strVal.contains('สัปดาห์') || strVal.contains('วัน')) {
+        return strVal;
+      }
+      final parts = strVal.split(' ');
+      if (parts.length == 2) {
+        final val = parts[0];
+        final unit = parts[1];
+        final unitTh =
+            unit == 'MONTHS' ? 'เดือน' : (unit == 'DAYS' ? 'วัน' : unit);
+        return '$val $unitTh';
+      }
+      return '$strVal เดือน'; // Fallback for old data or default
+    }
+
+    // Format specific values if needed
+
+    return strVal;
   }
 }

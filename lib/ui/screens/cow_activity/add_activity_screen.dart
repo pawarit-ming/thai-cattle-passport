@@ -165,7 +165,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
           ActivityType.TREATMENT => _buildTreatmentForm(),
           ActivityType.EDIT_LOG => _buildGenericForm('รายละเอียดการแก้ไข'),
           ActivityType.PREGNANCY_CHECK =>
-            _buildGenericForm('ผลการตรวจการตั้งท้อง'),
+            _buildGenericForm('ผลการตรวจครรภ์'),
           ActivityType.BREEDING => _buildGenericForm('รายละเอียดการผสมพันธุ์'),
           ActivityType.DEATH => _buildGenericForm('สาเหตุการตาย'),
           ActivityType.WEIGHT_UPDATE => _buildWeightUpdateForm(),
@@ -224,7 +224,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
       StyledTextField(
         controller: _calfNidController,
         label: 'เลขประจำตัวลูกวัว (NID)',
-        hintText: 'กรอกเลข NID 13 หลัก (ถ้ามี)',
+        hintText: 'กรอกเลข NID',
         icon: Icons.tag,
       ),
       SizedBox(height: 16.h),
@@ -293,19 +293,19 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
       case ActivityType.VACCINE:
         return 'ฉีดวัคซีน';
       case ActivityType.BIRTH:
-        return 'การเกิด';
+        return 'คลอดลูก';
       case ActivityType.TREATMENT:
         return 'การรักษา';
       case ActivityType.EDIT_LOG:
         return 'ประวัติการแก้ไข';
       case ActivityType.PREGNANCY_CHECK:
-        return 'ตรวจการตั้งท้อง';
+        return 'บันทึกผลการตรวจครรภ์';
       case ActivityType.BREEDING:
         return 'ผสมพันธุ์';
       case ActivityType.DEATH:
         return 'ตายแล้ว';
       case ActivityType.WEIGHT_UPDATE:
-        return 'ปรับปรุงน้ำหนัก';
+        return 'บันทึกน้ำหนัก';
       case ActivityType.SOLD:
         return 'ขาย';
     }

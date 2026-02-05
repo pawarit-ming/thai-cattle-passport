@@ -114,8 +114,8 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
                         // Display key data
                         ...widget.data.entries.map((e) => Padding(
                               padding: EdgeInsets.only(bottom: 8.h),
-                              child: _buildSummaryRow(
-                                  _formatKey(e.key), '${e.value}'),
+                              child: _buildSummaryRow(_formatKey(e.key),
+                                  _formatValue(e.key, e.value)),
                             )),
                       ],
                       if (widget.notes != null && widget.notes!.isNotEmpty) ...[
@@ -205,9 +205,60 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
         return 'รายละเอียดการรักษา';
       case 'details':
         return 'รายละเอียด';
+      case 'breeding_method':
+        return 'วิธีการ';
+      case 'sire_type':
+        return 'ประเภทพ่อพันธุ์';
+      case 'sire_id':
+        return 'ID พ่อพันธุ์';
+      case 'other_sire_name':
+        return 'ชื่อพ่อพันธุ์';
+      case 'other_sire_origin':
+        return 'ที่มาพ่อพันธุ์';
+      case 'check_method':
+        return 'วิธีการตรวจ';
+      case 'check_result':
+        return 'ผลการตรวจ';
+      case 'estimated_age':
+        return 'อายุครรภ์';
       default:
         return key.replaceAll('_', ' ').capitalize();
     }
+  }
+
+  String _formatValue(String key, dynamic value) {
+    if (value == null) return '-';
+    final strVal = value.toString();
+
+    if (key == 'breeding_method') {
+      if (strVal == 'NATURAL') return 'ตามธรรมชาติ';
+      if (strVal == 'AI') return 'ผสมเทียม';
+    }
+    if (key == 'sire_type') {
+      if (strVal == 'FARM') return 'วัวในฟาร์ม';
+      if (strVal == 'UNKNOWN') return 'ไม่ทราบ';
+      if (strVal == 'OTHER') return 'อื่นๆ';
+    }
+    if (key == 'sex') {
+      if (strVal == 'MALE') return 'เพศผู้';
+      if (strVal == 'FEMALE') return 'เพศเมีย';
+    }
+
+    // Pregnancy Check Translations
+    if (key == 'check_method') {
+      if (strVal == 'PALPATION') return 'การคลำ';
+      if (strVal == 'ULTRASOUND') return 'อัลตร้าซาวด์';
+      if (strVal == 'OBSERVATION') return 'การสังเกต';
+      if (strVal == 'BLOOD') return 'เจาะเลือด';
+      if (strVal == 'URINE') return 'ตรวจปัสสาวะ';
+    }
+    if (key == 'check_result') {
+      if (strVal == 'PREGNANT') return 'ตั้งครรภ์';
+      if (strVal == 'NOT_PREGNANT') return 'ไม่ตั้งครรภ์';
+      if (strVal == 'RECHECK') return 'ตรวจใหม่/ไม่แน่ใจ';
+    }
+
+    return strVal;
   }
 }
 

@@ -7,19 +7,19 @@ extension ActivityTypeExtension on ActivityType {
       case ActivityType.VACCINE:
         return 'ฉีดวัคซีน';
       case ActivityType.BIRTH:
-        return 'การเกิด';
+        return 'คลอดลูก';
       case ActivityType.TREATMENT:
         return 'การรักษา';
       case ActivityType.EDIT_LOG:
         return 'ประวัติการแก้ไข';
       case ActivityType.PREGNANCY_CHECK:
-        return 'ตรวจการตั้งท้อง';
+        return 'การตรวจครรภ์';
       case ActivityType.BREEDING:
         return 'ผสมพันธุ์';
       case ActivityType.DEATH:
         return 'ตายแล้ว';
       case ActivityType.WEIGHT_UPDATE:
-        return 'ปรับปรุงน้ำหนัก';
+        return 'บันทึกน้ำหนัก';
       case ActivityType.SOLD:
         return 'ขาย';
     }
@@ -30,13 +30,13 @@ extension ActivityTypeExtension on ActivityType {
       case ActivityType.VACCINE:
         return Icons.medical_services_outlined;
       case ActivityType.BIRTH:
-        return Icons.child_friendly;
+        return Icons.pets;
       case ActivityType.TREATMENT:
         return Icons.healing;
       case ActivityType.EDIT_LOG:
         return Icons.edit_note;
       case ActivityType.PREGNANCY_CHECK:
-        return Icons.pregnant_woman;
+        return Icons.check_rounded;
       case ActivityType.BREEDING:
         return Icons.favorite;
       case ActivityType.WEIGHT_UPDATE:

@@ -104,7 +104,13 @@ class FormDropdownField<T> extends StatelessWidget {
       items: items,
       value: value,
       onChanged: onChanged,
-      validator: validator,
+      validator: validator ??
+          (value) {
+            if (isRequired && value == null) {
+              return 'กรุณาเลือก$label';
+            }
+            return null;
+          },
       isRequired: isRequired,
       hintText: hintText,
     );

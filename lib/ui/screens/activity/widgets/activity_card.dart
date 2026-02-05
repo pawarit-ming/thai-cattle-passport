@@ -305,6 +305,8 @@ class ActivityCard extends StatelessWidget {
       // Generic
       case 'details':
         return 'รายละเอียด';
+      case 'death_cause':
+        return 'สาเหตุการตาย';
 
       default:
         return key;
@@ -328,6 +330,13 @@ class ActivityCard extends StatelessWidget {
     if (key == 'sex') {
       if (strVal == 'MALE') return 'เพศผู้';
       if (strVal == 'FEMALE') return 'เพศเมีย';
+    }
+    if (key == 'death_cause') {
+      if (strVal == 'EPIDEMIC') return 'โรคระบาด';
+      if (strVal == 'ACCIDENT') return 'อุบัติเหตุ';
+      if (strVal == 'DIGESTIVE') return 'ระบบย่อยอาหาร';
+      if (strVal == 'ENVIRONMENT') return 'สภาพแวดล้อม';
+      if (strVal == 'OTHER') return 'อื่นๆ';
     }
 
     // Pregnancy Check Translations

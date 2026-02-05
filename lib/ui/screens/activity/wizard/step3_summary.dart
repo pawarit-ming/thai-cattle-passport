@@ -221,6 +221,8 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
         return 'ผลการตรวจ';
       case 'estimated_age':
         return 'อายุครรภ์';
+      case 'death_cause':
+        return 'สาเหตุการตาย';
       default:
         return key.replaceAll('_', ' ').capitalize();
     }
@@ -256,6 +258,15 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
       if (strVal == 'PREGNANT') return 'ตั้งครรภ์';
       if (strVal == 'NOT_PREGNANT') return 'ไม่ตั้งครรภ์';
       if (strVal == 'RECHECK') return 'ตรวจใหม่/ไม่แน่ใจ';
+    }
+
+    if (key == 'death_cause') {
+      if (strVal == 'EPIDEMIC') return 'โรคระบาด';
+      if (strVal == 'ACCIDENT') return 'อุบัติเหตุ';
+      if (strVal == 'DIGESTIVE') return 'ระบบย่อยอาหาร';
+      if (strVal == 'ENVIRONMENT') return 'สภาพแวดล้อม';
+      if (strVal == 'UNKNOWN') return 'ไม่ทราบสาเหตุ';
+      if (strVal == 'OTHER') return 'อื่นๆ';
     }
 
     return strVal;

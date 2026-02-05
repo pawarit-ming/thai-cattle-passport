@@ -3,6 +3,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:logger/logger.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class CameraWidget extends StatefulWidget {
   final String title;
@@ -24,6 +25,7 @@ class _CameraWidgetState extends State<CameraWidget> {
   Future<void>? _initializeControllerFuture;
   String? _cameraError;
   String? _previewImagePath;
+  bool _permissionDenied = false;
 
   @override
   void initState() {
@@ -33,12 +35,44 @@ class _CameraWidgetState extends State<CameraWidget> {
 
   Future<void> _initializeCamera() async {
     try {
+      // Check camera permission first
+      final permissionStatus = await Permission.camera.status;
+      logger.i("Camera permission status: $permissionStatus");
+
+      if (permissionStatus.isDenied) {
+        // Request permission
+        final result = await Permission.camera.request();
+        if (result.isDenied || result.isPermanentlyDenied) {
+          if (mounted) {
+            setState(() {
+              _permissionDenied = true;
+              _cameraError = result.isPermanentlyDenied
+                  ? "กรุณาเปิดสิทธิ์กล้องในการตั้งค่าเครื่อง\nSettings > Th Cow Passport > Camera"
+                  : "แอปต้องการสิทธิ์ในการใช้กล้อง";
+              logger.e("Camera permission denied");
+            });
+          }
+          return;
+        }
+      } else if (permissionStatus.isPermanentlyDenied) {
+        if (mounted) {
+          setState(() {
+            _permissionDenied = true;
+            _cameraError =
+                "กรุณาเปิดสิทธิ์กล้องในการตั้งค่าเครื่อง\nSettings > Th Cow Passport > Camera";
+            logger.e("Camera permission permanently denied");
+          });
+        }
+        return;
+      }
+
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
         if (mounted) {
           setState(() {
-            _cameraError = "No cameras available.";
-            logger.e(_cameraError);
+            _cameraError =
+                "ไม่พบกล้อง\n(หากคุณใช้งานบน Simulator กรุณาทดสอบบนเครื่องจริง)";
+            logger.e("No cameras available");
           });
         }
         return;
@@ -159,7 +193,39 @@ class _CameraWidgetState extends State<CameraWidget> {
     }
 
     if (_cameraError != null) {
-      return Center(child: Text(_cameraError!));
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.all(24.r),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                _permissionDenied
+                    ? Icons.camera_alt_outlined
+                    : Icons.error_outline,
+                size: 64.r,
+                color: Colors.red,
+              ),
+              SizedBox(height: 16.h),
+              Text(
+                _cameraError!,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16.sp),
+              ),
+              if (_permissionDenied) ...[
+                SizedBox(height: 24.h),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    await openAppSettings();
+                  },
+                  icon: const Icon(Icons.settings),
+                  label: const Text('เปิดการตั้งค่า'),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
     }
 
     if (_previewImagePath != null) {

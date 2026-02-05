@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
+import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_service.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/general/widgets/health_preview_section.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/general/widgets/offspring_preview_section.dart';
 
@@ -14,6 +15,7 @@ class GeneralTab extends ConsumerWidget {
     final theme = Theme.of(context);
     // ดึงข้อมูลวัวปัจจุบันจาก Service
     final cow = ref.watch(cowDetailServiceProvider).currentCow;
+    final allCows = ref.watch(cowServiceProvider).cows;
 
     if (cow == null) {
       return const Center(child: Text("ไม่พบข้อมูลทั่วไป"));
@@ -55,9 +57,9 @@ class GeneralTab extends ConsumerWidget {
                   _buildDetailRow(theme, 'สีตัว:', cow.color ?? '-'),
                   Divider(height: 24.h),
                   _buildDetailRow(
-                      theme, 'แม่พันธุ์ (Dam):', cow.damId?.toString() ?? '-'),
-                  _buildDetailRow(theme, 'พ่อพันธุ์ (Sire):',
-                      cow.sireId?.toString() ?? '-'),
+                      theme, 'แม่พันธุ์:', _getDamNid(cow.damId, allCows)),
+                  _buildDetailRow(
+                      theme, 'พ่อพันธุ์:', _getSireNid(cow.sireId, allCows)),
                   _buildDetailRow(theme, 'สถานะ:', _getStatusLabel(cow.status)),
                 ],
               ),
@@ -109,16 +111,36 @@ class GeneralTab extends ConsumerWidget {
     );
   }
 
+  String _getSireNid(int? sireId, List<dynamic> allCows) {
+    if (sireId == null) return '-';
+    try {
+      final sire = allCows.firstWhere((c) => c.animalId == sireId);
+      return sire.nidNumber ?? '-';
+    } catch (_) {
+      return '-';
+    }
+  }
+
+  String _getDamNid(int? damId, List<dynamic> allCows) {
+    if (damId == null) return '-';
+    try {
+      final dam = allCows.firstWhere((c) => c.animalId == damId);
+      return dam.nidNumber ?? '-';
+    } catch (_) {
+      return '-';
+    }
+  }
+
   String _getStatusLabel(String status) {
     switch (status) {
       case 'ACTIVE':
-        return 'ใช้งาน';
-      case 'SOLD':
-        return 'ขายแล้ว';
-      case 'DECEASED':
-        return 'ตายแล้ว';
+        return 'สุขภาพดี';
       case 'SICK':
         return 'ป่วย';
+      case 'SOLD':
+        return 'ขายแล้ว';
+      case 'DEATH':
+        return 'ตายแล้ว';
       default:
         return 'ไม่ระบุ';
     }

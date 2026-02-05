@@ -263,10 +263,10 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
             value: _selectedStatus,
             icon: Icons.info,
             items: const [
-              DropdownMenuItem(value: 'ACTIVE', child: Text('ใช้งาน')),
-              DropdownMenuItem(value: 'SOLD', child: Text('ขายแล้ว')),
-              DropdownMenuItem(value: 'DECEASED', child: Text('ตายแล้ว')),
+              DropdownMenuItem(value: 'ACTIVE', child: Text('สุขภาพดี')),
               DropdownMenuItem(value: 'SICK', child: Text('ป่วย')),
+              DropdownMenuItem(value: 'SOLD', child: Text('ขายแล้ว')),
+              DropdownMenuItem(value: 'DEATH', child: Text('ตายแล้ว')),
             ],
             onChanged: (value) {
               if (value != null) setState(() => _selectedStatus = value);

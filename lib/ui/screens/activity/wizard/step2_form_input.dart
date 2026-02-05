@@ -64,6 +64,9 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
   final _pregAgeWeeksController = TextEditingController();
   final _pregAgeDaysController = TextEditingController();
 
+  // Death Controllers
+  String? _deathCause;
+
   @override
   void initState() {
     super.initState();
@@ -115,6 +118,12 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
       _pregCheckMethod = data['check_method'];
     if (data.containsKey('check_result'))
       _pregCheckResult = data['check_result'];
+    if (data.containsKey('check_result'))
+      _pregCheckResult = data['check_result'];
+
+    // Restore Death Data
+    if (data.containsKey('death_cause')) _deathCause = data['death_cause'];
+
     // Note: estimated_age format changed. Not restoring legacy partial data for simplicity in this iteration.
     // If strict migration needed, would parse "X สัปดาห์ Y วัน" here.
     if (data.containsKey('estimated_age')) {
@@ -287,7 +296,15 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
             final days = _pregAgeDaysController.text.isEmpty
                 ? '0'
                 : _pregAgeDaysController.text;
-            data['estimated_age'] = '$weeks สัปดาห์ $days วัน';
+            data['estimated_age'] = ((int.parse(weeks) * 7) + int.parse(days));
+          }
+          break;
+        case ActivityType.DEATH:
+          if (_deathCause != null) {
+            data['death_cause'] = _deathCause;
+            if (_deathCause == 'OTHER' && _detailsController.text.isNotEmpty) {
+              data['details'] = _detailsController.text;
+            }
           }
           break;
 
@@ -521,8 +538,11 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
           otherSireOriginController: _otherSireOriginController,
         );
       case ActivityType.DEATH:
-        return GenericForm(
-            controller: _detailsController, label: 'สาเหตุการตาย');
+        return DeathForm(
+          cause: _deathCause,
+          onCauseChanged: (val) => setState(() => _deathCause = val),
+          otherDetailsController: _detailsController,
+        );
       case ActivityType.SOLD:
         return GenericForm(controller: _detailsController, label: 'รายละเอียด');
     }

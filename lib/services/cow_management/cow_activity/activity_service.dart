@@ -27,6 +27,18 @@ class ActivityService {
   // The table name in your Supabase database
   static const String _tableName = 'activities';
 
+  /// Updates the cow's status in the database.
+  Future<void> _updateCowStatus(int cowId, String status) async {
+    try {
+      await _supabaseClient
+          .from('animals')
+          .update({'status': status}).eq('animal_id', cowId);
+    } catch (e) {
+      Logger().e('Error updating cow status: $e');
+      // Non-blocking error
+    }
+  }
+
   /// Adds a new activity to the database.
   Future<void> addActivity(Activity activity) async {
     try {
@@ -34,9 +46,12 @@ class ActivityService {
       final map = activity.toMapForInsert();
       await _supabaseClient.from(_tableName).insert(map);
 
-      // 2. If it's a BIRTH activity, automatically create the new calf
+      // 2. Handle side effects based on activity type
       if (activity.activityType == ActivityType.BIRTH) {
         await _createCalfFromActivity(activity);
+      } else if (activity.activityType == ActivityType.DEATH) {
+        // Automatically set status to DEATH
+        await _updateCowStatus(activity.animalId, 'DEATH');
       }
     } catch (e) {
       Logger().e('Error adding activity: $e');
@@ -63,6 +78,7 @@ class ActivityService {
       final sex = data['sex'] ?? 'FEMALE';
       final breed = data['breed'] ?? 'ไม่ระบุ';
       final birthWeight = data['birth_weight'];
+      final sireId = data['sire_id']; // Extract Sire ID
 
       // 3. Create New Cow Record
       final newCalf = {
@@ -72,7 +88,8 @@ class ActivityService {
         'breed': breed,
         'weight': birthWeight, // Initial weight
         'birth_date': activity.activityDate.toIso8601String(),
-        'dam_id': activity.animalId, // Link to Mother
+        'dam_id': activity.animalId, // Link to Mother (Current Cow)
+        'sire_id': sireId, // Link to Father (if Farm Sire)
         'farm_id': farmId,
         'user_id': userId,
         'status': 'ACTIVE', // Default status

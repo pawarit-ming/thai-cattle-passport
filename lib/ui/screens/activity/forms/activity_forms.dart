@@ -439,7 +439,52 @@ class PregnancyCheckForm extends StatelessWidget {
   }
 }
 
-// --- Generic Form (for Breeding, Death, Sold, etc.) ---
+// --- Death Form ---
+class DeathForm extends StatelessWidget {
+  final String? cause;
+  final ValueChanged<String?> onCauseChanged;
+  final TextEditingController otherDetailsController;
+
+  const DeathForm({
+    super.key,
+    required this.cause,
+    required this.onCauseChanged,
+    required this.otherDetailsController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        FormDropdownField<String>(
+          label: 'สาเหตุการตาย',
+          isRequired: true,
+          value: cause,
+          items: const [
+            DropdownMenuItem(value: 'EPIDEMIC', child: Text('โรคระบาด')),
+            DropdownMenuItem(value: 'ACCIDENT', child: Text('อุบัติเหตุ')),
+            DropdownMenuItem(value: 'DIGESTIVE', child: Text('ระบบย่อยอาหาร')),
+            DropdownMenuItem(value: 'ENVIRONMENT', child: Text('สภาพแวดล้อม')),
+            DropdownMenuItem(value: 'UNKNOWN', child: Text('ไม่ทราบสาเหตุ')),
+            DropdownMenuItem(value: 'OTHER', child: Text('อื่นๆ (ระบุ)')),
+          ],
+          onChanged: onCauseChanged,
+        ),
+        SizedBox(height: 16.h),
+        if (cause == 'OTHER')
+          FormTextField(
+            controller: otherDetailsController,
+            labelText: 'ระบุสาเหตุอื่นๆ หรือรายละเอียด',
+            maxLines: 3,
+            hintText: 'เช่น ขาหัก, กินพลาสติก',
+            isRequired: true,
+          ),
+      ],
+    );
+  }
+}
+
+// --- Generic Form (for Sold, etc.) ---
 class GenericForm extends StatelessWidget {
   final TextEditingController controller;
   final String label;

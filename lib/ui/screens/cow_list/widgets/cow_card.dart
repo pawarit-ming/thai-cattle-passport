@@ -91,21 +91,28 @@ class CowCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // ====================================================
+                      // จุดที่แก้ไข: ใช้ Row ชุดใหม่ที่มี FittedBox
+                      // ====================================================
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            cow.nidNumber,
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18.sp,
+                          Expanded(
+                            child: FittedBox(
+                              fit: BoxFit
+                                  .scaleDown, // ย่อตัวหนังสือถ้าพื้นที่ไม่พอ
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                cow.nidNumber,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18.sp,
+                                ),
+                              ),
                             ),
                           ),
-
-                          // เพิ่มระยะห่างนิดหน่อย กันตัวหนังสือชนกับป้ายชื่อ
                           SizedBox(width: 8.w),
-
                           Container(
                             padding: EdgeInsets.symmetric(
                                 horizontal: 8.w, vertical: 2.h),
@@ -113,7 +120,6 @@ class CowCard extends StatelessWidget {
                               color: colorScheme.primary,
                               borderRadius: BorderRadius.circular(8.r),
                             ),
-                            // ป้ายชื่อ (Container) ปล่อยไว้เหมือนเดิม มันจะอยู่ขวาสุด
                             child: Text(
                               'ชื่อ: ${cow.animalName}',
                               style: TextStyle(
@@ -124,6 +130,10 @@ class CowCard extends StatelessWidget {
                           ),
                         ],
                       ),
+                      // ====================================================
+                      // จบส่วนที่แก้ไข
+                      // ====================================================
+
                       SizedBox(height: 4.h),
                       Text(
                         '${cow.breed ?? '-'} • ${age != null ? '$age ปี' : 'ไม่ทราบ'}',

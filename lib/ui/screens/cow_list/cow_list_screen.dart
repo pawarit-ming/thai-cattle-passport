@@ -7,6 +7,7 @@ import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_servic
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
 import 'package:th_cow_passport/ui/screens/cow_list/widgets/cow_card.dart';
 import 'package:th_cow_passport/ui/screens/cow_list/widgets/filter_bottom_sheet.dart';
+import 'package:th_cow_passport/ui/screens/qr_scanner_screen.dart'; // Import QR Screen
 import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -37,10 +38,25 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
   // ใช้ Set เพื่อเก็บ ID ที่เลือก (ป้องกันการซ้ำและหาข้อมูลเร็ว)
   final Set<int> _selectedCowIds = {};
 
+  // Search State
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   List<Cow> get _filteredCows {
     final allCows = ref.read(cowServiceProvider).cows;
 
     return allCows.where((cow) {
+      // 0. Search Filter (Name or NID)
+      if (_searchQuery.isNotEmpty) {
+        final query = _searchQuery.toLowerCase();
+        final nameMatch = cow.animalName != null &&
+            cow.animalName!.toLowerCase().contains(query);
+        final nidMatch = cow.nidNumber.toLowerCase().contains(query);
+        if (!nameMatch && !nidMatch) {
+          return false;
+        }
+      }
+
       // 1. กรองเพศ (Gender)
       if (_selectedGender != null && cow.sex != _selectedGender) {
         return false;
@@ -106,11 +122,57 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
         });
       }
     });
+
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _authSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _refreshCows() async {
     logger.i('Manual refresh triggered');
     await ref.read(cowServiceProvider).fetchCows(forceRefresh: true);
+  }
+
+  // QR Scanning Logic
+  Future<void> _scanQrCode() async {
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(builder: (context) => const QRScannerScreen()),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      logger.i('QR Code Result: $result');
+
+      // Find cow by NID
+      final allCows = ref.read(cowServiceProvider).cows;
+      try {
+        final foundCow = allCows.firstWhere((cow) => cow.nidNumber == result);
+
+        // Navigate to details
+        if (mounted) {
+          context.push('/cow-detail/${foundCow.animalId}');
+        }
+      } catch (e) {
+        // Not found
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('ไม่พบวัวที่มีหมายเลข NID: $result'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _confirmBatchDelete() async {
@@ -251,6 +313,51 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Search Bar
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'ค้นหาชื่อ หรือ เลข NID',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_searchQuery.isNotEmpty)
+                          IconButton(
+                            icon: const Icon(Icons.clear, color: Colors.grey),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          ),
+                        IconButton(
+                          icon: const Icon(Icons.qr_code_scanner),
+                          tooltip: 'สแกน QR Code',
+                          color: colorScheme.primary,
+                          onPressed: _scanQrCode,
+                        ),
+                      ],
+                    ),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide(color: colorScheme.primary),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                  ),
+                ),
+                SizedBox(height: 16.h),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -321,7 +428,9 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
             const Text('ไม่พบวัวที่ตรงกับเงื่อนไขตัวกรอง'),
             TextButton(
               onPressed: () {
+                _searchController.clear();
                 setState(() {
+                  _searchQuery = '';
                   _selectedGender = null;
                   _selectedBreeds.clear();
                   _ageRange = const RangeValues(0, 20);

@@ -8,6 +8,7 @@ import 'package:th_cow_passport/supabase_config.dart';
 import 'package:th_cow_passport/ui/screens/cow_form/widgets/create_farm_dialog.dart';
 import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
 import 'package:th_cow_passport/ui/widgets/styled_dropdown_field.dart';
+import 'package:th_cow_passport/core/constants/animal_constants.dart';
 
 class GeneralInfoTab extends ConsumerStatefulWidget {
   final TextEditingController nidNumberController;
@@ -19,7 +20,6 @@ class GeneralInfoTab extends ConsumerStatefulWidget {
   final ValueChanged<String?> onSexChanged;
   final Farm? selectedFarm;
   final ValueChanged<Farm?> onFarmChanged;
-  final List<String> breedOptions;
 
   const GeneralInfoTab({
     super.key,
@@ -32,7 +32,6 @@ class GeneralInfoTab extends ConsumerStatefulWidget {
     required this.onSexChanged,
     required this.selectedFarm,
     required this.onFarmChanged,
-    required this.breedOptions,
   });
 
   @override
@@ -41,6 +40,43 @@ class GeneralInfoTab extends ConsumerStatefulWidget {
 
 class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
   final _logger = Logger();
+
+  // State
+  String? _selectedBreed;
+  final TextEditingController _customBreedController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeBreedFields();
+  }
+
+  void _initializeBreedFields() {
+    final currentBreed = widget.breedController.text;
+    if (currentBreed.isNotEmpty) {
+      if (AnimalConstants.breedOptions.contains(currentBreed)) {
+        _selectedBreed = currentBreed;
+      } else {
+        _selectedBreed = AnimalConstants.customOption;
+        _customBreedController.text = currentBreed;
+      }
+    } else {
+      _selectedBreed = null;
+    }
+
+    // Listen to custom controller to update main controller
+    _customBreedController.addListener(() {
+      if (_selectedBreed == AnimalConstants.customOption) {
+        widget.breedController.text = _customBreedController.text;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _customBreedController.dispose();
+    super.dispose();
+  }
 
   void _showCreateFarmDialog() {
     showDialog(
@@ -151,19 +187,24 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
           StyledDropdownField<String>(
             label: 'สายพันธุ์',
             isRequired: true,
-            value: widget.breedOptions.contains(widget.breedController.text)
-                ? widget.breedController.text
-                : null,
+            value: _selectedBreed,
             hintText: 'เลือกสายพันธุ์',
             icon: Icons.category,
-            items: widget.breedOptions.map((breed) {
+            items: AnimalConstants.breedOptions.map((breed) {
               return DropdownMenuItem(
                 value: breed,
                 child: Text(breed),
               );
             }).toList(),
             onChanged: (value) {
-              widget.breedController.text = value ?? '';
+              setState(() {
+                _selectedBreed = value;
+                if (value == AnimalConstants.customOption) {
+                  widget.breedController.text = _customBreedController.text;
+                } else {
+                  widget.breedController.text = value ?? '';
+                }
+              });
             },
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -172,6 +213,16 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
               return null;
             },
           ),
+          if (_selectedBreed == AnimalConstants.customOption) ...[
+            SizedBox(height: 16.h),
+            StyledTextField(
+              label: 'ระบุสายพันธุ์',
+              controller: _customBreedController,
+              icon: Icons.edit,
+              hintText: 'เช่น วากิวลูกผสม, บราห์มันแท้',
+              isRequired: true,
+            ),
+          ],
           SizedBox(height: 16.h),
           StyledTextField(
             controller: TextEditingController(

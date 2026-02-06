@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
+import 'package:th_cow_passport/core/constants/animal_constants.dart';
 import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
 import 'package:th_cow_passport/ui/widgets/styled_dropdown_field.dart';
 import 'package:th_cow_passport/ui/widgets/cow_selection_field.dart';
 
-class PhysicalInfoTab extends StatelessWidget {
+class PhysicalInfoTab extends StatefulWidget {
   final TextEditingController weightController;
   final TextEditingController heightController;
   final TextEditingController colorController;
@@ -26,6 +27,48 @@ class PhysicalInfoTab extends StatelessWidget {
   });
 
   @override
+  State<PhysicalInfoTab> createState() => _PhysicalInfoTabState();
+}
+
+class _PhysicalInfoTabState extends State<PhysicalInfoTab> {
+  // State
+  String? _selectedColor;
+  final TextEditingController _customColorController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeColorFields();
+  }
+
+  void _initializeColorFields() {
+    final currentColor = widget.colorController.text;
+    if (currentColor.isNotEmpty) {
+      if (AnimalConstants.colorOptions.contains(currentColor)) {
+        _selectedColor = currentColor;
+      } else {
+        _selectedColor = AnimalConstants.customOption;
+        _customColorController.text = currentColor;
+      }
+    } else {
+      _selectedColor = null;
+    }
+
+    // Listen to custom controller to update main controller
+    _customColorController.addListener(() {
+      if (_selectedColor == AnimalConstants.customOption) {
+        widget.colorController.text = _customColorController.text;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _customColorController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: EdgeInsets.all(16.r),
@@ -37,7 +80,7 @@ class PhysicalInfoTab extends StatelessWidget {
                 child: StyledTextField(
                     label: 'น้ำหนัก (กก.)',
                     hintText: 'เช่น 450.5',
-                    controller: weightController,
+                    controller: widget.weightController,
                     icon: Icons.monitor_weight,
                     suffixText: 'กก.',
                     keyboardType: TextInputType.number),
@@ -47,7 +90,7 @@ class PhysicalInfoTab extends StatelessWidget {
                 child: StyledTextField(
                     label: 'ส่วนสูง (ซม.)',
                     hintText: 'เช่น 150',
-                    controller: heightController,
+                    controller: widget.heightController,
                     icon: Icons.height,
                     suffixText: 'ซม.',
                     keyboardType: TextInputType.number),
@@ -57,39 +100,49 @@ class PhysicalInfoTab extends StatelessWidget {
           SizedBox(height: 16.h),
           StyledDropdownField<String>(
             label: 'สี',
-            value: colorController.text.isNotEmpty &&
-                    ['ขาว', 'ดำ', 'แดง', 'น้ำตาล', 'ด่าง', 'อื่น']
-                        .contains(colorController.text)
-                ? colorController.text
-                : null,
+            value: _selectedColor,
             hintText: 'เลือกสี',
             icon: Icons.color_lens,
-            items: ['ขาว', 'ดำ', 'แดง', 'น้ำตาล', 'ด่าง', 'อื่น']
-                .map((String value) {
+            items: AnimalConstants.colorOptions.map((String value) {
               return DropdownMenuItem<String>(
                 value: value,
                 child: Text(value),
               );
             }).toList(),
             onChanged: (newValue) {
-              if (newValue != null) {
-                colorController.text = newValue;
-              }
+              setState(() {
+                _selectedColor = newValue;
+                if (newValue == AnimalConstants.customOption) {
+                  widget.colorController.text = _customColorController.text;
+                } else {
+                  widget.colorController.text = newValue ?? '';
+                }
+              });
             },
           ),
+          if (_selectedColor == AnimalConstants.customOption) ...[
+            SizedBox(height: 16.h),
+            StyledTextField(
+              label: 'ระบุสี',
+              controller: _customColorController,
+              icon: Icons.palette,
+              hintText: 'เช่น เหลืองอ่อน, ส้มแดง',
+              isRequired: true,
+            ),
+          ],
           SizedBox(height: 16.h),
           CowSelectionField(
             label: 'พ่อพันธุ์',
             icon: Icons.male,
-            initialCowId: selectedSireId,
-            onCowSelected: onSireSelected,
+            initialCowId: widget.selectedSireId,
+            onCowSelected: widget.onSireSelected,
           ),
           SizedBox(height: 16.h),
           CowSelectionField(
             label: 'แม่พันธุ์',
             icon: Icons.female,
-            initialCowId: selectedDamId,
-            onCowSelected: onDamSelected,
+            initialCowId: widget.selectedDamId,
+            onCowSelected: widget.onDamSelected,
           ),
         ],
       ),

@@ -27,16 +27,6 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
 
-  final List<String> _breedOptions = [
-    'บราห์มัน',
-    'ชาร์โรเลส์',
-    'วากิว',
-    'แองกัส',
-    'ฮินดูบราซิล',
-    'พื้นเมือง',
-    'อื่นๆ'
-  ];
-
   // State
   bool _isImagePickerStep = true;
   bool _isSaveButtonEnabled = false;
@@ -251,7 +241,6 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
             },
             selectedFarm: _selectedFarm,
             onFarmChanged: (farm) => setState(() => _selectedFarm = farm),
-            breedOptions: _breedOptions,
           ),
           PhysicalInfoTab(
             weightController: _weightController,

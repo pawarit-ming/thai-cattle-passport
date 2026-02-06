@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:logger/logger.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
 import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_service.dart';
+import 'package:th_cow_passport/core/constants/animal_constants.dart';
 import 'package:th_cow_passport/ui/widgets/cow_detail_widget.dart';
 import 'package:th_cow_passport/ui/widgets/cow_selection_field.dart';
 import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
@@ -23,25 +24,6 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
   final logger = Logger();
   final _formKey = GlobalKey<FormState>();
 
-  final List<String> _breedOptions = [
-    'บราห์มัน',
-    'ชาร์โรเลส์',
-    'วากิว',
-    'แองกัส',
-    'ฮินดูบราซิล',
-    'พื้นเมือง',
-    'อื่น'
-  ];
-
-  final List<String> _colorOptions = [
-    'ขาว',
-    'ดำ',
-    'แดง',
-    'น้ำตาล',
-    'ด่าง',
-    'อื่น'
-  ];
-
 // Tab Controller
   late TabController _tabController;
 
@@ -52,6 +34,14 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
   late TextEditingController _colorController;
   late TextEditingController _weightController;
   late TextEditingController _heightController;
+
+  // Controllers for custom breed/color
+  final TextEditingController _customBreedController = TextEditingController();
+  final TextEditingController _customColorController = TextEditingController();
+
+  // Selected dropdown values
+  String? _selectedBreed;
+  String? _selectedColor;
 
   // Parent IDs
   int? _selectedSireId;
@@ -77,6 +67,24 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
     _weightController = TextEditingController(text: cow?.weight?.toString());
     _heightController = TextEditingController(text: cow?.height?.toString());
 
+    // Initialize dropdown selections
+    _selectedBreed =
+        AnimalConstants.breedOptions.contains(cow?.breed) ? cow?.breed : null;
+    _selectedColor =
+        AnimalConstants.colorOptions.contains(cow?.color) ? cow?.color : null;
+
+    // If breed/color is custom (not in list), set to 'อื่นๆ (ระบุ)' and populate custom field
+    if (cow?.breed != null &&
+        !AnimalConstants.breedOptions.contains(cow!.breed)) {
+      _selectedBreed = AnimalConstants.customOption;
+      _customBreedController.text = cow.breed!;
+    }
+    if (cow?.color != null &&
+        !AnimalConstants.colorOptions.contains(cow!.color)) {
+      _selectedColor = AnimalConstants.customOption;
+      _customColorController.text = cow.color!;
+    }
+
     _selectedSireId = cow?.sireId;
     _selectedDamId = cow?.damId;
 
@@ -95,6 +103,8 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
     _colorController.dispose();
     _weightController.dispose();
     _heightController.dispose();
+    _customBreedController.dispose();
+    _customColorController.dispose();
     super.dispose();
   }
 
@@ -107,11 +117,19 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
         return;
       }
 
+      // Determine final breed and color values
+      final finalBreed = _selectedBreed == AnimalConstants.customOption
+          ? _customBreedController.text
+          : _selectedBreed ?? _breedController.text;
+      final finalColor = _selectedColor == AnimalConstants.customOption
+          ? _customColorController.text
+          : _selectedColor ?? _colorController.text;
+
       final updatedCow = currentCow.copyWith(
         animalName: _nameController.text,
         nidNumber: _nidController.text,
-        breed: _breedController.text,
-        color: _colorController.text,
+        breed: finalBreed,
+        color: finalColor,
         weight: double.tryParse(_weightController.text),
         height: double.tryParse(_heightController.text),
         damId: _selectedDamId,
@@ -196,16 +214,13 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
               icon: Icons.tag,
               isRequired: true),
           SizedBox(height: 16.h),
-          SizedBox(height: 16.h),
           StyledDropdownField<String>(
             label: 'สายพันธุ์',
             isRequired: true,
             hintText: 'เลือกสายพันธุ์',
-            value: _breedOptions.contains(_breedController.text)
-                ? _breedController.text
-                : null,
+            value: _selectedBreed,
             icon: Icons.category,
-            items: _breedOptions.map((breed) {
+            items: AnimalConstants.breedOptions.map((breed) {
               return DropdownMenuItem(
                 value: breed,
                 child: Text(breed),
@@ -213,17 +228,20 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
             }).toList(),
             onChanged: (value) {
               setState(() {
-                _breedController.text = value ?? '';
+                _selectedBreed = value;
               });
             },
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'กรุณาเลือกสายพันธุ์';
-              }
-              return null;
-            },
           ),
-          SizedBox(height: 16.h),
+          if (_selectedBreed == AnimalConstants.customOption) ...[
+            SizedBox(height: 16.h),
+            StyledTextField(
+              label: 'ระบุสายพันธุ์',
+              controller: _customBreedController,
+              icon: Icons.edit,
+              hintText: 'เช่น วากิวลูกผสม, บราห์มันแท้',
+              isRequired: true,
+            ),
+          ],
           SizedBox(height: 16.h),
 
           // เพิ่มส่วนเลือกวันที่และเพศเพื่อให้แก้ไขได้ทุกอย่าง
@@ -305,11 +323,9 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
           StyledDropdownField<String>(
             label: 'สีตัว',
             hintText: 'เลือกสี',
-            value: _colorOptions.contains(_colorController.text)
-                ? _colorController.text
-                : null,
+            value: _selectedColor,
             icon: Icons.palette,
-            items: _colorOptions.map((color) {
+            items: AnimalConstants.colorOptions.map((color) {
               return DropdownMenuItem(
                 value: color,
                 child: Text(color),
@@ -317,15 +333,20 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
             }).toList(),
             onChanged: (value) {
               setState(() {
-                _colorController.text = value ?? '';
+                _selectedColor = value;
               });
             },
           ),
-          SizedBox(height: 16.h),
-          StyledTextField(
-              label: 'สีตัว (อื่น ๆ)',
-              controller: _colorController,
-              icon: Icons.palette),
+          if (_selectedColor == AnimalConstants.customOption) ...[
+            SizedBox(height: 16.h),
+            StyledTextField(
+              label: 'ระบุสีตัว',
+              controller: _customColorController,
+              icon: Icons.edit,
+              hintText: 'เช่น เหลืองอ่อน, ส้มแดง',
+              isRequired: true,
+            ),
+          ],
           SizedBox(height: 16.h),
 
           // Parent Selection

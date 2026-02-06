@@ -114,7 +114,8 @@ class ActivityService {
           .from(_tableName)
           .select()
           .eq('animal_id', cowId)
-          .order('activity_date', ascending: false);
+          .order('activity_date', ascending: false)
+          .order('created_at', ascending: false);
 
       if (response.isEmpty) {
         return [];

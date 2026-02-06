@@ -589,7 +589,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                             shape: BoxShape.circle,
                             color: _currentImageIndex == entry.key
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.4),
+                                : Colors.white.withValues(alpha: 0.4),
                           ),
                         );
                       }).toList(),
@@ -615,7 +615,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                         padding: EdgeInsets.symmetric(
                             horizontal: 8.w, vertical: 2.h),
                         decoration: BoxDecoration(
-                          color: colorScheme.primary.withOpacity(0.1),
+                          color: colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Text(
@@ -769,13 +769,13 @@ class _SellerDetailsSheetState extends State<SellerDetailsSheet> {
               decoration: BoxDecoration(
                 color: Colors.blue[50],
                 borderRadius: BorderRadius.circular(16.r),
-                border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
               ),
               child: Stack(
                 children: [
                   Center(
                     child: Icon(Icons.map_outlined,
-                        size: 100.r, color: Colors.blue.withOpacity(0.1)),
+                        size: 100.r, color: Colors.blue.withValues(alpha: 0.1)),
                   ),
                   Center(
                     child: Column(
@@ -816,7 +816,7 @@ class _SellerDetailsSheetState extends State<SellerDetailsSheet> {
               children: [
                 CircleAvatar(
                   radius: 28.r,
-                  backgroundColor: colorScheme.primary.withOpacity(0.1),
+                  backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
                   child: Icon(Icons.person,
                       size: 30.r, color: colorScheme.primary),
                 ),

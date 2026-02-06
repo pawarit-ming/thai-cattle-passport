@@ -281,10 +281,10 @@ class _OfferScreenState extends State<OfferScreen> {
                               padding: EdgeInsets.symmetric(
                                   horizontal: 8.w, vertical: 2.h),
                               decoration: BoxDecoration(
-                                color: statusColor.withOpacity(0.1),
+                                color: statusColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(6.r),
                                 border: Border.all(
-                                    color: statusColor.withOpacity(0.5)),
+                                    color: statusColor.withValues(alpha: 0.5)),
                               ),
                               child: Text(statusText,
                                   style: TextStyle(

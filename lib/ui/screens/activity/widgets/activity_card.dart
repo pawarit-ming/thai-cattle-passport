@@ -39,7 +39,7 @@ class ActivityCard extends StatelessWidget {
   }
 
   Widget _buildDateSection(ThemeData theme) {
-    final date = activity.activityDate;
+    final date = activity.activityDate.toLocal();
     final monthName = _getMonthNameShort(date.month);
 
     return Container(
@@ -100,7 +100,7 @@ class ActivityCard extends StatelessWidget {
               border: Border.all(color: Colors.white, width: 2.w),
               boxShadow: [
                 BoxShadow(
-                  color: color.withOpacity(0.3),
+                  color: color.withValues(alpha: 0.3),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 )
@@ -124,7 +124,7 @@ class ActivityCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
+            color: Colors.grey.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -299,8 +299,8 @@ class ActivityCard extends StatelessWidget {
                             color: theme.colorScheme.primary,
                             borderRadius: BorderRadius.circular(6.r),
                             border: Border.all(
-                                color:
-                                    theme.colorScheme.primary.withOpacity(0.8)),
+                                color: theme.colorScheme.primary
+                                    .withValues(alpha: 0.8)),
                           ),
                           child: Text(
                             _formatValue(key, newValue) ?? '-',

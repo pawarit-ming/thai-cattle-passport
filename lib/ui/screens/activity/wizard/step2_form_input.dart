@@ -114,12 +114,15 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
     }
 
     // Restore Pregnancy Check Data
-    if (data.containsKey('check_method'))
+    if (data.containsKey('check_method')) {
       _pregCheckMethod = data['check_method'];
-    if (data.containsKey('check_result'))
+    }
+    if (data.containsKey('check_result')) {
       _pregCheckResult = data['check_result'];
-    if (data.containsKey('check_result'))
+    }
+    if (data.containsKey('check_result')) {
       _pregCheckResult = data['check_result'];
+    }
 
     // Restore Death Data
     if (data.containsKey('death_cause')) _deathCause = data['death_cause'];

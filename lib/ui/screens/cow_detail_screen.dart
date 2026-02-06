@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:logger/logger.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
+import 'package:th_cow_passport/services/cow_management/cow_activity/activity_service.dart';
 import 'package:th_cow_passport/ui/screens/camera_screen.dart';
 
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/activity/activity_tab.dart';
@@ -139,12 +140,18 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
         child: Padding(
           padding: EdgeInsets.all(16.r),
           child: ElevatedButton.icon(
-            onPressed: () {
+            onPressed: () async {
 // ... (context handled by tool)
               if (isActivityTab) {
                 context.push('/add-activity/$cowId');
               } else {
-                context.push('/edit-form/$animalId');
+                // Navigate to edit screen and wait for result
+                final didEdit =
+                    await context.push<bool>('/edit-form/$animalId');
+                // If edit was successful, refresh activities
+                if (didEdit == true) {
+                  ref.invalidate(activitiesProvider(cowId));
+                }
               }
             },
             icon: Icon(isActivityTab ? Icons.add : Icons.edit),

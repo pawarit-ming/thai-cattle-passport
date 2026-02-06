@@ -196,6 +196,11 @@ class ActivityCard extends StatelessWidget {
 
     if (validEntries.isEmpty) return const SizedBox.shrink();
 
+    // Special handling for EDIT_LOG
+    if (activity.activityType == ActivityType.EDIT_LOG) {
+      return _buildEditLogGrid(theme, data);
+    }
+
     return Column(
       children: validEntries.map((entry) {
         return Padding(
@@ -231,6 +236,92 @@ class ActivityCard extends StatelessWidget {
         );
       }).toList(),
     );
+  }
+
+  Widget _buildEditLogGrid(ThemeData theme, Map<String, dynamic> data) {
+    final changes = <Widget>[];
+
+    data.forEach((key, value) {
+      if (value == null || value.toString().isEmpty) return;
+
+      // Parse the change object {"old": ..., "new": ...}
+      if (value is Map<String, dynamic>) {
+        final oldValue = value['old'];
+        final newValue = value['new'];
+
+        if (oldValue != null || newValue != null) {
+          changes.add(
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 6.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _getTranslatedDataKey(key),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Row(
+                    children: [
+                      // Old value
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 8.w, vertical: 6.h),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(6.r),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Text(
+                            _formatValue(key, oldValue) ?? '-',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.grey.shade600,
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w),
+                        child: Icon(Icons.arrow_forward,
+                            size: 16.r, color: Colors.grey),
+                      ),
+                      // New value
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 8.w, vertical: 6.h),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary,
+                            borderRadius: BorderRadius.circular(6.r),
+                            border: Border.all(
+                                color:
+                                    theme.colorScheme.primary.withOpacity(0.8)),
+                          ),
+                          child: Text(
+                            _formatValue(key, newValue) ?? '-',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+    });
+
+    return Column(children: changes);
   }
 
   // --- Helpers ---
@@ -301,6 +392,22 @@ class ActivityCard extends StatelessWidget {
       case 'estimated_age':
         return 'อายุครรภ์';
 
+      // Edit Fields (for EDIT_LOG)
+      case 'status':
+        return 'สถานะ';
+      case 'height':
+        return 'ส่วนสูง (ซม.)';
+      case 'color':
+        return 'สีตัว';
+      case 'birth_date':
+        return 'วันเกิด';
+      case 'origin':
+        return 'แหล่งที่มา';
+      case 'import_date':
+        return 'วันนำเข้า';
+      case 'dam_id':
+        return 'แม่พันธุ์';
+
       // Generic
       case 'details':
         return 'รายละเอียด';
@@ -329,6 +436,12 @@ class ActivityCard extends StatelessWidget {
     if (key == 'sex') {
       if (strVal == 'MALE') return 'เพศผู้';
       if (strVal == 'FEMALE') return 'เพศเมีย';
+    }
+    if (key == 'status') {
+      if (strVal == 'ACTIVE') return 'สุขภาพดี';
+      if (strVal == 'SICK') return 'ป่วย';
+      if (strVal == 'SOLD') return 'ขายแล้ว';
+      if (strVal == 'DEATH') return 'ตายแล้ว';
     }
     if (key == 'death_cause') {
       if (strVal == 'EPIDEMIC') return 'โรคระบาด';

@@ -138,7 +138,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
         );
         // Force refresh the list so the updated details appear there too.
         ref.read(cowServiceProvider).fetchCows(forceRefresh: true);
-        context.pop(); // กลับไปหน้า Detail
+        context.pop(true); // กลับไปหน้า Detail พร้อมสัญญาณว่ามีการแก้ไข
       } else if (errorMessage != null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('เกิดข้อผิดพลาด: $errorMessage')),

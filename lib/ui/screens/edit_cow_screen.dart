@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -5,10 +6,13 @@ import 'package:go_router/go_router.dart';
 import 'package:logger/logger.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
 import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_service.dart';
+import 'package:th_cow_passport/services/cow_management/models/cow_model.dart'; // Import Cow Model
+import 'package:th_cow_passport/ui/screens/camera_screen.dart'; // Import CameraScreen
 import 'package:th_cow_passport/core/constants/animal_constants.dart';
 import 'package:th_cow_passport/ui/widgets/cow_detail_widget.dart';
 import 'package:th_cow_passport/ui/widgets/cow_selection_field.dart';
 import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:th_cow_passport/ui/widgets/styled_dropdown_field.dart';
 
 class EditCowScreen extends ConsumerStatefulWidget {
@@ -38,6 +42,11 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
   // Controllers for custom breed/color
   final TextEditingController _customBreedController = TextEditingController();
   final TextEditingController _customColorController = TextEditingController();
+
+  // Lists for new images to be appended
+  final List<File> _newFaceFiles = [];
+  final List<File> _newBodyFiles = [];
+  final List<File> _newMarkFiles = [];
 
   // Selected dropdown values
   String? _selectedBreed;
@@ -141,8 +150,12 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
       );
 
       // 3. ส่งข้อมูลไปบันทึกที่ Supabase ผ่าน Service
-      final errorMessage =
-          await ref.read(cowDetailServiceProvider).updateCow(updatedCow);
+      final errorMessage = await ref.read(cowDetailServiceProvider).updateCow(
+            updatedCow,
+            newFaceFiles: _newFaceFiles,
+            newBodyFiles: _newBodyFiles,
+            newMarkFiles: _newMarkFiles,
+          );
 
       if (errorMessage != null) {
         logger.e('Error updating cow: $errorMessage');
@@ -165,6 +178,153 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
     }
   }
 
+  // Combine existing images (URLs) and new local files (Paths)
+  List<String> _getDisplayImages(Cow? cow) {
+    if (cow == null) return [];
+    List<String> images = [];
+    if (cow.facePic != null) images.addAll(cow.facePic!);
+    if (cow.bodyPic != null) images.addAll(cow.bodyPic!);
+    if (cow.markPic != null) images.addAll(cow.markPic!);
+
+    // Append new local files
+    images.addAll(_newFaceFiles.map((f) => f.path));
+    images.addAll(_newBodyFiles.map((f) => f.path));
+    images.addAll(_newMarkFiles.map((f) => f.path));
+
+    return images;
+  }
+
+  Future<void> _handleImageTap() async {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: EdgeInsets.all(16.r),
+                child: Text(
+                  'เพิ่มรูปภาพ',
+                  style:
+                      TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.face),
+                title: const Text('รูปหน้าวัว'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage('face');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.pets),
+                title: const Text('รูปตัววัว'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage('body');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.warning),
+                title: const Text('รูปตำหนิ'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage('mark');
+                },
+              ),
+              SizedBox(height: 16.h),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickImage(String type) async {
+    showModalBottomSheet(
+        context: context,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+        ),
+        builder: (context) {
+          return SafeArea(
+            child: Wrap(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('ถ่ายรูป'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickFromCamera(type);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('เลือกจากอัลบั้ม'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickFromGallery(type);
+                  },
+                ),
+              ],
+            ),
+          );
+        });
+  }
+
+  Future<void> _pickFromCamera(String type) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CameraScreen(
+          baseTitle: 'ถ่ายรูป',
+          steps: ['ถ่ายรูป'], // Single step
+        ),
+      ),
+    );
+
+    if (result != null) {
+      File? file;
+      if (result is String) {
+        file = File(result);
+      } else if (result is List &&
+          result.isNotEmpty &&
+          result.first is String) {
+        file = File(result.first);
+      }
+
+      if (file != null) {
+        _addImageFile(type, file);
+      }
+    }
+  }
+
+  Future<void> _pickFromGallery(String type) async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      _addImageFile(type, File(image.path));
+    }
+  }
+
+  void _addImageFile(String type, File file) {
+    setState(() {
+      if (type == 'face') {
+        _newFaceFiles.add(file);
+      } else if (type == 'body') {
+        _newBodyFiles.add(file);
+      } else if (type == 'mark') {
+        _newMarkFiles.add(file);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -179,9 +339,9 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
       key: _formKey,
       child: CowDetailWidget(
         title: 'แก้ไขข้อมูล: ${cow.animalName}',
-        images: [
-          if (cow.facePic != null) ...cow.facePic!,
-        ],
+        images: _getDisplayImages(cow),
+        isEditable: true,
+        onImageTap: _handleImageTap,
         tabController: _tabController,
         tabs: const [
           Tab(text: 'ข้อมูลทั่วไป'),

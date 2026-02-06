@@ -49,7 +49,9 @@ class CowDetailService extends ChangeNotifier {
 
   // 2. ฟังก์ชันแก้ไขข้อมูลวัว (Update)
   Future<String?> updateCow(Cow updatedCow,
-      {File? newFacePic, File? newBodyPic, File? newMarkPic}) async {
+      {List<File>? newFaceFiles,
+      List<File>? newBodyFiles,
+      List<File>? newMarkFiles}) async {
     _setLoading(true);
     try {
       // Prepare lists (initially from the model, or empty if null)
@@ -59,24 +61,29 @@ class CowDetailService extends ChangeNotifier {
 
       final nidNumber = updatedCow.nidNumber;
 
-      // Upload new images and REPLACE the first item if exists (or add if empty)
-      // Since the UI currently supports only one image per category, we treat the first item as the main one.
-      if (newFacePic != null) {
-        final url = await _uploadImage(newFacePic, nidNumber, 'face');
-        if (url != null) {
-          faceUrls = [url]; // Replace with new list containing the new URL
+      // Upload new images and APPEND to the list
+      if (newFaceFiles != null) {
+        for (final file in newFaceFiles) {
+          final url = await _uploadImage(file, nidNumber, 'face');
+          if (url != null) {
+            faceUrls.add(url);
+          }
         }
       }
-      if (newBodyPic != null) {
-        final url = await _uploadImage(newBodyPic, nidNumber, 'body');
-        if (url != null) {
-          bodyUrls = [url];
+      if (newBodyFiles != null) {
+        for (final file in newBodyFiles) {
+          final url = await _uploadImage(file, nidNumber, 'body');
+          if (url != null) {
+            bodyUrls.add(url);
+          }
         }
       }
-      if (newMarkPic != null) {
-        final url = await _uploadImage(newMarkPic, nidNumber, 'mark');
-        if (url != null) {
-          markUrls = [url];
+      if (newMarkFiles != null) {
+        for (final file in newMarkFiles) {
+          final url = await _uploadImage(file, nidNumber, 'mark');
+          if (url != null) {
+            markUrls.add(url);
+          }
         }
       }
 

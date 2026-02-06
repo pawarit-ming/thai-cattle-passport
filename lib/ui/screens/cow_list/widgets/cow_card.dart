@@ -75,16 +75,41 @@ class CowCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
                         color: colorScheme.secondary.withValues(alpha: 0.3)),
-                    image: (cow.facePic != null && cow.facePic!.isNotEmpty)
-                        ? DecorationImage(
-                            image: NetworkImage(cow.facePic!.first),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
+                    image: () {
+                      String? imageUrl;
+                      if (cow.facePic != null && cow.facePic!.isNotEmpty) {
+                        imageUrl = cow.facePic!.first;
+                      } else if (cow.bodyPic != null &&
+                          cow.bodyPic!.isNotEmpty) {
+                        imageUrl = cow.bodyPic!.first;
+                      } else if (cow.markPic != null &&
+                          cow.markPic!.isNotEmpty) {
+                        imageUrl = cow.markPic!.first;
+                      }
+
+                      if (imageUrl != null) {
+                        return DecorationImage(
+                          image: NetworkImage(imageUrl),
+                          fit: BoxFit.cover,
+                        );
+                      }
+                      return null;
+                    }(),
                   ),
-                  child: (cow.facePic == null || cow.facePic!.isEmpty)
-                      ? Icon(Icons.pets, color: colorScheme.primary, size: 36.r)
-                      : null,
+                  child: () {
+                    final hasFace =
+                        cow.facePic != null && cow.facePic!.isNotEmpty;
+                    final hasBody =
+                        cow.bodyPic != null && cow.bodyPic!.isNotEmpty;
+                    final hasMark =
+                        cow.markPic != null && cow.markPic!.isNotEmpty;
+
+                    if (!hasFace && !hasBody && !hasMark) {
+                      return Icon(Icons.pets,
+                          color: colorScheme.primary, size: 36.r);
+                    }
+                    return null;
+                  }(),
                 ),
                 SizedBox(width: 16.w),
                 Expanded(

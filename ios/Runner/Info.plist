@@ -47,5 +47,9 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs camera access to scan QR codes and take pictures of cows.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>แอปพลิเคชันต้องการเข้าถึงตำแหน่งของคุณเพื่อระบุพิกัดที่ตั้งของฟาร์ม</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>แอปพลิเคชันต้องการเข้าถึงตำแหน่งของคุณเพื่อระบุพิกัดที่ตั้งของฟาร์ม</string>
 </dict>
 </plist>

@@ -51,7 +51,7 @@ class ActivityCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       padding: EdgeInsets.symmetric(vertical: 8.h),
       child: Column(
@@ -129,7 +129,7 @@ class ActivityCard extends StatelessWidget {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.25), width: 1.w),
       ),
       child: Padding(
         padding: EdgeInsets.all(12.r),

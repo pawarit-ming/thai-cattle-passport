@@ -32,9 +32,13 @@ class CowCard extends StatelessWidget {
             ? colorScheme.primaryContainer.withValues(alpha: 0.3)
             : (theme.cardTheme.color ?? Colors.white),
         borderRadius: BorderRadius.circular(24.r),
-        border: isSelected
-            ? Border.all(color: colorScheme.primary, width: 2.w)
-            : null,
+        border: Border.all(
+          color: isSelected
+              ? colorScheme.primary
+              : Colors.grey.withValues(
+                  alpha: 0.2), // เพิ่มเส้นขอบสีเทาจาง ๆ เมื่อไม่ได้เลือก
+          width: isSelected ? 2.w : 1.w,
+        ),
         boxShadow: [
           BoxShadow(
             color: colorScheme.primary.withValues(alpha: 0.05),

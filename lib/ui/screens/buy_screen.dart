@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:th_cow_passport/ui/screens/cow_detail_screen.dart';
 
 // 1. Model สำหรับรายการในตลาด
 class MarketItem {
@@ -581,7 +582,18 @@ class _MarketItemCardState extends State<_MarketItemCard> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () {},
+        onTap: () {
+          Navigator.of(context, rootNavigator: true).push(
+            MaterialPageRoute(
+              builder: (context) => CowDetailScreen(
+                // แก้ไข: ใช้ int.tryParse เพื่อแปลง String เป็น int
+                // หากแปลงไม่ได้ (เป็นค่าว่าง) ให้ใส่ค่า 0 แทน (หรือค่า default อื่นๆ)
+                cowId: int.tryParse(item.id) ?? 0,
+                isReadOnly: true,
+              ),
+            ),
+          );
+        },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -13,6 +13,8 @@ class CowDetailWidget extends StatelessWidget {
   final VoidCallback? onBack;
   final Widget? floatingActionButton;
   final TabController tabController;
+  final bool isEditable;
+  final VoidCallback? onImageTap;
 
   const CowDetailWidget({
     super.key,
@@ -26,6 +28,8 @@ class CowDetailWidget extends StatelessWidget {
     this.actions,
     this.onBack,
     this.floatingActionButton,
+    this.isEditable = false,
+    this.onImageTap,
   });
 
   @override
@@ -49,7 +53,11 @@ class CowDetailWidget extends StatelessWidget {
             SliverToBoxAdapter(
               child: AspectRatio(
                 aspectRatio: 16 / 9,
-                child: _ImageCarousel(images: images),
+                child: _ImageCarousel(
+                  images: images,
+                  isEditable: isEditable,
+                  onTap: onImageTap,
+                ),
               ),
             ),
             SliverPersistentHeader(
@@ -82,8 +90,14 @@ class CowDetailWidget extends StatelessWidget {
 // --- Widget สำหรับแสดงรูปภาพแบบเลื่อนได้ (Carousel) ---
 class _ImageCarousel extends StatefulWidget {
   final List<String> images;
+  final bool isEditable;
+  final VoidCallback? onTap;
 
-  const _ImageCarousel({required this.images});
+  const _ImageCarousel({
+    required this.images,
+    this.isEditable = false,
+    this.onTap,
+  });
 
   @override
   State<_ImageCarousel> createState() => _ImageCarouselState();
@@ -94,16 +108,30 @@ class _ImageCarouselState extends State<_ImageCarousel> {
 
   Widget _buildSingleImage(String? url) {
     if (url == null || url.isEmpty) {
+      if (widget.isEditable) {
+        return Container(
+          color: Colors.grey[200],
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.add_a_photo, size: 48.r, color: Colors.grey[600]),
+              SizedBox(height: 8.h),
+              Text('เพิ่มรูปภาพ', style: TextStyle(color: Colors.grey[600])),
+            ],
+          ),
+        );
+      }
       return Container(
         color: Colors.grey[300],
-        child: Icon(Icons.pets, size: 80.r, color: Colors.grey[400]),
+        child: Image.asset('assets/images/cow.png', width: 80.r, height: 80.r),
       );
     }
 
     final isNetworkImage = url.startsWith('http');
+    Widget imageWidget;
 
     if (isNetworkImage) {
-      return Image.network(
+      imageWidget = Image.network(
         url,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) => Container(
@@ -112,15 +140,40 @@ class _ImageCarouselState extends State<_ImageCarousel> {
         ),
       );
     } else {
-      return Image.file(File(url), fit: BoxFit.cover);
+      imageWidget = Image.file(File(url), fit: BoxFit.cover);
     }
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        imageWidget,
+        if (widget.isEditable)
+          Container(
+            color: Colors.black.withValues(alpha: 0.3),
+            child: Center(
+              child: Container(
+                padding: EdgeInsets.all(12.r),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.add_a_photo,
+                    size: 32.r, color: Theme.of(context).primaryColor),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     // กรณีไม่มีรูปเลย
     if (widget.images.isEmpty) {
-      return _buildSingleImage(null);
+      return GestureDetector(
+        onTap: widget.isEditable ? widget.onTap : null,
+        child: _buildSingleImage(null),
+      );
     }
 
     return Stack(
@@ -134,7 +187,10 @@ class _ImageCarouselState extends State<_ImageCarousel> {
             });
           },
           itemBuilder: (context, index) {
-            return _buildSingleImage(widget.images[index]);
+            return GestureDetector(
+              onTap: widget.isEditable ? widget.onTap : null,
+              child: _buildSingleImage(widget.images[index]),
+            );
           },
         ),
 

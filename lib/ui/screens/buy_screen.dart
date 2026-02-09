@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:th_cow_passport/ui/screens/cow_detail_screen.dart';
 
 // 1. Model สำหรับรายการในตลาด
 class MarketItem {
@@ -15,6 +17,8 @@ class MarketItem {
   final String location;
   final List<String> images;
   final String sellerId;
+  final double? latitude;
+  final double? longitude;
 
   MarketItem({
     required this.id,
@@ -27,6 +31,8 @@ class MarketItem {
     required this.location,
     required this.images,
     required this.sellerId,
+    this.latitude,
+    this.longitude,
   });
 
   factory MarketItem.fromJson(Map<String, dynamic> json) {
@@ -61,6 +67,25 @@ class MarketItem {
     String normalizedBreed =
         json['breed']?.toString().trim() ?? 'ไม่ระบุสายพันธุ์';
 
+    // --- ส่วนดึงพิกัด ---
+    Map<String, dynamic>? farmData;
+
+    try {
+      final rawFarms = json['farms'];
+
+      if (rawFarms != null) {
+        if (rawFarms is List && rawFarms.isNotEmpty) {
+          // กรณีมาเป็น List (เช่น [{...}])
+          farmData = rawFarms[0] as Map<String, dynamic>;
+        } else if (rawFarms is Map) {
+          // กรณีมาเป็น Object (เช่น {...})
+          farmData = rawFarms as Map<String, dynamic>;
+        }
+      }
+    } catch (e) {
+      print('เกิดข้อผิดพลาดตอนดึงพิกัด: $e');
+    }
+
     return MarketItem(
       id: json['animal_id']?.toString() ?? '',
       name: json['animal_name'] ?? 'ไม่มีชื่อ',
@@ -73,6 +98,12 @@ class MarketItem {
       seller: 'รหัส: ${json['user_id'] ?? '-'}',
       location: json['origin'] ?? 'ไม่ระบุพิกัด',
       images: imgList,
+      latitude: farmData?['latitude'] != null
+          ? double.tryParse(farmData!['latitude'].toString())
+          : null,
+      longitude: farmData?['longitude'] != null
+          ? double.tryParse(farmData!['longitude'].toString())
+          : null,
     );
   }
 }
@@ -128,7 +159,13 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
       final supabase = Supabase.instance.client;
       final myUserId = supabase.auth.currentUser?.id;
 
-      var query = supabase.from('animals').select();
+      var query = supabase.from('animals').select('''
+      *,
+      farms:farm_id (
+        latitude,
+        longitude
+      )
+      ''');
 
       // 1. กรอง User ID ตัวเองออก
       if (myUserId != null) {
@@ -545,7 +582,18 @@ class _MarketItemCardState extends State<_MarketItemCard> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () {},
+        onTap: () {
+          Navigator.of(context, rootNavigator: true).push(
+            MaterialPageRoute(
+              builder: (context) => CowDetailScreen(
+                // แก้ไข: ใช้ int.tryParse เพื่อแปลง String เป็น int
+                // หากแปลงไม่ได้ (เป็นค่าว่าง) ให้ใส่ค่า 0 แทน (หรือค่า default อื่นๆ)
+                cowId: int.tryParse(item.id) ?? 0,
+                isReadOnly: true,
+              ),
+            ),
+          );
+        },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -589,7 +637,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                             shape: BoxShape.circle,
                             color: _currentImageIndex == entry.key
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.4),
+                                : Colors.white.withValues(alpha: 0.4),
                           ),
                         );
                       }).toList(),
@@ -615,7 +663,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                         padding: EdgeInsets.symmetric(
                             horizontal: 8.w, vertical: 2.h),
                         decoration: BoxDecoration(
-                          color: colorScheme.primary.withOpacity(0.1),
+                          color: colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Text(
@@ -737,6 +785,10 @@ class _SellerDetailsSheetState extends State<SellerDetailsSheet> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    // เตรียมตำแหน่งพิกัด (ถ้าไม่มีพิกัด ให้ไปลงที่กรุงเทพฯ เป็น Default)
+    final LatLng cattleLocation = LatLng(
+        widget.item.latitude ?? 13.7563, widget.item.longitude ?? 100.5018);
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.7,
       decoration: BoxDecoration(
@@ -766,41 +818,25 @@ class _SellerDetailsSheetState extends State<SellerDetailsSheet> {
           Expanded(
             child: Container(
               width: double.infinity,
+              clipBehavior: Clip.antiAlias, // ทำให้ขอบแผนที่มนตาม Container
               decoration: BoxDecoration(
-                color: Colors.blue[50],
                 borderRadius: BorderRadius.circular(16.r),
-                border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                border: Border.all(color: Colors.grey[200]!),
               ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: Icon(Icons.map_outlined,
-                        size: 100.r, color: Colors.blue.withOpacity(0.1)),
+              child: GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: cattleLocation,
+                  zoom: 15, // ระดับความใกล้
+                ),
+                markers: {
+                  Marker(
+                    markerId: MarkerId(widget.item.id),
+                    position: cattleLocation,
+                    infoWindow: InfoWindow(title: widget.item.name),
                   ),
-                  Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.location_on, size: 48.r, color: Colors.red),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 8.w, vertical: 4.h),
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8.r),
-                              boxShadow: const [
-                                BoxShadow(blurRadius: 4, color: Colors.black12)
-                              ]),
-                          child: Text(
-                            widget.item.location,
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 12.sp),
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                ],
+                },
+                myLocationButtonEnabled: false,
+                mapType: MapType.normal,
               ),
             ),
           ),
@@ -816,7 +852,7 @@ class _SellerDetailsSheetState extends State<SellerDetailsSheet> {
               children: [
                 CircleAvatar(
                   radius: 28.r,
-                  backgroundColor: colorScheme.primary.withOpacity(0.1),
+                  backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
                   child: Icon(Icons.person,
                       size: 30.r, color: colorScheme.primary),
                 ),

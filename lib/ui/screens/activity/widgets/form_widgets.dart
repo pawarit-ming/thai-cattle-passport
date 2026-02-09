@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:th_cow_passport/ui/widgets/styled_dropdown_field.dart';
 
 class DatePickerField extends StatelessWidget {
@@ -43,6 +44,9 @@ class FormTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final String? suffixText;
 
+  final IconData? icon;
+  final String? assetIcon;
+
   const FormTextField({
     super.key,
     required this.controller,
@@ -52,6 +56,8 @@ class FormTextField extends StatelessWidget {
     this.isRequired = true,
     this.keyboardType,
     this.suffixText,
+    this.icon,
+    this.assetIcon,
   });
 
   @override
@@ -66,6 +72,16 @@ class FormTextField extends StatelessWidget {
         border: const OutlineInputBorder(),
         alignLabelWithHint: true,
         suffixText: suffixText,
+        prefixIcon: assetIcon != null
+            ? Padding(
+                padding: EdgeInsets.all(12.r),
+                child: Image.asset(
+                  assetIcon!,
+                  width: 24.r,
+                  height: 24.r,
+                ),
+              )
+            : (icon != null ? Icon(icon) : null),
       ),
       validator: (value) {
         if (isRequired && (value == null || value.isEmpty)) {
@@ -86,6 +102,9 @@ class FormDropdownField<T> extends StatelessWidget {
   final bool isRequired;
   final String? hintText;
 
+  final String? assetIcon;
+  final IconData? icon;
+
   const FormDropdownField({
     super.key,
     required this.label,
@@ -95,6 +114,8 @@ class FormDropdownField<T> extends StatelessWidget {
     this.validator,
     this.isRequired = false,
     this.hintText,
+    this.assetIcon,
+    this.icon,
   });
 
   @override
@@ -113,6 +134,8 @@ class FormDropdownField<T> extends StatelessWidget {
           },
       isRequired: isRequired,
       hintText: hintText,
+      assetIcon: assetIcon,
+      icon: icon,
     );
   }
 }

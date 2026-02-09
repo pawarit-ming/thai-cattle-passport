@@ -22,7 +22,7 @@ class AppShell extends StatelessWidget {
         items: const [
           BottomNavigationBarItem(
             // แนะนำ Icons.pets (สัตว์) หรือ Icons.agriculture (เกษตรกรรม)
-            icon: Icon(Icons.pets),
+            icon: ImageIcon(AssetImage('assets/images/cow.png')),
             label: 'วัว',
           ),
           BottomNavigationBarItem(

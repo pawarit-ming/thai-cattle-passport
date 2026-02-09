@@ -15,7 +15,14 @@ import 'package:th_cow_passport/ui/widgets/cow_detail_widget.dart';
 
 class CowDetailScreen extends ConsumerStatefulWidget {
   final int cowId;
-  const CowDetailScreen({super.key, required this.cowId});
+  final bool isReadOnly;
+
+  const CowDetailScreen({
+    super.key,
+    required this.cowId,
+    // 2. กำหนดค่าเริ่มต้นเป็น false (เพื่อให้หน้าอื่นๆ ยังแก้ไขได้ปกติ)
+    this.isReadOnly = false,
+  });
 
   @override
   ConsumerState<CowDetailScreen> createState() => _CowDetailScreenState();
@@ -86,38 +93,47 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
         }
       },
       actions: [
-        IconButton(
-          icon: const Icon(Icons.qr_code_2),
-          tooltip: 'แสดง QR Code',
-          onPressed: () => _showQrDialog(context, cow.nidNumber),
-        ),
+        // เพิ่มเงื่อนไขเช็คตรงนี้
+        if (!widget.isReadOnly)
+          IconButton(
+            icon: const Icon(Icons.qr_code_2),
+            tooltip: 'แสดง QR Code',
+            onPressed: () => _showQrDialog(context, cow.nidNumber),
+          ),
       ],
       tabs: const [
         Tab(text: 'ข้อมูลทั่วไป'),
         Tab(text: 'กิจกรรม'),
       ],
       tabViews: [
-        const GeneralTab(),
+        // แก้ไข: ส่งค่า isReadOnly เข้าไป
+        GeneralTab(isReadOnly: widget.isReadOnly),
         ActivityTab(cowId: cow.animalId!),
       ],
-      bottomBar: _buildBottomBar(
-          context, colorScheme, theme, cow.animalId!, cow.animalId!),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const CameraScreen(
-                baseTitle: 'ระบุตัวตนวัว',
-                steps: ['หน้าวัว', 'ตัววัว', 'ขาวัว'],
-              ),
+      bottomBar: widget.isReadOnly
+          ? null
+          : _buildBottomBar(
+              context, colorScheme, theme, cow.animalId!, cow.animalId!),
+
+      // --- แก้ไขจุดนี้: ถ้าเป็น ReadOnly ให้ส่ง null ---
+      floatingActionButton: widget.isReadOnly
+          ? null
+          : FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CameraScreen(
+                      baseTitle: 'ระบุตัวตนวัว',
+                      steps: ['หน้าวัว', 'ตัววัว', 'ขาวัว'],
+                    ),
+                  ),
+                );
+              },
+              backgroundColor: colorScheme.secondary,
+              foregroundColor: colorScheme.onSecondary,
+              child: const Icon(Icons.camera_alt),
             ),
-          );
-        },
-        backgroundColor: colorScheme.secondary,
-        foregroundColor: colorScheme.onSecondary,
-        child: const Icon(Icons.camera_alt),
-      ),
     );
   }
 

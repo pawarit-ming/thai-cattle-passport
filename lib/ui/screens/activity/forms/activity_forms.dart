@@ -66,6 +66,7 @@ class BirthForm extends StatelessWidget {
           controller: nameController,
           labelText: 'ชื่อลูกวัว',
           hintText: 'ชื่อของลูกวัว',
+          assetIcon: 'assets/images/calf.png',
         ),
         SizedBox(height: 16.h),
         // Gender Dropdown
@@ -75,6 +76,7 @@ class BirthForm extends StatelessWidget {
           label: 'เพศลูกวัว',
           isRequired: true,
           value: genderController.text.isEmpty ? null : genderController.text,
+          assetIcon: 'assets/images/gender.png',
           items: const [
             DropdownMenuItem(value: 'MALE', child: Text('เพศผู้')),
             DropdownMenuItem(value: 'FEMALE', child: Text('เพศเมีย')),

@@ -70,4 +70,13 @@ extension ActivityTypeExtension on ActivityType {
         return Colors.grey;
     }
   }
+
+  String? get assetIcon {
+    switch (this) {
+      case ActivityType.BIRTH:
+        return 'assets/images/calf.png';
+      default:
+        return null;
+    }
+  }
 }

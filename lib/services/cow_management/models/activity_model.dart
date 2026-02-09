@@ -82,8 +82,8 @@ class Activity {
       'activity_type': activityType.toJson(),
       'description': description,
       'data': data,
-      'activity_date': activityDate.toIso8601String(),
-      'created_at': createdAt?.toIso8601String(),
+      'activity_date': activityDate.toUtc().toIso8601String(),
+      'created_at': createdAt?.toUtc().toIso8601String(),
     };
   }
 }

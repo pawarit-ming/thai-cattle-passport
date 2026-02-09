@@ -8,7 +8,12 @@ import 'package:th_cow_passport/ui/screens/cow_detail/tabs/general/widgets/offsp
 
 class GeneralTab extends ConsumerWidget {
   // เปลี่ยนเป็น ConsumerWidget
-  const GeneralTab({super.key});
+  final bool isReadOnly;
+
+  const GeneralTab({
+    super.key,
+    this.isReadOnly = false, // ค่าเริ่มต้นเป็น false
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -86,7 +91,11 @@ class GeneralTab extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(16.r)),
             child: Padding(
               padding: EdgeInsets.all(16.r),
-              child: OffspringPreviewSection(cowId: cow.animalId!),
+              child: AbsorbPointer(
+                // 2. ถ้าเป็น Read-only จะทำการบล็อกการกด (Absorbing = true)
+                absorbing: isReadOnly,
+                child: OffspringPreviewSection(cowId: cow.animalId!),
+              ),
             ),
           ),
         ],

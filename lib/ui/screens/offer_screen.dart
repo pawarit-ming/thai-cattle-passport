@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'cow_detail_screen.dart';
 
 class OfferScreen extends StatefulWidget {
   const OfferScreen({super.key});
@@ -237,124 +238,149 @@ class _OfferScreenState extends State<OfferScreen> {
 
           final isCompleted = status != 'pending';
 
+          // ตรวจสอบว่าโหลดข้อมูลวัวเสร็จเรียบร้อยแล้วหรือไม่
+          final hasData = animalSnapshot.hasData && animalData != null;
+
           return Card(
             margin: EdgeInsets.only(bottom: 16.h),
             elevation: 2,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.r)),
-            child: Padding(
-              padding: EdgeInsets.all(16.r),
-              child: Column(
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 60.r,
-                        height: 60.r,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(12.r),
-                          image: (image != null && image.isNotEmpty)
-                              ? DecorationImage(
-                                  image: NetworkImage(image), fit: BoxFit.cover)
-                              : null,
-                        ),
-                        child: (image == null || image.isEmpty)
-                            ? Icon(Icons.pets,
-                                color: colorScheme.primary, size: 30.r)
-                            : null,
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(cowName,
-                                style: theme.textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.bold)),
-                            Text('สายพันธุ์: $breed',
-                                style: theme.textTheme.bodySmall
-                                    ?.copyWith(color: Colors.grey.shade600)),
-                            SizedBox(height: 4.h),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 8.w, vertical: 2.h),
-                              decoration: BoxDecoration(
-                                color: statusColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6.r),
-                                border: Border.all(
-                                    color: statusColor.withOpacity(0.5)),
-                              ),
-                              child: Text(statusText,
-                                  style: TextStyle(
-                                      fontSize: 10.sp,
-                                      color: statusColor,
-                                      fontWeight: FontWeight.bold)),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // ปุ่มลบรายการ (แสดงเฉพาะรายการที่จบแล้ว)
-                      if (isCompleted)
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline,
-                              color: Colors.grey),
-                          onPressed: () => _deleteOffer(offer['id'].toString()),
-                          tooltip: 'ลบรายการนี้',
-                        ),
-                    ],
-                  ),
-                  Divider(height: 24.h),
-                  Row(
-                    children: [
-                      Icon(Icons.person,
-                          size: 14.r, color: colorScheme.secondary),
-                      SizedBox(width: 8.w),
-                      Text('ผู้ซื้อ: ${buyerId.toString().substring(0, 5)}...',
-                          style: theme.textTheme.bodyMedium),
-                      const Spacer(),
-                      Text(dateStr,
-                          style: theme.textTheme.bodySmall
-                              ?.copyWith(color: Colors.grey)),
-                    ],
-                  ),
-                  if (!isCompleted) ...[
-                    SizedBox(height: 16.h),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => _updateStatus(
-                                offer['id'].toString(),
-                                animalId.toString(),
-                                'rejected'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.red,
-                              side: const BorderSide(color: Colors.red),
-                              padding: EdgeInsets.symmetric(vertical: 12.h),
-                            ),
-                            child: const Text('ปฏิเสธ'),
+            // เพิ่ม clipBehavior เพื่อให้เอฟเฟกต์การกด (Ripple) อยู่ภายในขอบมนของการ์ด
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: hasData
+                  ? () {
+                      // ใช้ Navigator.of(context, rootNavigator: true)
+                      // เพื่อบอกว่าให้เปิดหน้าใหม่ทับ Navbar ไปเลย
+                      Navigator.of(context, rootNavigator: true).push(
+                        MaterialPageRoute(
+                          builder: (context) => CowDetailScreen(
+                            cowId: animalId, // ส่งค่าตามปกติ
+                            // animal: animalData, // ถ้าจำเป็นต้องส่ง
                           ),
+                        ),
+                      );
+                    }
+                  : null,
+              child: Padding(
+                padding: EdgeInsets.all(16.r),
+                child: Column(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 60.r,
+                          height: 60.r,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(12.r),
+                            image: (image != null && image.isNotEmpty)
+                                ? DecorationImage(
+                                    image: NetworkImage(image),
+                                    fit: BoxFit.cover)
+                                : null,
+                          ),
+                          child: (image == null || image.isEmpty)
+                              ? Icon(Icons.pets,
+                                  color: colorScheme.primary, size: 30.r)
+                              : null,
                         ),
                         SizedBox(width: 12.w),
                         Expanded(
-                          child: FilledButton(
-                            onPressed: () => _updateStatus(
-                                offer['id'].toString(),
-                                animalId.toString(),
-                                'accepted'),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              padding: EdgeInsets.symmetric(vertical: 12.h),
-                            ),
-                            child: const Text('ยอมรับ'),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(cowName,
+                                  style: theme.textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold)),
+                              Text('สายพันธุ์: $breed',
+                                  style: theme.textTheme.bodySmall
+                                      ?.copyWith(color: Colors.grey.shade600)),
+                              SizedBox(height: 4.h),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 8.w, vertical: 2.h),
+                                decoration: BoxDecoration(
+                                  color: statusColor.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(6.r),
+                                  border: Border.all(
+                                      color:
+                                          statusColor.withValues(alpha: 0.5)),
+                                ),
+                                child: Text(statusText,
+                                    style: TextStyle(
+                                        fontSize: 10.sp,
+                                        color: statusColor,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                            ],
                           ),
                         ),
+                        // ปุ่มลบรายการ (แสดงเฉพาะรายการที่จบกระบวนการแล้ว)
+                        if (isCompleted)
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline,
+                                color: Colors.grey),
+                            onPressed: () =>
+                                _deleteOffer(offer['id'].toString()),
+                            tooltip: 'ลบรายการนี้',
+                          ),
                       ],
                     ),
-                  ]
-                ],
+                    Divider(height: 24.h),
+                    Row(
+                      children: [
+                        Icon(Icons.person,
+                            size: 14.r, color: colorScheme.secondary),
+                        SizedBox(width: 8.w),
+                        Text(
+                            'ผู้ซื้อ: ${buyerId.toString().substring(0, 5)}...',
+                            style: theme.textTheme.bodyMedium),
+                        const Spacer(),
+                        Text(dateStr,
+                            style: theme.textTheme.bodySmall
+                                ?.copyWith(color: Colors.grey)),
+                      ],
+                    ),
+                    if (!isCompleted) ...[
+                      SizedBox(height: 16.h),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => _updateStatus(
+                                  offer['id'].toString(),
+                                  animalId.toString(),
+                                  'rejected'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                side: const BorderSide(color: Colors.red),
+                                padding: EdgeInsets.symmetric(vertical: 12.h),
+                              ),
+                              child: const Text('ปฏิเสธ'),
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: () => _updateStatus(
+                                  offer['id'].toString(),
+                                  animalId.toString(),
+                                  'accepted'),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                padding: EdgeInsets.symmetric(vertical: 12.h),
+                              ),
+                              child: const Text('ยอมรับ'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ]
+                  ],
+                ),
               ),
             ),
           );

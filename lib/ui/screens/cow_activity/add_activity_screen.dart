@@ -164,8 +164,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
           ActivityType.BIRTH => _buildBirthForm(),
           ActivityType.TREATMENT => _buildTreatmentForm(),
           ActivityType.EDIT_LOG => _buildGenericForm('รายละเอียดการแก้ไข'),
-          ActivityType.PREGNANCY_CHECK =>
-            _buildGenericForm('ผลการตรวจครรภ์'),
+          ActivityType.PREGNANCY_CHECK => _buildGenericForm('ผลการตรวจครรภ์'),
           ActivityType.BREEDING => _buildGenericForm('รายละเอียดการผสมพันธุ์'),
           ActivityType.DEATH => _buildGenericForm('สาเหตุการตาย'),
           ActivityType.WEIGHT_UPDATE => _buildWeightUpdateForm(),
@@ -202,7 +201,8 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
         label: 'ชื่อลูกวัว',
         hintText: 'ชื่อของลูกวัว',
         isRequired: true,
-        icon: Icons.pets,
+        icon: Icons.pets, // Required param
+        assetIcon: 'assets/images/calf.png',
       ),
       SizedBox(height: 16.h),
       StyledTextField(
@@ -210,7 +210,8 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
         label: 'เพศลูกวัว',
         hintText: 'เพศผู้ / เพศเมีย',
         isRequired: true,
-        icon: Icons.wc,
+        icon: Icons.wc, // Required param
+        assetIcon: 'assets/images/gender.png',
       ),
       SizedBox(height: 16.h),
       StyledTextField(

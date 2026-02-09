@@ -6,6 +6,7 @@ class StyledTextField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
   final IconData icon;
+  final String? assetIcon;
   final String? hintText;
   final bool isRequired;
   final TextInputType? keyboardType;
@@ -24,6 +25,7 @@ class StyledTextField extends StatelessWidget {
     required this.controller,
     required this.label,
     required this.icon,
+    this.assetIcon,
     this.hintText,
     this.isRequired = false,
     this.keyboardType,
@@ -83,7 +85,16 @@ class StyledTextField extends StatelessWidget {
             suffixText: suffixText,
             contentPadding: EdgeInsets.symmetric(
                 horizontal: 16.w, vertical: 12.h), // Ensure padding
-            prefixIcon: Icon(icon),
+            prefixIcon: assetIcon != null
+                ? Padding(
+                    padding: EdgeInsets.all(12.r),
+                    child: Image.asset(
+                      assetIcon!,
+                      width: 24.r,
+                      height: 24.r,
+                    ),
+                  )
+                : Icon(icon),
             filled: true,
             fillColor: Colors.grey.shade50,
             border:

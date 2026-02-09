@@ -14,6 +14,7 @@ class StyledDropdownField<T> extends StatelessWidget {
   final ValueChanged<T?>? onChanged;
   final String? Function(T?)? validator;
   final IconData? icon;
+  final String? assetIcon;
   final bool isRequired;
   final String? hintText;
   final String? helperText;
@@ -26,6 +27,7 @@ class StyledDropdownField<T> extends StatelessWidget {
     this.value,
     this.validator,
     this.icon,
+    this.assetIcon,
     this.isRequired = false,
     this.hintText,
     this.helperText,
@@ -55,7 +57,16 @@ class StyledDropdownField<T> extends StatelessWidget {
             hintText: hintText ?? 'เลือก$label',
             helperText: helperText,
             helperMaxLines: 2,
-            prefixIcon: icon != null ? Icon(icon) : null,
+            prefixIcon: assetIcon != null
+                ? Padding(
+                    padding: EdgeInsets.all(12.r),
+                    child: Image.asset(
+                      assetIcon!,
+                      width: 24.r,
+                      height: 24.r,
+                    ),
+                  )
+                : (icon != null ? Icon(icon) : null),
             filled: true,
             fillColor: Colors.grey.shade50,
             contentPadding:

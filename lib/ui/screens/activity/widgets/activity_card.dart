@@ -129,7 +129,8 @@ class ActivityCard extends StatelessWidget {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.25), width: 1.w),
+        border:
+            Border.all(color: Colors.grey.withValues(alpha: 0.25), width: 1.w),
       ),
       child: Padding(
         padding: EdgeInsets.all(12.r),
@@ -148,8 +149,11 @@ class ActivityCard extends StatelessWidget {
                   // Header: Icon + Title
                   Row(
                     children: [
-                      Icon(activity.activityType.icon,
-                          color: color, size: 20.r),
+                      activity.activityType.assetIcon != null
+                          ? Image.asset(activity.activityType.assetIcon!,
+                              width: 24.r, height: 24.r)
+                          : Icon(activity.activityType.icon,
+                              color: color, size: 20.r),
                       SizedBox(width: 8.w),
                       Expanded(
                         child: Text(

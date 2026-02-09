@@ -49,8 +49,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
       // 0. Search Filter (Name or NID)
       if (_searchQuery.isNotEmpty) {
         final query = _searchQuery.toLowerCase();
-        final nameMatch = cow.animalName != null &&
-            cow.animalName!.toLowerCase().contains(query);
+        final nameMatch = cow.animalName.toLowerCase().contains(query);
         final nidMatch = cow.nidNumber.toLowerCase().contains(query);
         if (!nameMatch && !nidMatch) {
           return false;

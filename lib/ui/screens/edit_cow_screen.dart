@@ -365,7 +365,9 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
           StyledTextField(
               label: 'ชื่อวัว',
               controller: _nameController,
-              icon: Icons.pets,
+              icon: Icons
+                  .pets, // Keep icon as fallback or remove if not needed, but StyledTextField requires it? Wops, required.
+              assetIcon: 'assets/images/cow.png',
               isRequired: true),
           SizedBox(height: 16.h),
           StyledTextField(
@@ -427,6 +429,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
             label: 'เพศ',
             value: _selectedSex,
             icon: Icons.wc,
+            assetIcon: 'assets/images/gender.png',
             items: const [
               DropdownMenuItem(value: 'MALE', child: Text('ผู้')),
               DropdownMenuItem(value: 'FEMALE', child: Text('เมีย')),
@@ -555,12 +558,13 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
           label: Text('บันทึกการเปลี่ยนแปลง',
               style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
           style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-            minimumSize: Size(double.infinity, 56.h),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r)),
-          ),
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              padding: EdgeInsets.symmetric(vertical: 16.h),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30.r)),
+            ),
         ),
       ),
     );

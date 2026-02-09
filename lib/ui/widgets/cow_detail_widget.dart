@@ -123,7 +123,7 @@ class _ImageCarouselState extends State<_ImageCarousel> {
       }
       return Container(
         color: Colors.grey[300],
-        child: Icon(Icons.pets, size: 80.r, color: Colors.grey[400]),
+        child: Image.asset('assets/images/cow.png', width: 80.r, height: 80.r),
       );
     }
 

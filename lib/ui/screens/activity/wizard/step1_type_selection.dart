@@ -78,11 +78,21 @@ class Step1TypeSelection extends StatelessWidget {
                   color: WizardColors.background,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  type.icon,
-                  color: WizardColors.textLight,
-                  size: 28.r,
-                ),
+                child: type.assetIcon != null
+                    ? Padding(
+                        padding: EdgeInsets.all(12.r),
+                        child: Image.asset(
+                          type.assetIcon!,
+                          width: 28.r,
+                          height: 28.r,
+                          color: WizardColors.textLight,
+                        ),
+                      )
+                    : Icon(
+                        type.icon,
+                        color: WizardColors.textLight,
+                        size: 28.r,
+                      ),
               ),
               SizedBox(height: 16.h),
               Text(

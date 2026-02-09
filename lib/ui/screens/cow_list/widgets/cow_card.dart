@@ -109,8 +109,8 @@ class CowCard extends StatelessWidget {
                         cow.markPic != null && cow.markPic!.isNotEmpty;
 
                     if (!hasFace && !hasBody && !hasMark) {
-                      return Icon(Icons.pets,
-                          color: colorScheme.primary, size: 36.r);
+                      return Image.asset('assets/images/cow.png',
+                          width: 36.r, height: 36.r);
                     }
                     return null;
                   }(),

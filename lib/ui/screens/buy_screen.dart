@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // 1. Model สำหรับรายการในตลาด
 class MarketItem {
@@ -86,6 +87,34 @@ class MarketItem {
       print('เกิดข้อผิดพลาดตอนดึงพิกัด: $e');
     }
 
+    dynamic rawProfiles = json['profiles'];
+    Map<String, dynamic>? profileData;
+
+    if (rawProfiles != null) {
+      if (rawProfiles is List && rawProfiles.isNotEmpty) {
+        profileData = rawProfiles[0] as Map<String, dynamic>;
+      } else if (rawProfiles is Map<String, dynamic>) {
+        profileData = rawProfiles;
+      }
+    }
+
+    String sellerDisplayName = 'ไม่ระบุชื่อผู้ขาย';
+
+    if (profileData != null) {
+      final firstName = profileData['first_name']?.toString() ?? '';
+      final lastName = profileData['last_name']?.toString() ?? '';
+      sellerDisplayName = '$firstName $lastName'.trim();
+
+      // ถ้าดึงชื่อมาได้แต่ดันเป็นค่าว่าง ให้แสดงรหัส ID แทน
+      if (sellerDisplayName.isEmpty) {
+        sellerDisplayName = 'รหัส: ${json['user_id'] ?? '-'}';
+      }
+    } else {
+      // กรณี profileData เป็น null (หาในตาราง profiles ไม่เจอ)
+      // ให้พยายามแสดงรหัส ID แทนคำว่าไม่ระบุชื่อ เพื่อให้รู้ว่าวัวเป็นของใคร
+      sellerDisplayName = 'รหัส: ${json['user_id'] ?? '-'}';
+    }
+
     return MarketItem(
       id: json['animal_id']?.toString() ?? '',
       name: json['animal_name'] ?? 'ไม่มีชื่อ',
@@ -95,8 +124,14 @@ class MarketItem {
           DateTime.now(),
       weight: double.tryParse(json['weight']?.toString() ?? '0') ?? 0.0,
       sellerId: json['user_id']?.toString() ?? '',
-      seller: 'รหัส: ${json['user_id'] ?? '-'}',
-      location: json['origin'] ?? 'ไม่ระบุพิกัด',
+      seller: sellerDisplayName,
+
+      // --- แก้ไขจุดนี้ ---
+      // พยายามดึงชื่อฟาร์มก่อน ถ้าไม่มีให้ใช้ origin ถ้าไม่มีอีกให้แสดง 'ไม่ระบุชื่อฟาร์ม'
+      location: farmData?['farm_name']?.toString() ??
+          json['origin'] ??
+          'ไม่ระบุชื่อฟาร์ม',
+
       images: imgList,
       latitude: farmData?['latitude'] != null
           ? double.tryParse(farmData!['latitude'].toString())
@@ -161,7 +196,12 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
 
       var query = supabase.from('animals').select('''
       *,
+      profiles:user_id (
+      first_name,
+      last_name
+      ),
       farms:farm_id (
+        farm_name,
         latitude,
         longitude
       )
@@ -780,6 +820,23 @@ class SellerDetailsSheet extends StatefulWidget {
 class _SellerDetailsSheetState extends State<SellerDetailsSheet> {
   bool _isSubmitting = false;
 
+  // ฟังก์ชันสำหรับเปิด Google Maps
+  Future<void> _launchMap(double lat, double lng) async {
+    final Uri googleMapsUrl =
+        Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lng");
+
+    if (await canLaunchUrl(googleMapsUrl)) {
+      await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+    } else {
+      // กรณีเปิดไม่ได้ (เช่น ไม่มีเบราว์เซอร์หรือแอป)
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ไม่สามารถเปิดแผนที่ได้')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -826,13 +883,19 @@ class _SellerDetailsSheetState extends State<SellerDetailsSheet> {
               child: GoogleMap(
                 initialCameraPosition: CameraPosition(
                   target: cattleLocation,
-                  zoom: 15, // ระดับความใกล้
+                  zoom: 15,
                 ),
                 markers: {
                   Marker(
                     markerId: MarkerId(widget.item.id),
                     position: cattleLocation,
-                    infoWindow: InfoWindow(title: widget.item.name),
+                    infoWindow: InfoWindow(
+                      title: widget.item.name,
+                      snippet: 'กดที่นี่เพื่อนำทาง', // เพิ่มคำอธิบายเล็กน้อย
+                    ),
+                    // แก้ไขส่วนนี้: เมื่อกดที่ตัวหมุดจะเรียกฟังก์ชันเปิดแอปทันที
+                    onTap: () => _launchMap(
+                        cattleLocation.latitude, cattleLocation.longitude),
                   ),
                 },
                 myLocationButtonEnabled: false,

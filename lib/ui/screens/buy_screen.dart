@@ -114,6 +114,16 @@ class MarketItem {
       sellerDisplayName = 'รหัส: ${json['user_id'] ?? '-'}';
     }
 
+    // 1. ดึงชื่อฟาร์ม (ถ้าไม่มีใช้ origin)
+    String fName = farmData?['farm_name']?.toString() ?? json['origin'] ?? 'ไม่ระบุชื่อฟาร์ม';
+
+    // 2. ดึงชื่อจังหวัด
+    String fProvince = farmData?['province']?.toString() ?? '';
+
+    // 3. รวมเข้าด้วยกัน
+    String displayLocation =
+        fProvince.isNotEmpty ? '$fName จ.$fProvince' : fName;
+
     return MarketItem(
       id: json['animal_id']?.toString() ?? '',
       name: json['animal_name'] ?? 'ไม่มีชื่อ',
@@ -125,11 +135,7 @@ class MarketItem {
       sellerId: json['user_id']?.toString() ?? '',
       seller: sellerDisplayName,
 
-      // --- แก้ไขจุดนี้ ---
-      // พยายามดึงชื่อฟาร์มก่อน ถ้าไม่มีให้ใช้ origin ถ้าไม่มีอีกให้แสดง 'ไม่ระบุชื่อฟาร์ม'
-      location: farmData?['farm_name']?.toString() ??
-          json['origin'] ??
-          'ไม่ระบุชื่อฟาร์ม',
+      location: displayLocation,
 
       images: imgList,
       latitude: farmData?['latitude'] != null
@@ -201,6 +207,7 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
       ),
       farms:farm_id (
         farm_name,
+        province,
         latitude,
         longitude
       )

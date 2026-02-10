@@ -130,7 +130,7 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
             children: [
               // Month Dropdown
               Expanded(
-                flex: 3,
+                flex: 1,
                 child: DropdownButtonFormField<int>(
                   isExpanded:
                       true, // Fix overflow by allowing text to truncate/wrap if needed
@@ -166,7 +166,7 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
               SizedBox(width: 12.w),
               // Year Dropdown
               Expanded(
-                flex: 2,
+                flex: 1,
                 child: DropdownButtonFormField<int>(
                   isExpanded: true,
                   initialValue: _selectedYear,

@@ -49,15 +49,12 @@ class CowDetailService extends ChangeNotifier {
 
   // 2. ฟังก์ชันแก้ไขข้อมูลวัว (Update)
   Future<String?> updateCow(Cow updatedCow,
-      {List<File>? newFaceFiles,
-      List<File>? newBodyFiles,
-      List<File>? newMarkFiles}) async {
+      {List<File>? newFaceFiles, List<File>? newBodyFiles}) async {
     _setLoading(true);
     try {
       // Prepare lists (initially from the model, or empty if null)
       List<String> faceUrls = List.from(updatedCow.facePic ?? []);
       List<String> bodyUrls = List.from(updatedCow.bodyPic ?? []);
-      List<String> markUrls = List.from(updatedCow.markPic ?? []);
 
       final nidNumber = updatedCow.nidNumber;
 
@@ -78,14 +75,6 @@ class CowDetailService extends ChangeNotifier {
           }
         }
       }
-      if (newMarkFiles != null) {
-        for (final file in newMarkFiles) {
-          final url = await _uploadImage(file, nidNumber, 'mark');
-          if (url != null) {
-            markUrls.add(url);
-          }
-        }
-      }
 
       final dataToUpdate = {
         'animal_name': updatedCow.animalName,
@@ -101,7 +90,6 @@ class CowDetailService extends ChangeNotifier {
         'status': updatedCow.status,
         'face_pic': faceUrls,
         'body_pic': bodyUrls,
-        'mark_pic': markUrls,
         'updated_at': DateTime.now().toIso8601String(),
       };
 
@@ -114,7 +102,6 @@ class CowDetailService extends ChangeNotifier {
       _currentCow = updatedCow.copyWith(
         facePic: faceUrls,
         bodyPic: bodyUrls,
-        markPic: markUrls,
       );
 
       logger.i("Cow updated successfully: ${updatedCow.animalName}");
@@ -135,13 +122,11 @@ class CowDetailService extends ChangeNotifier {
   }
 
   // 3. ฟังก์ชันเพิ่มวัวใหม่ (Add)
-  Future<bool> addCow(Cow cow,
-      {File? bodyPic, File? facePic, File? markPic}) async {
+  Future<bool> addCow(Cow cow, {File? bodyPic, File? facePic}) async {
     _setLoading(true);
     try {
       List<String>? bodyPicUrls;
       List<String>? facePicUrls;
-      List<String>? markPicUrls;
       final nidNumber = cow.nidNumber;
 
       // Upload images if provided
@@ -153,15 +138,10 @@ class CowDetailService extends ChangeNotifier {
         final url = await _uploadImage(facePic, nidNumber, 'face');
         if (url != null) facePicUrls = [url];
       }
-      if (markPic != null) {
-        final url = await _uploadImage(markPic, nidNumber, 'mark');
-        if (url != null) markPicUrls = [url];
-      }
 
       final cowWithImages = cow.copyWith(
         bodyPic: bodyPicUrls,
         facePic: facePicUrls,
-        markPic: markPicUrls,
       );
 
       final data = cowWithImages.toMapForInsert();

@@ -82,7 +82,6 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
       images: [
         if (cow.facePic != null) ...cow.facePic!,
         if (cow.bodyPic != null) ...cow.bodyPic!,
-        if (cow.markPic != null) ...cow.markPic!,
       ],
       tabController: _tabController,
       onBack: () {

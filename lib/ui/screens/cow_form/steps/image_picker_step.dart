@@ -8,20 +8,16 @@ import 'package:th_cow_passport/ui/screens/camera_screen.dart';
 class ImagePickerStep extends StatefulWidget {
   final File? faceImage;
   final File? bodyImage;
-  final File? markImage;
   final Function(File) onFaceImageChanged;
   final Function(File) onBodyImageChanged;
-  final Function(File) onMarkImageChanged;
   final VoidCallback onNext;
 
   const ImagePickerStep({
     super.key,
     this.faceImage,
     this.bodyImage,
-    this.markImage,
     required this.onFaceImageChanged,
     required this.onBodyImageChanged,
-    required this.onMarkImageChanged,
     required this.onNext,
   });
 
@@ -95,9 +91,7 @@ class _ImagePickerStepState extends State<ImagePickerStep> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final canContinue = widget.faceImage != null &&
-        widget.bodyImage != null &&
-        widget.markImage != null;
+    final canContinue = widget.faceImage != null && widget.bodyImage != null;
 
     return Scaffold(
       appBar: AppBar(
@@ -122,7 +116,7 @@ class _ImagePickerStepState extends State<ImagePickerStep> {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.sp)),
             SizedBox(height: 8.h),
             const Text(
-                'กรุณาเพิ่มรูปภาพให้ครบทั้ง 3 รูปเพื่อใช้ในการระบุตัวตน'),
+                'กรุณาเพิ่มรูปภาพให้ครบทั้ง 2 รูปเพื่อใช้ในการระบุตัวตน'),
             SizedBox(height: 24.h),
             Expanded(
               child: SingleChildScrollView(
@@ -130,21 +124,17 @@ class _ImagePickerStepState extends State<ImagePickerStep> {
                   children: [
                     _buildPhotoPicker(
                       label: 'รูปหน้าตรง',
+                      assetPath: 'assets/images/cow_face.png',
                       imageFile: widget.faceImage,
                       onTap: () => _showImageSourceDialog(
                           'รูปหน้าตรง', widget.onFaceImageChanged),
                     ),
                     _buildPhotoPicker(
                       label: 'รูปด้านข้างลำตัว',
+                      assetPath: 'assets/images/cow.png',
                       imageFile: widget.bodyImage,
                       onTap: () => _showImageSourceDialog(
                           'รูปด้านข้างลำตัว', widget.onBodyImageChanged),
-                    ),
-                    _buildPhotoPicker(
-                      label: 'รูปขา/ตำหนิ',
-                      imageFile: widget.markImage,
-                      onTap: () => _showImageSourceDialog(
-                          'รูปขา/ตำหนิ', widget.onMarkImageChanged),
                     ),
                   ],
                 ),
@@ -172,6 +162,7 @@ class _ImagePickerStepState extends State<ImagePickerStep> {
 
   Widget _buildPhotoPicker({
     required String label,
+    String? assetPath,
     required File? imageFile,
     required VoidCallback onTap,
   }) {
@@ -181,51 +172,80 @@ class _ImagePickerStepState extends State<ImagePickerStep> {
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8.h),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12.r),
-        child: AspectRatio(
-          aspectRatio: 16 / 9,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              border: Border.all(
-                color: isAdded ? colorScheme.primary : Colors.grey.shade300,
-                width: isAdded ? 2.w : 1.w,
-              ),
-              borderRadius: BorderRadius.circular(24.r),
-              image: isAdded
-                  ? DecorationImage(
-                      image: FileImage(imageFile), fit: BoxFit.cover)
-                  : null,
-            ),
-            child: isAdded
-                ? Align(
-                    alignment: Alignment.bottomRight,
-                    child: Container(
-                      margin: EdgeInsets.all(8.r),
-                      padding: EdgeInsets.all(4.r),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.check, color: Colors.white, size: 20.r),
-                    ),
-                  )
-                : Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.add_a_photo_outlined,
-                            color: Colors.grey.shade600, size: 36.r),
-                        SizedBox(height: 8.h),
-                        Text(label,
-                            style: TextStyle(color: Colors.grey.shade700)),
-                      ],
-                    ),
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(label,
+                  style: TextStyle(
+                      color: colorScheme.primary, fontWeight: FontWeight.bold)),
+            ],
           ),
-        ),
+          SizedBox(height: 8.h),
+          InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(12.r),
+            child: AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  border: Border.all(
+                    color: isAdded ? colorScheme.primary : Colors.grey.shade300,
+                    width: isAdded ? 2.w : 1.w,
+                  ),
+                  borderRadius: BorderRadius.circular(24.r),
+                  image: isAdded
+                      ? DecorationImage(
+                          image: FileImage(imageFile), fit: BoxFit.cover)
+                      : null,
+                ),
+                child: isAdded
+                    ? Align(
+                        alignment: Alignment.bottomRight,
+                        child: Container(
+                          margin: EdgeInsets.all(8.r),
+                          padding: EdgeInsets.all(4.r),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.check,
+                              color: Colors.white, size: 20.r),
+                        ),
+                      )
+                    : Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (assetPath != null)
+                              Image.asset(
+                                assetPath,
+                                width: 48.r,
+                                height: 48.r,
+                                color: Colors.grey.shade400,
+                              )
+                            else
+                              Icon(Icons.add_a_photo_outlined,
+                                  color: Colors.grey.shade600, size: 36.r),
+                            SizedBox(height: 8.h),
+                            Text(
+                              'คลิกเพื่อเพิ่มรูปภาพ',
+                              style: TextStyle(
+                                color: Colors.grey.shade700,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12.sp,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

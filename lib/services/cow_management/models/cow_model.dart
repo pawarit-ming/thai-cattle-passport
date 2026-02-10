@@ -14,7 +14,6 @@ class Cow {
   final double? height;
   final List<String>? facePic;
   final List<String>? bodyPic;
-  final List<String>? markPic;
   final String? origin;
   final DateTime? importDate;
   final String status;
@@ -38,7 +37,6 @@ class Cow {
     this.height,
     this.facePic,
     this.bodyPic,
-    this.markPic,
     this.origin,
     this.importDate,
     this.status = 'ACTIVE',
@@ -63,7 +61,6 @@ class Cow {
     double? height,
     List<String>? facePic,
     List<String>? bodyPic,
-    List<String>? markPic,
     String? origin,
     DateTime? importDate,
     String? status,
@@ -86,7 +83,6 @@ class Cow {
       height: height ?? this.height,
       facePic: facePic ?? this.facePic,
       bodyPic: bodyPic ?? this.bodyPic,
-      markPic: markPic ?? this.markPic,
       origin: origin ?? this.origin,
       importDate: importDate ?? this.importDate,
       status: status ?? this.status,
@@ -118,9 +114,6 @@ class Cow {
           : null,
       bodyPic: map['body_pic'] != null
           ? List<String>.from(map['body_pic'] as List)
-          : null,
-      markPic: map['mark_pic'] != null
-          ? List<String>.from(map['mark_pic'] as List)
           : null,
       origin: map['origin'],
       importDate: map['import_date'] != null
@@ -162,7 +155,6 @@ class Cow {
       'height': height,
       'face_pic': facePic,
       'body_pic': bodyPic,
-      'mark_pic': markPic,
       'origin': origin,
       'import_date': importDate?.toIso8601String().substring(0, 10),
       'status': status,

@@ -52,7 +52,6 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
   // Image files
   File? _faceImage;
   File? _bodyImage;
-  File? _markImage;
 
   DateTime _birthDate = DateTime.now();
   String _sex = 'MALE'; // Default to MALE
@@ -144,17 +143,14 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
       status: 'ACTIVE',
       facePic: [],
       bodyPic: [],
-      markPic: [],
     );
 
     try {
       logger.i('[CowForm] Saving cow: ${_animalNameController.text}');
-
       final success = await cowService.addCow(
         newCow,
         facePic: _faceImage,
         bodyPic: _bodyImage,
-        markPic: _markImage,
       );
 
 // ... inside _saveForm ...
@@ -204,10 +200,8 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
     return ImagePickerStep(
       faceImage: _faceImage,
       bodyImage: _bodyImage,
-      markImage: _markImage,
       onFaceImageChanged: (file) => setState(() => _faceImage = file),
       onBodyImageChanged: (file) => setState(() => _bodyImage = file),
-      onMarkImageChanged: (file) => setState(() => _markImage = file),
       onNext: () => setState(() => _isImagePickerStep = false),
     );
   }
@@ -221,7 +215,6 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
         images: [
           if (_faceImage != null) _faceImage!.path,
           if (_bodyImage != null) _bodyImage!.path,
-          if (_markImage != null) _markImage!.path,
         ],
         tabController: _tabController,
         tabs: const [

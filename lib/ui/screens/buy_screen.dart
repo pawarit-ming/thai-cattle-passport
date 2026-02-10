@@ -52,7 +52,6 @@ class MarketItem {
 
     addImage(json['face_pic']);
     addImage(json['body_pic']);
-    addImage(json['mark_pic']);
 
     // --- จัดการเพศ (Sex Normalization) ---
     String rawSex = json['sex']?.toString().toLowerCase() ?? '';

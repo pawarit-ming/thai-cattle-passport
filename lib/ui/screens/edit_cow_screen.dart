@@ -46,7 +46,6 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
   // Lists for new images to be appended
   final List<File> _newFaceFiles = [];
   final List<File> _newBodyFiles = [];
-  final List<File> _newMarkFiles = [];
 
   // Selected dropdown values
   String? _selectedBreed;
@@ -154,7 +153,6 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
             updatedCow,
             newFaceFiles: _newFaceFiles,
             newBodyFiles: _newBodyFiles,
-            newMarkFiles: _newMarkFiles,
           );
 
       if (errorMessage != null) {
@@ -184,12 +182,10 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
     List<String> images = [];
     if (cow.facePic != null) images.addAll(cow.facePic!);
     if (cow.bodyPic != null) images.addAll(cow.bodyPic!);
-    if (cow.markPic != null) images.addAll(cow.markPic!);
 
     // Append new local files
     images.addAll(_newFaceFiles.map((f) => f.path));
     images.addAll(_newBodyFiles.map((f) => f.path));
-    images.addAll(_newMarkFiles.map((f) => f.path));
 
     return images;
   }
@@ -214,7 +210,12 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.face),
+                leading: Image.asset(
+                  'assets/images/cow_face.png',
+                  width: 24.r,
+                  height: 24.r,
+                  color: Colors.grey.shade700,
+                ),
                 title: const Text('รูปหน้าวัว'),
                 onTap: () {
                   Navigator.pop(context);
@@ -222,19 +223,16 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.pets),
+                leading: Image.asset(
+                  'assets/images/cow.png',
+                  width: 24.r,
+                  height: 24.r,
+                  color: Colors.grey.shade700,
+                ),
                 title: const Text('รูปตัววัว'),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage('body');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.warning),
-                title: const Text('รูปตำหนิ'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage('mark');
                 },
               ),
               SizedBox(height: 16.h),
@@ -319,8 +317,6 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
         _newFaceFiles.add(file);
       } else if (type == 'body') {
         _newBodyFiles.add(file);
-      } else if (type == 'mark') {
-        _newMarkFiles.add(file);
       }
     });
   }
@@ -558,13 +554,13 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
           label: Text('บันทึกการเปลี่ยนแปลง',
               style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
           style: ElevatedButton.styleFrom(
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30.r)),
-            ),
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+            padding: EdgeInsets.symmetric(vertical: 16.h),
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.r)),
+          ),
         ),
       ),
     );

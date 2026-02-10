@@ -86,9 +86,6 @@ class CowCard extends StatelessWidget {
                       } else if (cow.bodyPic != null &&
                           cow.bodyPic!.isNotEmpty) {
                         imageUrl = cow.bodyPic!.first;
-                      } else if (cow.markPic != null &&
-                          cow.markPic!.isNotEmpty) {
-                        imageUrl = cow.markPic!.first;
                       }
 
                       if (imageUrl != null) {
@@ -105,10 +102,8 @@ class CowCard extends StatelessWidget {
                         cow.facePic != null && cow.facePic!.isNotEmpty;
                     final hasBody =
                         cow.bodyPic != null && cow.bodyPic!.isNotEmpty;
-                    final hasMark =
-                        cow.markPic != null && cow.markPic!.isNotEmpty;
 
-                    if (!hasFace && !hasBody && !hasMark) {
+                    if (!hasFace && !hasBody) {
                       return Image.asset('assets/images/cow.png',
                           width: 36.r, height: 36.r);
                     }

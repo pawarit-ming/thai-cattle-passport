@@ -167,33 +167,345 @@ class BirthForm extends StatelessWidget {
   }
 }
 
+// --- Illness Form ---
+class IllnessForm extends StatelessWidget {
+  final TextEditingController symptomsController;
+
+  const IllnessForm({super.key, required this.symptomsController});
+
+  @override
+  Widget build(BuildContext context) {
+    return FormTextField(
+      controller: symptomsController,
+      labelText: 'อาการที่พบ',
+      maxLines: 3,
+      hintText: 'เช่น ซึม ไม่กินอาหาร มีไข้ น้ำมูกไหล',
+      isRequired: true,
+    );
+  }
+}
+
 // --- Treatment Form ---
 class TreatmentForm extends StatelessWidget {
+  // Sickness reference (read-only symptoms from SICKNESS record)
+  final Map<String, dynamic>? sicknessRef;
+
+  // Selection mode: 'FROM_RECORD' or 'NEW'
+  final String? selectionMode;
+  final ValueChanged<String> onSelectionModeChanged;
+
+  // Symptoms (editable only when mode = NEW)
   final TextEditingController symptomsController;
-  final TextEditingController treatmentDetailsController;
+
+  // Disease
+  final String? diseaseType;
+  final ValueChanged<String?> onDiseaseTypeChanged;
+  final TextEditingController otherDiseaseController;
+
+  // Treatment Method
+  final String? treatmentMethod;
+  final ValueChanged<String?> onTreatmentMethodChanged;
+  final TextEditingController otherTreatmentController;
+
+  // Recovery Status
+  final String? recoveryStatus;
+  final ValueChanged<String?> onRecoveryStatusChanged;
+
+  // Follow-up Date (optional, shown when not recovered)
+  final DateTime? followUpDate;
+  final ValueChanged<DateTime?> onFollowUpDateChanged;
 
   const TreatmentForm({
     super.key,
+    this.sicknessRef,
+    this.selectionMode,
+    required this.onSelectionModeChanged,
     required this.symptomsController,
-    required this.treatmentDetailsController,
+    this.diseaseType,
+    required this.onDiseaseTypeChanged,
+    required this.otherDiseaseController,
+    this.treatmentMethod,
+    required this.onTreatmentMethodChanged,
+    required this.otherTreatmentController,
+    this.recoveryStatus,
+    required this.onRecoveryStatusChanged,
+    this.followUpDate,
+    required this.onFollowUpDateChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        FormTextField(
-          controller: symptomsController,
-          labelText: 'อาการ',
-          maxLines: 3,
-          hintText: 'อธิบายอาการป่วยของวัว',
+        // ── 1. Selection Mode ──
+        if (sicknessRef != null) ...[
+          Text(
+            'เลือกข้อมูลอ้างอิง',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14.sp,
+              color: Colors.grey.shade800,
+            ),
+          ),
+          SizedBox(height: 8.h),
+
+          // Option 1: From sickness record
+          _SelectionCard(
+            selected: selectionMode == 'FROM_RECORD',
+            icon: Icons.sick,
+            iconColor: Colors.orange.shade700,
+            title: 'จากบันทึกการป่วยล่าสุด',
+            subtitle: 'อาการ: ${sicknessRef!['illness_symptoms'] ?? '-'}',
+            onTap: () => onSelectionModeChanged('FROM_RECORD'),
+          ),
+          SizedBox(height: 8.h),
+
+          // Option 2: New
+          _SelectionCard(
+            selected: selectionMode == 'NEW',
+            icon: Icons.add_circle_outline,
+            iconColor: Colors.blue.shade600,
+            title: 'เพิ่มการรักษาใหม่',
+            subtitle: 'กรอกอาการเอง',
+            onTap: () => onSelectionModeChanged('NEW'),
+          ),
+          SizedBox(height: 16.h),
+        ],
+
+        // ── 2. Symptoms ──
+        if (selectionMode == 'NEW' || sicknessRef == null) ...[
+          FormTextField(
+            controller: symptomsController,
+            labelText: 'อาการ',
+            maxLines: 3,
+            hintText: 'อธิบายอาการป่วยของวัว',
+          ),
+          SizedBox(height: 16.h),
+        ],
+
+        // ── 2. Disease Name Dropdown ──
+        FormDropdownField<String>(
+          label: 'ชื่อโรค / สาเหตุ',
+          value: diseaseType,
+          items: const [
+            DropdownMenuItem(value: 'LUMPY_SKIN', child: Text('ลัมปีสกิน')),
+            DropdownMenuItem(value: 'PARASITE', child: Text('พยาธิ')),
+            DropdownMenuItem(value: 'BLOAT', child: Text('ท้องอืด')),
+            DropdownMenuItem(value: 'PNEUMONIA', child: Text('ปอดบวม')),
+            DropdownMenuItem(value: 'MASTITIS', child: Text('เต้านมอักเสบ')),
+            DropdownMenuItem(value: 'FOOT_ROT', child: Text('โรคกีบเน่า')),
+            DropdownMenuItem(value: 'DIARRHEA', child: Text('ท้องเสีย')),
+            DropdownMenuItem(value: 'OTHER', child: Text('อื่นๆ (ระบุ)')),
+          ],
+          onChanged: onDiseaseTypeChanged,
         ),
         SizedBox(height: 16.h),
-        FormTextField(
-          controller: treatmentDetailsController,
-          labelText: 'รายละเอียดการรักษา',
-          maxLines: 3,
-          hintText: 'ระบุยาและวิธีการรักษา',
+
+        // Disease OTHER text field
+        if (diseaseType == 'OTHER') ...[
+          FormTextField(
+            controller: otherDiseaseController,
+            labelText: 'ระบุชื่อโรค',
+            hintText: 'กรอกชื่อโรค',
+            isRequired: true,
+          ),
+          SizedBox(height: 16.h),
+        ],
+
+        // ── 3. Treatment Method Dropdown ──
+        FormDropdownField<String>(
+          label: 'วิธีการรักษา',
+          value: treatmentMethod,
+          items: const [
+            DropdownMenuItem(value: 'ORAL_MED', child: Text('กินยา')),
+            DropdownMenuItem(value: 'TOPICAL', child: Text('ทายา')),
+            DropdownMenuItem(value: 'INJECTION', child: Text('ฉีดยา')),
+            DropdownMenuItem(value: 'VACCINE', child: Text('ฉีดวัคซีน')),
+            DropdownMenuItem(value: 'SURGERY', child: Text('ผ่าตัด')),
+            DropdownMenuItem(value: 'OTHER', child: Text('อื่นๆ (ระบุ)')),
+          ],
+          onChanged: onTreatmentMethodChanged,
+        ),
+        SizedBox(height: 16.h),
+
+        // Treatment OTHER text field
+        if (treatmentMethod == 'OTHER') ...[
+          FormTextField(
+            controller: otherTreatmentController,
+            labelText: 'ระบุวิธีการรักษา',
+            hintText: 'กรอกรายละเอียดวิธีรักษา',
+            isRequired: true,
+          ),
+          SizedBox(height: 16.h),
+        ],
+
+        // ── 4. Recovery Status Dropdown ──
+        FormDropdownField<String>(
+          label: 'สถานะหลังรักษา',
+          value: recoveryStatus,
+          items: const [
+            DropdownMenuItem(value: 'RECOVERED', child: Text('หายดีแล้ว')),
+            DropdownMenuItem(value: 'MONITORING', child: Text('เฝ้าดูอาการ')),
+            DropdownMenuItem(value: 'REFERRED', child: Text('ส่งต่อรักษา')),
+          ],
+          onChanged: onRecoveryStatusChanged,
+        ),
+        SizedBox(height: 16.h),
+
+        // ── 5. Follow-up Date (optional, shown when not recovered) ──
+        if (recoveryStatus != null && recoveryStatus != 'RECOVERED') ...[
+          _FollowUpDatePicker(
+            followUpDate: followUpDate,
+            onDateChanged: onFollowUpDateChanged,
+          ),
+          SizedBox(height: 16.h),
+        ],
+      ],
+    );
+  }
+}
+
+// --- Selection Card for Treatment mode ---
+class _SelectionCard extends StatelessWidget {
+  final bool selected;
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _SelectionCard({
+    required this.selected,
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12.r),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: selected ? iconColor.withValues(alpha: 0.08) : Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(
+            color: selected ? iconColor : Colors.grey.shade300,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor, size: 24.sp),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13.sp,
+                      color: selected ? iconColor : Colors.grey.shade800,
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: Colors.grey.shade600,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            if (selected)
+              Icon(Icons.check_circle, color: iconColor, size: 20.sp),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// --- Follow-up Date Picker sub-widget ---
+class _FollowUpDatePicker extends StatelessWidget {
+  final DateTime? followUpDate;
+  final ValueChanged<DateTime?> onDateChanged;
+
+  const _FollowUpDatePicker({
+    required this.followUpDate,
+    required this.onDateChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final dateStr = followUpDate != null
+        ? '${followUpDate!.day}/${followUpDate!.month}/${followUpDate!.year}'
+        : 'ยังไม่ได้เลือก';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'วันนัดตรวจ (ถ้ามี)',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 13.sp,
+            color: Colors.grey.shade700,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        InkWell(
+          onTap: () async {
+            final picked = await showDatePicker(
+              context: context,
+              initialDate:
+                  followUpDate ?? DateTime.now().add(const Duration(days: 7)),
+              firstDate: DateTime.now(),
+              lastDate: DateTime.now().add(const Duration(days: 365)),
+              helpText: 'เลือกวันนัดตรวจ',
+            );
+            if (picked != null) {
+              onDateChanged(picked);
+            }
+          },
+          borderRadius: BorderRadius.circular(12.r),
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.grey.shade300),
+              color: Colors.white,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  dateStr,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: followUpDate != null
+                        ? Colors.black87
+                        : Colors.grey.shade500,
+                  ),
+                ),
+                Icon(Icons.calendar_today,
+                    size: 18.sp, color: Colors.grey.shade600),
+              ],
+            ),
+          ),
         ),
       ],
     );

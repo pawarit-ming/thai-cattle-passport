@@ -1,5 +1,6 @@
 enum ActivityType {
   WEIGHT_UPDATE,
+  SICKNESS,
   TREATMENT,
   VACCINE,
   BREEDING,

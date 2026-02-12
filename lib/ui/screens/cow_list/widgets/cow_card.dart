@@ -115,59 +115,42 @@ class CowCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ====================================================
-                      // จุดที่แก้ไข: ใช้ Row ชุดใหม่ที่มี FittedBox
-                      // ====================================================
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: FittedBox(
-                              fit: BoxFit
-                                  .scaleDown, // ย่อตัวหนังสือถ้าพื้นที่ไม่พอ
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                cow.nidNumber,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  color: colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18.sp,
-                                ),
-                              ),
-                            ),
+                      // NID
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          cow.nidNumber,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18.sp,
                           ),
-                          SizedBox(width: 8.w),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 8.w, vertical: 2.h),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary,
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                            child: Text(
-                              'ชื่อ: ${cow.animalName}',
-                              style: TextStyle(
-                                  color: colorScheme.onPrimary,
-                                  fontSize: 10.sp,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                      // ====================================================
-                      // จบส่วนที่แก้ไข
-                      // ====================================================
-
-                      SizedBox(height: 4.h),
+                      // Name
                       Text(
-                        '${cow.breed ?? '-'} • ${age != null ? '$age ปี' : 'ไม่ทราบ'}',
+                        cow.animalName,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 4.h),
+                      // Breed
+                      Text(
+                        cow.breed ?? '-',
                         style: theme.textTheme.bodyMedium,
                       ),
                       SizedBox(height: 8.h),
+                      // Gender + Age
                       Row(
                         children: [
                           _buildMiniTag(
                             icon: cow.sex == 'MALE' ? Icons.male : Icons.female,
+                            label: cow.sex == 'MALE' ? 'ผู้' : 'เมีย',
                             color: cow.sex == 'MALE'
                                 ? Colors.blue.shade100
                                 : Colors.pink.shade100,
@@ -175,24 +158,69 @@ class CowCard extends StatelessWidget {
                                 ? Colors.blue.shade800
                                 : Colors.pink.shade800,
                           ),
-                          SizedBox(width: 8.w),
-                          _buildMiniTag(
-                            icon: Icons.monitor_heart_outlined,
-                            label: 'สุขภาพดี',
-                            color: Colors.green.shade100,
-                            textColor: Colors.green.shade800,
-                          ),
+                          if (age != null) ...[
+                            SizedBox(width: 8.w),
+                            Text(
+                              '$age ปี',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),
                 SizedBox(width: 8.w),
-                Icon(Icons.arrow_forward_ios,
-                    size: 16.r, color: theme.dividerColor),
+                // Health status (replaces arrow)
+                _buildHealthTag(),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHealthTag() {
+    switch (cow.status) {
+      case 'SICK':
+        return _buildStatusTag(
+          label: 'ป่วย',
+          color: Colors.red.shade100,
+          textColor: Colors.red.shade800,
+        );
+      case 'DEATH':
+        return _buildStatusTag(
+          label: 'ตาย',
+          color: Colors.grey.shade300,
+          textColor: Colors.grey.shade800,
+        );
+      default:
+        return _buildStatusTag(
+          label: 'สุขภาพดี',
+          color: Colors.green.shade100,
+          textColor: Colors.green.shade800,
+        );
+    }
+  }
+
+  Widget _buildStatusTag(
+      {required String label, required Color color, required Color textColor}) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(20.r),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12.sp,
+          color: textColor,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
@@ -204,21 +232,21 @@ class CowCard extends StatelessWidget {
       required Color color,
       required Color textColor}) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(4.r),
+        borderRadius: BorderRadius.circular(12.r),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12.r, color: textColor),
+          Icon(icon, size: 14.r, color: textColor),
           if (label != null && label.isNotEmpty) ...[
             SizedBox(width: 4.w),
             Text(
               label,
               style: TextStyle(
-                  fontSize: 10.sp,
+                  fontSize: 11.sp,
                   color: textColor,
                   fontWeight: FontWeight.bold),
             ),

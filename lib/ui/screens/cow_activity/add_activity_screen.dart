@@ -162,6 +162,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
         ...switch (type) {
           ActivityType.VACCINE => _buildVaccineForm(),
           ActivityType.BIRTH => _buildBirthForm(),
+          ActivityType.SICKNESS => _buildGenericForm('อาการที่พบ'),
           ActivityType.TREATMENT => _buildTreatmentForm(),
           ActivityType.EDIT_LOG => _buildGenericForm('รายละเอียดการแก้ไข'),
           ActivityType.PREGNANCY_CHECK => _buildGenericForm('ผลการตรวจครรภ์'),
@@ -295,6 +296,8 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
         return 'ฉีดวัคซีน';
       case ActivityType.BIRTH:
         return 'คลอดลูก';
+      case ActivityType.SICKNESS:
+        return 'บันทึกการป่วย';
       case ActivityType.TREATMENT:
         return 'การรักษา';
       case ActivityType.EDIT_LOG:
@@ -342,6 +345,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
         data['symptoms'] = _symptomsController.text;
         data['treatment_details'] = _treatmentDetailsController.text;
         break;
+      case ActivityType.SICKNESS:
       case ActivityType.EDIT_LOG:
       case ActivityType.PREGNANCY_CHECK:
       case ActivityType.BREEDING:

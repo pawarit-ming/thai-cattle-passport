@@ -51,6 +51,18 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
   final _treatmentDetailsController = TextEditingController();
   final _detailsController = TextEditingController();
 
+  // Illness Controllers
+  final _illnessSymptomsController = TextEditingController();
+
+  // Treatment Controllers
+  String? _treatmentSelectionMode; // 'FROM_RECORD' or 'NEW'
+  String? _diseaseType;
+  final _otherDiseaseController = TextEditingController();
+  String? _treatmentMethod;
+  final _otherTreatmentController = TextEditingController();
+  String? _recoveryStatus;
+  DateTime? _followUpDate;
+
   // Breeding Controllers
   String? _breedingMethod;
   String? _sireType;
@@ -100,6 +112,34 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
     }
     if (data.containsKey('details')) _detailsController.text = data['details'];
 
+    // Restore Illness Data
+    if (data.containsKey('illness_symptoms')) {
+      _illnessSymptomsController.text = data['illness_symptoms'];
+    }
+
+    // Restore Treatment Data
+    if (data.containsKey('treatment_selection_mode')) {
+      _treatmentSelectionMode = data['treatment_selection_mode'];
+    } else if (data.containsKey('sickness_ref')) {
+      _treatmentSelectionMode = 'FROM_RECORD';
+    }
+    if (data.containsKey('disease_type')) _diseaseType = data['disease_type'];
+    if (data.containsKey('other_disease_name')) {
+      _otherDiseaseController.text = data['other_disease_name'];
+    }
+    if (data.containsKey('treatment_method')) {
+      _treatmentMethod = data['treatment_method'];
+    }
+    if (data.containsKey('other_treatment_detail')) {
+      _otherTreatmentController.text = data['other_treatment_detail'];
+    }
+    if (data.containsKey('recovery_status')) {
+      _recoveryStatus = data['recovery_status'];
+    }
+    if (data.containsKey('follow_up_date')) {
+      _followUpDate = DateTime.tryParse(data['follow_up_date']);
+    }
+
     // Restore Breeding Data
     if (data.containsKey('breeding_method')) {
       _breedingMethod = data['breeding_method'];
@@ -148,6 +188,9 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
     _symptomsController.dispose();
     _treatmentDetailsController.dispose();
     _detailsController.dispose();
+    _illnessSymptomsController.dispose();
+    _otherDiseaseController.dispose();
+    _otherTreatmentController.dispose();
     _otherSireNameController.dispose();
     _otherSireOriginController.dispose();
     _pregAgeWeeksController.dispose();
@@ -179,9 +222,33 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
         );
       },
     );
-    if (picked != null) {
+    if (picked != null && mounted) {
+      final TimeOfDay? time = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(_selectedDate),
+        helpText: 'เลือกเวลา',
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.light(
+                primary: WizardColors.primarySpring,
+                onPrimary: Colors.white,
+                onSurface: WizardColors.textDark,
+              ),
+            ),
+            child: child!,
+          );
+        },
+      );
       setState(() {
-        _selectedDate = picked;
+        final t = time ?? TimeOfDay.fromDateTime(_selectedDate);
+        _selectedDate = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          t.hour,
+          t.minute,
+        );
       });
     }
   }
@@ -251,12 +318,35 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
             }
           }
           break;
+        case ActivityType.SICKNESS:
+          if (_illnessSymptomsController.text.isNotEmpty) {
+            data['illness_symptoms'] = _illnessSymptomsController.text;
+          }
+          break;
         case ActivityType.TREATMENT:
           if (_symptomsController.text.isNotEmpty) {
             data['symptoms'] = _symptomsController.text;
           }
-          if (_treatmentDetailsController.text.isNotEmpty) {
-            data['treatment_details'] = _treatmentDetailsController.text;
+          if (_diseaseType != null) {
+            data['disease_type'] = _diseaseType;
+            if (_diseaseType == 'OTHER' &&
+                _otherDiseaseController.text.isNotEmpty) {
+              data['other_disease_name'] = _otherDiseaseController.text;
+            }
+          }
+          if (_treatmentMethod != null) {
+            data['treatment_method'] = _treatmentMethod;
+            if (_treatmentMethod == 'OTHER' &&
+                _otherTreatmentController.text.isNotEmpty) {
+              data['other_treatment_detail'] = _otherTreatmentController.text;
+            }
+          }
+          if (_recoveryStatus != null) {
+            data['recovery_status'] = _recoveryStatus;
+          }
+          data['is_recovered'] = _recoveryStatus == 'RECOVERED';
+          if (_followUpDate != null) {
+            data['follow_up_date'] = _followUpDate!.toIso8601String();
           }
           break;
         case ActivityType.WEIGHT_UPDATE:
@@ -368,7 +458,7 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
                                     color: Colors.grey, fontSize: 12.sp),
                               ),
                               Text(
-                                DateFormat('d MMM yyyy').format(_selectedDate),
+                                '${DateFormat('d MMM yyyy').format(_selectedDate)}  ${_selectedDate.hour.toString().padLeft(2, '0')}:${_selectedDate.minute.toString().padLeft(2, '0')} น.',
                                 style: WizardStyles.titleMedium,
                               ),
                             ],
@@ -481,10 +571,31 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
           otherSireNameController: _otherSireNameController,
           otherSireOriginController: _otherSireOriginController,
         );
+      case ActivityType.SICKNESS:
+        return IllnessForm(
+          symptomsController: _illnessSymptomsController,
+        );
       case ActivityType.TREATMENT:
+        final sicknessRef =
+            widget.initialData['sickness_ref'] as Map<String, dynamic>?;
         return TreatmentForm(
           symptomsController: _symptomsController,
-          treatmentDetailsController: _treatmentDetailsController,
+          sicknessRef: sicknessRef,
+          selectionMode: _treatmentSelectionMode,
+          onSelectionModeChanged: (val) =>
+              setState(() => _treatmentSelectionMode = val),
+          diseaseType: _diseaseType,
+          onDiseaseTypeChanged: (val) => setState(() => _diseaseType = val),
+          otherDiseaseController: _otherDiseaseController,
+          treatmentMethod: _treatmentMethod,
+          onTreatmentMethodChanged: (val) =>
+              setState(() => _treatmentMethod = val),
+          otherTreatmentController: _otherTreatmentController,
+          recoveryStatus: _recoveryStatus,
+          onRecoveryStatusChanged: (val) =>
+              setState(() => _recoveryStatus = val),
+          followUpDate: _followUpDate,
+          onFollowUpDateChanged: (val) => setState(() => _followUpDate = val),
         );
       case ActivityType.WEIGHT_UPDATE:
         return Column(

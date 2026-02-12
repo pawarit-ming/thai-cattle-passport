@@ -233,6 +233,8 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
     switch (type) {
       case ActivityType.VACCINE:
         return 'ฉีดวัคซีน';
+      case ActivityType.SICKNESS:
+        return 'บันทึกการป่วย';
       case ActivityType.TREATMENT:
         return 'การรักษา';
       case ActivityType.BIRTH:

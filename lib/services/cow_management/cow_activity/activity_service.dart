@@ -52,6 +52,14 @@ class ActivityService {
       } else if (activity.activityType == ActivityType.DEATH) {
         // Automatically set status to DEATH
         await _updateCowStatus(activity.animalId, 'DEATH');
+      } else if (activity.activityType == ActivityType.SICKNESS) {
+        // Automatically set status to SICK
+        await _updateCowStatus(activity.animalId, 'SICK');
+      } else if (activity.activityType == ActivityType.TREATMENT) {
+        // If recovered, set status back to ACTIVE
+        if (activity.data['is_recovered'] == true) {
+          await _updateCowStatus(activity.animalId, 'ACTIVE');
+        }
       }
     } catch (e) {
       Logger().e('Error adding activity: $e');

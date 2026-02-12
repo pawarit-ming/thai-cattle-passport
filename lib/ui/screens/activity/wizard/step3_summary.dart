@@ -112,11 +112,13 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
                       if (widget.data.isNotEmpty) ...[
                         Divider(height: 32.h),
                         // Display key data
-                        ...widget.data.entries.map((e) => Padding(
-                              padding: EdgeInsets.only(bottom: 8.h),
-                              child: _buildSummaryRow(_formatKey(e.key),
-                                  _formatValue(e.key, e.value)),
-                            )),
+                        ...widget.data.entries
+                            .where((e) => !_isInternalKey(e.key))
+                            .map((e) => Padding(
+                                  padding: EdgeInsets.only(bottom: 8.h),
+                                  child: _buildSummaryRow(_formatKey(e.key),
+                                      _formatValue(e.key, e.value)),
+                                )),
                       ],
                       if (widget.notes != null && widget.notes!.isNotEmpty) ...[
                         Divider(height: 32.h),
@@ -223,9 +225,31 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
         return 'อายุครรภ์';
       case 'death_cause':
         return 'สาเหตุการตาย';
+      case 'illness_symptoms':
+        return 'อาการที่พบ';
+      case 'disease_type':
+        return 'ชื่อโรค/สาเหตุ';
+      case 'other_disease_name':
+        return 'ชื่อโรค (ระบุ)';
+      case 'treatment_method':
+        return 'วิธีการรักษา';
+      case 'other_treatment_detail':
+        return 'วิธีรักษา (ระบุ)';
+      case 'recovery_status':
+        return 'สถานะหลังรักษา';
+      case 'is_recovered':
+        return 'หายดีแล้ว';
+      case 'follow_up_date':
+        return 'วันนัดตรวจ';
+      case 'disease_name':
+        return 'ชื่อโรค/สาเหตุ';
       default:
         return key.replaceAll('_', ' ').capitalize();
     }
+  }
+
+  bool _isInternalKey(String key) {
+    return const {'sickness_ref'}.contains(key);
   }
 
   String _formatValue(String key, dynamic value) {
@@ -267,6 +291,51 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
       if (strVal == 'ENVIRONMENT') return 'สภาพแวดล้อม';
       if (strVal == 'UNKNOWN') return 'ไม่ทราบสาเหตุ';
       if (strVal == 'OTHER') return 'อื่นๆ';
+    }
+
+    if (key == 'is_recovered') {
+      if (value == true) return 'ใช่';
+      return 'ไม่';
+    }
+
+    if (key == 'disease_type') {
+      const map = {
+        'LUMPY_SKIN': 'ลัมปีสกิน',
+        'PARASITE': 'พยาธิ',
+        'BLOAT': 'ท้องอืด',
+        'PNEUMONIA': 'ปอดบวม',
+        'MASTITIS': 'เต้านมอักเสบ',
+        'FOOT_ROT': 'โรคกีบเน่า',
+        'DIARRHEA': 'ท้องเสีย',
+        'OTHER': 'อื่นๆ',
+      };
+      return map[strVal] ?? strVal;
+    }
+
+    if (key == 'treatment_method') {
+      const map = {
+        'ORAL_MED': 'กินยา',
+        'TOPICAL': 'ทายา',
+        'INJECTION': 'ฉีดยา',
+        'VACCINE': 'ฉีดวัคซีน',
+        'SURGERY': 'ผ่าตัด',
+        'OTHER': 'อื่นๆ',
+      };
+      return map[strVal] ?? strVal;
+    }
+
+    if (key == 'recovery_status') {
+      const map = {
+        'RECOVERED': 'หายดีแล้ว',
+        'MONITORING': 'เฝ้าดูอาการ',
+        'REFERRED': 'ส่งต่อรักษา',
+      };
+      return map[strVal] ?? strVal;
+    }
+
+    if (key == 'follow_up_date') {
+      final dt = DateTime.tryParse(strVal);
+      if (dt != null) return '${dt.day}/${dt.month}/${dt.year + 543}';
     }
 
     return strVal;

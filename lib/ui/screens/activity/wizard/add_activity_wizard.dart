@@ -82,6 +82,64 @@ class _AddActivityWizardState extends ConsumerState<AddActivityWizard> {
       }
     }
 
+    // Treatment: check sickness history
+    if (type == ActivityType.TREATMENT) {
+      final cow = ref.read(cowDetailServiceProvider).currentCow;
+      final isSick = cow?.status == 'SICK';
+
+      if (!isSick && mounted) {
+        // Cow is healthy — show warning
+        final shouldProceed = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text('ไม่มีประวัติการป่วย'),
+            content: const Text(
+              'วัวตัวนี้ไม่มีสถานะป่วยในระบบ\nคุณต้องการบันทึกการรักษาต่อหรือไม่?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                style: TextButton.styleFrom(foregroundColor: Colors.grey),
+                child: const Text('ยกเลิก'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('ยืนยัน (บันทึกต่อ)'),
+              ),
+            ],
+          ),
+        );
+
+        if (shouldProceed != true) {
+          setState(() => _selectedType = null);
+          return;
+        }
+      } else if (isSick) {
+        // Cow is sick — fetch latest SICKNESS activity and pre-fill
+        final activities =
+            await ref.read(activitiesProvider(widget.cowId).future);
+        final sicknessActivities = activities
+            .where((a) => a.activityType == ActivityType.SICKNESS)
+            .toList();
+
+        if (sicknessActivities.isNotEmpty) {
+          final latest =
+              sicknessActivities.first; // already sorted by date desc
+          setState(() {
+            _formData = {
+              ..._formData,
+              'sickness_ref': {
+                'illness_symptoms': latest.data['illness_symptoms'] ?? '',
+                'date': latest.activityDate.toIso8601String(),
+              },
+              'symptoms': latest.data['illness_symptoms'] ?? '',
+            };
+          });
+        }
+      }
+    }
+
     _nextStep();
   }
 

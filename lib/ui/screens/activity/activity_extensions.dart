@@ -4,6 +4,8 @@ import 'package:th_cow_passport/services/cow_management/models/activity_model.da
 extension ActivityTypeExtension on ActivityType {
   String get label {
     switch (this) {
+      case ActivityType.SICKNESS:
+        return 'บันทึกการป่วย';
       case ActivityType.VACCINE:
         return 'ฉีดวัคซีน';
       case ActivityType.BIRTH:
@@ -27,6 +29,8 @@ extension ActivityTypeExtension on ActivityType {
 
   IconData get icon {
     switch (this) {
+      case ActivityType.SICKNESS:
+        return Icons.sick;
       case ActivityType.VACCINE:
         return Icons.medical_services_outlined;
       case ActivityType.BIRTH:
@@ -50,6 +54,8 @@ extension ActivityTypeExtension on ActivityType {
 
   Color get color {
     switch (this) {
+      case ActivityType.SICKNESS:
+        return Colors.red;
       case ActivityType.VACCINE:
         return Colors.blue;
       case ActivityType.BIRTH:

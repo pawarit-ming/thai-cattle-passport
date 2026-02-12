@@ -166,6 +166,14 @@ class ActivityCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    '${activity.activityDate.toLocal().hour.toString().padLeft(2, '0')}:${activity.activityDate.toLocal().minute.toString().padLeft(2, '0')} น.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.grey.shade500,
+                      fontSize: 11.sp,
+                    ),
+                  ),
 
                   // Description
                   if (activity.description != null &&
@@ -196,6 +204,7 @@ class ActivityCard extends StatelessWidget {
   Widget _buildDataGrid(ThemeData theme, Map<String, dynamic> data) {
     final validEntries = data.entries
         .where((e) => e.value != null && e.value.toString().isNotEmpty)
+        .where((e) => e.key != 'sickness_ref')
         .toList();
 
     if (validEntries.isEmpty) return const SizedBox.shrink();
@@ -375,6 +384,26 @@ class ActivityCard extends StatelessWidget {
         return 'อาการ';
       case 'treatment_details':
         return 'การรักษา';
+      case 'disease_type':
+        return 'ชื่อโรค/สาเหตุ';
+      case 'disease_name':
+        return 'ชื่อโรค/สาเหตุ';
+      case 'other_disease_name':
+        return 'ชื่อโรค (ระบุ)';
+      case 'treatment_method':
+        return 'วิธีการรักษา';
+      case 'other_treatment_detail':
+        return 'วิธีรักษา (ระบุ)';
+      case 'recovery_status':
+        return 'สถานะหลังรักษา';
+      case 'is_recovered':
+        return 'หายดีแล้ว';
+      case 'follow_up_date':
+        return 'วันนัดตรวจ';
+
+      // Sickness
+      case 'illness_symptoms':
+        return 'อาการที่พบ';
 
       // Breeding
       case 'breeding_method':
@@ -411,7 +440,6 @@ class ActivityCard extends StatelessWidget {
         return 'วันนำเข้า';
       case 'dam_id':
         return 'แม่พันธุ์';
-
       // Generic
       case 'details':
         return 'รายละเอียด';
@@ -482,6 +510,56 @@ class ActivityCard extends StatelessWidget {
         return '$val $unitTh';
       }
       return '$strVal เดือน'; // Fallback for old data or default
+    }
+
+    // Disease type
+    if (key == 'disease_type') {
+      const map = {
+        'LUMPY_SKIN': 'ลัมปีสกิน',
+        'PARASITE': 'พยาธิ',
+        'BLOAT': 'ท้องอืด',
+        'PNEUMONIA': 'ปอดบวม',
+        'MASTITIS': 'เต้านมอักเสบ',
+        'FOOT_ROT': 'โรคกีบเน่า',
+        'DIARRHEA': 'ท้องเสีย',
+        'OTHER': 'อื่นๆ',
+      };
+      return map[strVal] ?? strVal;
+    }
+
+    // Treatment method
+    if (key == 'treatment_method') {
+      const map = {
+        'ORAL_MED': 'กินยา',
+        'TOPICAL': 'ทายา',
+        'INJECTION': 'ฉีดยา',
+        'VACCINE': 'ฉีดวัคซีน',
+        'SURGERY': 'ผ่าตัด',
+        'OTHER': 'อื่นๆ',
+      };
+      return map[strVal] ?? strVal;
+    }
+
+    // Recovery status
+    if (key == 'recovery_status') {
+      const map = {
+        'RECOVERED': 'หายดีแล้ว',
+        'MONITORING': 'เฝ้าดูอาการ',
+        'REFERRED': 'ส่งต่อรักษา',
+      };
+      return map[strVal] ?? strVal;
+    }
+
+    // is_recovered
+    if (key == 'is_recovered') {
+      if (value == true || strVal == 'true') return 'ใช่';
+      return 'ไม่';
+    }
+
+    // Follow-up date
+    if (key == 'follow_up_date') {
+      final dt = DateTime.tryParse(strVal);
+      if (dt != null) return '${dt.day}/${dt.month}/${dt.year + 543}';
     }
 
     return strVal;

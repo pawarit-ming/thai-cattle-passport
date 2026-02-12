@@ -39,7 +39,8 @@ class HealthPreviewSection extends ConsumerWidget {
             final healthActivities = activities
                 .where((a) =>
                     a.activityType == ActivityType.VACCINE ||
-                    a.activityType == ActivityType.TREATMENT)
+                    a.activityType == ActivityType.TREATMENT ||
+                    a.activityType == ActivityType.SICKNESS)
                 .toList();
 
             if (healthActivities.isEmpty) {
@@ -108,7 +109,7 @@ class HealthTab extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Column(
         children: [
           Container(
@@ -127,6 +128,7 @@ class HealthTab extends ConsumerWidget {
               tabs: const [
                 Tab(text: 'วัคซีน'),
                 Tab(text: 'รักษาโรค'),
+                Tab(text: 'ป่วย'),
               ],
             ),
           ),
@@ -135,6 +137,7 @@ class HealthTab extends ConsumerWidget {
               children: [
                 _buildActivityList(ref, ActivityType.VACCINE),
                 _buildActivityList(ref, ActivityType.TREATMENT),
+                _buildActivityList(ref, ActivityType.SICKNESS),
               ],
             ),
           ),
@@ -163,7 +166,7 @@ class HealthTab extends ConsumerWidget {
                     size: 48.r, color: Colors.grey[400]),
                 SizedBox(height: 16.h),
                 Text(
-                  'ไม่มีข้อมูล${type == ActivityType.VACCINE ? 'การฉีดวัคซีน' : 'การรักษา'}',
+                  'ไม่มีข้อมูล${type == ActivityType.VACCINE ? 'การฉีดวัคซีน' : type == ActivityType.TREATMENT ? 'การรักษา' : 'การป่วย'}',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 16.sp,

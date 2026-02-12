@@ -46,7 +46,15 @@ class CowDetailWidget extends StatelessWidget {
               centerTitle: true,
               title: Text(title,
                   style: const TextStyle(fontWeight: FontWeight.bold)),
-              leading: BackButton(onPressed: onBack),
+
+              automaticallyImplyLeading: false,
+              // ถ้าไม่มี onBack ให้ใช้ SizedBox.shrink() แทน null เพื่อความชัวร์
+              leading: onBack != null
+                  ? BackButton(onPressed: onBack)
+                  : const SizedBox.shrink(),
+              // ถ้าไม่มี onBack ให้ตั้งความกว้างเป็น 0 ไปเลย
+              leadingWidth: onBack != null ? null : 0,
+
               actions: actions,
             ),
             // 2. เรียกใช้ Widget แสดงรูปภาพแบบสไลด์ที่สร้างขึ้นใหม่ด้านล่าง

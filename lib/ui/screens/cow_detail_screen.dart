@@ -84,20 +84,25 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
         if (cow.bodyPic != null) ...cow.bodyPic!,
       ],
       tabController: _tabController,
-      onBack: () {
-        if (context.canPop()) {
-          context.pop();
-        } else {
-          context.go('/');
-        }
-      },
+
+      // ถ้าเป็น isReadOnly (ดูผ่านเว็บ) ให้ส่งค่า null เพื่อซ่อนปุ่ม
+      // ถ้าไม่ใช่ (ดูผ่านแอป) ให้ส่งฟังก์ชันถอยหลังตามปกติ
+      onBack: widget.isReadOnly 
+          ? null 
+          : () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/');
+              }
+            },
       actions: [
         // เพิ่มเงื่อนไขเช็คตรงนี้
         if (!widget.isReadOnly)
           IconButton(
             icon: const Icon(Icons.qr_code_2),
             tooltip: 'แสดง QR Code',
-            onPressed: () => _showQrDialog(context, cow.nidNumber),
+            onPressed: () => _showQrDialog(context, cow.animalId.toString()),
           ),
       ],
       tabs: const [
@@ -192,6 +197,10 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    const String baseUrl = 'https://th-cow-passport-web.web.app/#/cow-detail';
+
+    final String qrData = '$baseUrl/$cowId';
+
     showDialog(
       context: context,
       builder: (context) {
@@ -219,7 +228,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
                   width: 200.w,
                   height: 200.h,
                   child: QrImageView(
-                    data: cowId,
+                    data: qrData,
                     version: QrVersions.auto,
                     size: 200.r,
                     backgroundColor: Colors.white,

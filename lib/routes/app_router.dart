@@ -35,9 +35,10 @@ final router = GoRouter(
     final session = supabase.auth.currentSession;
     final isLoggingIn = state.matchedLocation == '/login';
     final isRegistering = state.matchedLocation == '/register';
+    final isPublicView = state.matchedLocation.startsWith('/cow-detail');
 
     // ถ้ายังไม่ Login และไม่ได้อยู่ที่หน้า Login หรือ Register -> บังคับไป Login
-    if (session == null && !isLoggingIn && !isRegistering) {
+    if (session == null && !isLoggingIn && !isRegistering && !isPublicView) {
       return '/login';
     }
 
@@ -73,6 +74,17 @@ final router = GoRouter(
       builder: (context, state) => const RegisterScreen(),
     ),
 
+    GoRoute(
+      path: '/cow-detail/:id', // ชื่อ path นี้ต้องตรงกับ QR Code ที่เจนออกมา
+      parentNavigatorKey: _rootNavigatorKey, // สำคัญ: ให้ทับ Shell Route ทั้งหมด
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+        return CowDetailScreen(
+          cowId: id,
+          isReadOnly: true, // เปิดโหมดดูอย่างเดียว (ซ่อนปุ่มแก้ไข/เมนู)
+        );
+      },
+    ),
     GoRoute(
       path: '/detail/:id',
       builder: (context, state) {

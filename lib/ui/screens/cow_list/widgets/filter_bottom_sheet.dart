@@ -49,7 +49,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.7,
+      height: MediaQuery.of(context).size.height * 0.75,
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),

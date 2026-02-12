@@ -115,7 +115,9 @@ class MarketItem {
     }
 
     // 1. ดึงชื่อฟาร์ม (ถ้าไม่มีใช้ origin)
-    String fName = farmData?['farm_name']?.toString() ?? json['origin'] ?? 'ไม่ระบุชื่อฟาร์ม';
+    String fName = farmData?['farm_name']?.toString() ??
+        json['origin'] ??
+        'ไม่ระบุชื่อฟาร์ม';
 
     // 2. ดึงชื่อจังหวัด
     String fProvince = farmData?['province']?.toString() ?? '';
@@ -134,9 +136,7 @@ class MarketItem {
       weight: double.tryParse(json['weight']?.toString() ?? '0') ?? 0.0,
       sellerId: json['user_id']?.toString() ?? '',
       seller: sellerDisplayName,
-
       location: displayLocation,
-
       images: imgList,
       latitude: farmData?['latitude'] != null
           ? double.tryParse(farmData!['latitude'].toString())
@@ -362,7 +362,7 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
                 ),
                 SizedBox(height: 20.h),
                 Text(
-                  'กรองสินค้า',
+                  'กรองข้อมูลวัว',
                   style: theme.textTheme.headlineSmall?.copyWith(
                       color: colorScheme.primary, fontWeight: FontWeight.bold),
                 ),
@@ -489,96 +489,144 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
+      // 1. AppBar เอาปุ่มออกทั้งหมด (เหลือแค่ชื่อ)
       appBar: AppBar(
-        title: _isSearching
-            ? SizedBox(
-                height: 40.h,
-                child: TextField(
-                  controller: _searchController,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    hintText: 'ค้นหาชื่อวัว หรือ ผู้ขาย...',
-                    hintStyle: TextStyle(color: Colors.grey[400]),
-                    border: InputBorder.none,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                  ),
-                  onChanged: (val) => _applyFilters(),
-                ),
-              )
-            : const Text('ตลาดซื้อขายวัว'),
-        actions: [
-          IconButton(
-            icon: Icon(_isSearching ? Icons.close : Icons.search),
-            onPressed: () {
-              setState(() {
-                if (_isSearching) {
-                  _isSearching = false;
-                  _searchController.clear();
-                  _applyFilters();
-                } else {
-                  _isSearching = true;
-                }
-              });
-            },
-          ),
-          if (!_isSearching)
-            IconButton(
-              icon: const Icon(Icons.filter_list),
-              onPressed: _showFilterSheet,
-            ),
-        ],
+        title: const Text('ตลาดซื้อขายวัว'),
+        centerTitle: true,
+        // actions: [], // ไม่ใส่ actions ตามที่ขอ (เอา reset และ filter เดิมออก)
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-            child: Row(
-              children: [
-                Text(
-                  'ผลลัพธ์ ${_filteredItems.length} รายการ',
-                  style: TextStyle(color: Colors.grey[600]),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: _isLoading
-                ? Center(
-                    child: CircularProgressIndicator(
-                        color: theme.colorScheme.primary))
-                : RefreshIndicator(
-                    onRefresh: _fetchAnimals,
-                    child: _filteredItems.isEmpty
-                        ? ListView(
-                            children: [
-                              SizedBox(height: 100.h),
-                              const Center(
-                                child: Text('ไม่พบวัวที่คุณค้นหา',
-                                    style: TextStyle(color: Colors.grey)),
-                              ),
-                            ],
-                          )
-                        : ListView.builder(
-                            padding: EdgeInsets.all(16.r),
-                            itemCount: _filteredItems.length,
-                            itemBuilder: (context, index) {
-                              final item = _filteredItems[index];
-                              // เช็คว่าไอดีนี้อยู่ใน Set ที่เสนอซื้อแล้วหรือไม่
-                              final hasOffered = _myOfferIds.contains(item.id);
 
-                              return _MarketItemCard(
-                                item: item,
-                                hasOffered: hasOffered, // ส่งค่านี้เข้าไป
-                                onOfferSubmitted: () =>
-                                    _handleOfferSubmitted(item.id),
-                              );
-                            },
-                          ),
+      // 2. Body ให้ทุกอย่างเลื่อนได้ (Scroll with parent)
+      body: RefreshIndicator(
+        onRefresh: _fetchAnimals,
+        child: ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          // item 0 คือส่วนหัว (ค้นหา + ผลลัพธ์ + ปุ่มกรอง), ที่เหลือคือรายการวัว
+          itemCount: _filteredItems.isEmpty ? 2 : _filteredItems.length + 1,
+          itemBuilder: (context, index) {
+            // --- ส่วนหัว (Index 0) ---
+            if (index == 0) {
+              return Column(
+                children: [
+                  // ช่องค้นหา
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'ค้นหาชื่อวัว สายพันธุ์ หรือ ผู้ขาย...',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon:
+                                    const Icon(Icons.clear, color: Colors.grey),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _applyFilters();
+                                },
+                              )
+                            : null,
+                        contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16.w, vertical: 12.h),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide:
+                              BorderSide(color: theme.colorScheme.primary),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                      ),
+                      onChanged: (val) => _applyFilters(),
+                    ),
                   ),
-          ),
-        ],
+
+                  // ส่วนแสดงผลลัพธ์ และ ปุ่ม Filter
+                  Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    child: Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween, // ชิดซ้าย-ขวา
+                      children: [
+                        Row(
+                          children: [
+                            SizedBox(width: 8.w),
+                            Text(
+                              'ผลลัพธ์ ${_filteredItems.length} รายการ',
+                              style: TextStyle(
+                                color: Colors.grey[700],
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // ปุ่ม Filter (ด้านขวา)
+                        Container(
+                          child: IconButton(
+                            icon: Icon(Icons.filter_list,
+                                color: theme.colorScheme.primary),
+                            tooltip: 'ตัวกรอง',
+                            onPressed: _showFilterSheet,
+                            padding: EdgeInsets.all(8.r),
+                            constraints:
+                                const BoxConstraints(), // ให้ปุ่มกระชับ
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            // --- ส่วนแสดงสถานะ (Index 1 กรณีไม่มีข้อมูล) ---
+            if (_isLoading) {
+              return SizedBox(
+                height: 200.h,
+                child: Center(
+                    child: CircularProgressIndicator(
+                        color: theme.colorScheme.primary)),
+              );
+            }
+
+            if (_filteredItems.isEmpty) {
+              return SizedBox(
+                height: 200.h,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.search_off, size: 64.r, color: Colors.grey[300]),
+                    SizedBox(height: 16.h),
+                    const Text('ไม่พบวัวที่คุณค้นหา',
+                        style: TextStyle(color: Colors.grey)),
+                  ],
+                ),
+              );
+            }
+
+            // --- รายการวัว (Index 1, 2, 3...) ---
+            final item = _filteredItems[index - 1];
+            final hasOffered = _myOfferIds.contains(item.id);
+
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              child: _MarketItemCard(
+                item: item,
+                hasOffered: hasOffered,
+                onOfferSubmitted: () => _handleOfferSubmitted(item.id),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

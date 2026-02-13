@@ -87,8 +87,8 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
 
       // ถ้าเป็น isReadOnly (ดูผ่านเว็บ) ให้ส่งค่า null เพื่อซ่อนปุ่ม
       // ถ้าไม่ใช่ (ดูผ่านแอป) ให้ส่งฟังก์ชันถอยหลังตามปกติ
-      onBack: widget.isReadOnly 
-          ? null 
+      onBack: widget.isReadOnly
+          ? null
           : () {
               if (context.canPop()) {
                 context.pop();
@@ -123,21 +123,178 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
       floatingActionButton: widget.isReadOnly
           ? null
           : FloatingActionButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CameraScreen(
-                      baseTitle: 'ระบุตัวตนวัว',
-                      steps: ['หน้าวัว', 'ตัววัว', 'ขาวัว'],
-                    ),
-                  ),
-                );
-              },
+              onPressed: () => _showScanInstructionDialog(context),
               backgroundColor: colorScheme.secondary,
               foregroundColor: colorScheme.onSecondary,
               child: const Icon(Icons.camera_alt),
             ),
+    );
+  }
+
+  void _showScanInstructionDialog(BuildContext context) {
+    final theme = Theme.of(context);
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 28.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon header
+                Container(
+                  width: 56.r,
+                  height: 56.r,
+                  decoration: BoxDecoration(
+                    color: theme.primaryColor.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.camera_alt_rounded,
+                      color: theme.primaryColor, size: 28.r),
+                ),
+                SizedBox(height: 16.h),
+                Text(
+                  'ถ่ายภาพระบุตัวตน',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 6.h),
+                Text(
+                  'ถ่ายภาพตามลำดับเพื่อระบุตัวตนวัว',
+                  style: TextStyle(fontSize: 13.sp, color: Colors.grey[500]),
+                ),
+                SizedBox(height: 24.h),
+
+                // Steps
+                _buildInstructionStep(
+                  context,
+                  1,
+                  'หน้าวัว',
+                  'ถ่ายหน้าตรงให้เห็นชัดเจน',
+                  'assets/images/cow_face.png',
+                ),
+                SizedBox(height: 12.h),
+                _buildInstructionStep(
+                  context,
+                  2,
+                  'ตัววัว',
+                  'ถ่ายด้านข้างให้เห็นลาย/สี',
+                  'assets/images/cow.png',
+                ),
+
+                SizedBox(height: 28.h),
+
+                // Button
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const CameraScreen(
+                            baseTitle: 'ระบุตัวตนวัว',
+                            steps: ['หน้าวัว', 'ตัววัว'],
+                            stepIcons: [
+                              'assets/images/cow_face.png',
+                              'assets/images/cow.png',
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                    style: FilledButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 14.h),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14.r)),
+                    ),
+                    icon: const Icon(Icons.camera_alt, size: 18),
+                    label: Text('เริ่มถ่ายภาพ',
+                        style: TextStyle(
+                            fontSize: 15.sp, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text('ยกเลิก',
+                      style:
+                          TextStyle(color: Colors.grey[400], fontSize: 13.sp)),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildInstructionStep(BuildContext context, int number, String title,
+      String subtitle, String assetPath) {
+    return Container(
+      padding: EdgeInsets.all(12.r),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          // Step number badge
+          Container(
+            width: 24.r,
+            height: 24.r,
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                '$number',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(width: 12.w),
+          // Icon
+          Image.asset(assetPath,
+              width: 36.r,
+              height: 36.r,
+              color: Theme.of(context).colorScheme.primary),
+          SizedBox(width: 12.w),
+          // Text
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14.sp,
+                    color: Colors.black87,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 11.sp, color: Colors.grey[500]),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

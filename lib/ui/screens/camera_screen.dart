@@ -7,11 +7,13 @@ import 'package:th_cow_passport/ui/widgets/camera_widget.dart';
 class CameraScreen extends StatefulWidget {
   final String baseTitle;
   final List<String>? steps;
+  final List<String>? stepIcons; // asset paths per step
 
   const CameraScreen({
     super.key,
     required this.baseTitle,
     this.steps,
+    this.stepIcons,
   });
 
   @override
@@ -59,12 +61,18 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   Widget build(BuildContext context) {
     String currentTitle = widget.baseTitle;
+    String? currentIcon;
     if (_isMultiStep) {
-      currentTitle = '${widget.baseTitle} - ${widget.steps![_currentStep]}';
+      currentTitle =
+          '${widget.steps![_currentStep]} (${_currentStep + 1}/${widget.steps!.length})';
+      if (widget.stepIcons != null && _currentStep < widget.stepIcons!.length) {
+        currentIcon = widget.stepIcons![_currentStep];
+      }
     }
 
     return CameraWidget(
       title: currentTitle,
+      titleIcon: currentIcon,
       onPictureConfirmed: _onPictureConfirmed,
     );
   }

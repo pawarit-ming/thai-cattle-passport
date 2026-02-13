@@ -165,7 +165,7 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
   // เพิ่มตัวแปรเก็บ ID วัวที่เราเคยเสนอซื้อไปแล้ว
   Set<String> _myOfferIds = {};
 
-  bool _isSearching = false;
+  final bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
 
   String? _selectedGender;

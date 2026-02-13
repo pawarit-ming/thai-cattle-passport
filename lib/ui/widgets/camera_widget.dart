@@ -7,11 +7,13 @@ import 'package:permission_handler/permission_handler.dart';
 
 class CameraWidget extends StatefulWidget {
   final String title;
+  final String? titleIcon; // asset icon path
   final Function(String) onPictureConfirmed;
 
   const CameraWidget({
     super.key,
     required this.title,
+    this.titleIcon,
     required this.onPictureConfirmed,
   });
 
@@ -155,9 +157,23 @@ class _CameraWidgetState extends State<CameraWidget> {
       },
       child: Scaffold(
         appBar: AppBar(
-            title: Text(_previewImagePath != null
-                ? 'ภาพตัวอย่าง - ${widget.title}'
-                : widget.title)),
+            title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (widget.titleIcon != null) ...[
+              Image.asset(widget.titleIcon!,
+                  width: 28,
+                  height: 28,
+                  color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 8),
+            ],
+            Flexible(
+              child: Text(_previewImagePath != null
+                  ? 'ภาพตัวอย่าง - ${widget.title}'
+                  : widget.title),
+            ),
+          ],
+        )),
         body: _buildBody(),
         floatingActionButton: _previewImagePath == null && _cameraError == null
             ? GestureDetector(

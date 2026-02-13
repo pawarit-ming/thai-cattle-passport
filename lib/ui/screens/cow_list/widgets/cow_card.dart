@@ -150,7 +150,6 @@ class CowCard extends StatelessWidget {
                         children: [
                           _buildMiniTag(
                             icon: cow.sex == 'MALE' ? Icons.male : Icons.female,
-                            label: cow.sex == 'MALE' ? 'ผู้' : 'เมีย',
                             color: cow.sex == 'MALE'
                                 ? Colors.blue.shade100
                                 : Colors.pink.shade100,

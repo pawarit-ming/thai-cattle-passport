@@ -257,7 +257,35 @@ class ActivityCard extends StatelessWidget {
     data.forEach((key, value) {
       if (value == null || value.toString().isEmpty) return;
 
-      // Parse the change object {"old": ..., "new": ...}
+      // Special handling for image fields: show friendly label instead of bucket path
+      if (key == 'face_pic' || key == 'body_pic') {
+        changes.add(
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 6.h),
+            child: Row(
+              children: [
+                Image.asset(
+                  key == 'face_pic'
+                      ? 'assets/images/cow_face.png'
+                      : 'assets/images/cow.png',
+                  width: 16.r,
+                  height: 16.r,
+                  color: Colors.grey.shade700,
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  'เพิ่ม${_getTranslatedDataKey(key)}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade700,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+        return;
+      }
       if (value is Map<String, dynamic>) {
         final oldValue = value['old'];
         final newValue = value['new'];
@@ -440,6 +468,11 @@ class ActivityCard extends StatelessWidget {
         return 'วันนำเข้า';
       case 'dam_id':
         return 'แม่พันธุ์';
+      case 'face_pic':
+        return 'รูปหน้าวัว';
+      case 'body_pic':
+        return 'รูปตัววัว';
+
       // Generic
       case 'details':
         return 'รายละเอียด';

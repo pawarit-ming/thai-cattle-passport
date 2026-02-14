@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" 
+"http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
+
+	<!-- App Settings -->
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -20,28 +21,31 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>LSApplicationCategoryType</key>
-	<string></string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+
+	<!-- iOS Settings -->
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>This app needs camera access to scan QR codes and take pictures of cows.</string>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
+	<key>LSApplicationCategoryType</key>
+	<string></string>
+
+	<!-- Launch Screen -->
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+
+	<!-- Orientation -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -49,20 +53,31 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
+	<!-- Performance -->
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- Permissions -->
+
+	<!-- Camera -->
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs camera access to scan QR codes and take pictures of cows.</string>
+
+	<!-- Location -->
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>แอปพลิเคชันต้องการเข้าถึงตำแหน่งของคุณเพื่อระบุพิกัดที่ตั้งของฟาร์ม</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>แอปพลิเคชันต้องการเข้าถึงตำแหน่งของคุณเพื่อระบุพิกัดที่ตั้งของฟาร์ม</string>
+
+	<!-- Allow HTTP/HTTPS if needed -->
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
-	<string>https</string>
-	<string>http</string>
+		<string>https</string>
+		<string>http</string>
 	</array>
+
 </dict>
 </plist>

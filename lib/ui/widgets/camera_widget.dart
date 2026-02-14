@@ -1,20 +1,24 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class CameraWidget extends StatefulWidget {
   final String title;
+<<<<<<< Updated upstream
   final String? titleIcon; // asset icon path
   final Function(String) onPictureConfirmed;
+=======
+>>>>>>> Stashed changes
 
   const CameraWidget({
     super.key,
     required this.title,
+<<<<<<< Updated upstream
     this.titleIcon,
     required this.onPictureConfirmed,
+=======
+>>>>>>> Stashed changes
   });
 
   @override
@@ -22,85 +26,65 @@ class CameraWidget extends StatefulWidget {
 }
 
 class _CameraWidgetState extends State<CameraWidget> {
-  final logger = Logger();
   CameraController? _controller;
   Future<void>? _initializeControllerFuture;
-  String? _cameraError;
   String? _previewImagePath;
-  bool _permissionDenied = false;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _initializeCamera();
+    _initCamera();
   }
 
-  Future<void> _initializeCamera() async {
+  Future<void> _initCamera() async {
     try {
-      // Check camera permission first
-      final permissionStatus = await Permission.camera.status;
-      logger.i("Camera permission status: $permissionStatus");
-
-      if (permissionStatus.isDenied) {
-        // Request permission
-        final result = await Permission.camera.request();
-        if (result.isDenied || result.isPermanentlyDenied) {
-          if (mounted) {
-            setState(() {
-              _permissionDenied = true;
-              _cameraError = result.isPermanentlyDenied
-                  ? "กรุณาเปิดสิทธิ์กล้องในการตั้งค่าเครื่อง\nSettings > Th Cow Passport > Camera"
-                  : "แอปต้องการสิทธิ์ในการใช้กล้อง";
-              logger.e("Camera permission denied");
-            });
-          }
-          return;
-        }
-      } else if (permissionStatus.isPermanentlyDenied) {
-        if (mounted) {
-          setState(() {
-            _permissionDenied = true;
-            _cameraError =
-                "กรุณาเปิดสิทธิ์กล้องในการตั้งค่าเครื่อง\nSettings > Th Cow Passport > Camera";
-            logger.e("Camera permission permanently denied");
-          });
-        }
+      final status = await Permission.camera.request();
+      if (!status.isGranted) {
+        setState(() {
+          _error = "ไม่ได้รับสิทธิ์กล้อง";
+        });
         return;
       }
 
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
-        if (mounted) {
-          setState(() {
-            _cameraError =
-                "ไม่พบกล้อง\n(หากคุณใช้งานบน Simulator กรุณาทดสอบบนเครื่องจริง)";
-            logger.e("No cameras available");
-          });
-        }
+        setState(() {
+          _error = "ไม่พบกล้อง";
+        });
         return;
       }
 
-      final firstCamera = cameras.first;
       _controller = CameraController(
-        firstCamera,
+        cameras.first,
         ResolutionPreset.medium,
         enableAudio: false,
       );
 
       _initializeControllerFuture = _controller!.initialize();
       await _initializeControllerFuture;
-      logger.i("Camera initialized successfully.");
+
+      if (mounted) setState(() {});
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _cameraError = "Failed to initialize camera: ${e.toString()}";
-          logger.e(_cameraError, error: e);
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {});
-      }
+      setState(() {
+        _error = e.toString();
+      });
+    }
+  }
+
+  Future<void> _takePicture() async {
+    try {
+      if (_controller == null || !_controller!.value.isInitialized) return;
+
+      final image = await _controller!.takePicture();
+
+      setState(() {
+        _previewImagePath = image.path;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+      });
     }
   }
 
@@ -110,44 +94,9 @@ class _CameraWidgetState extends State<CameraWidget> {
     super.dispose();
   }
 
-  Future<void> _takePicture() async {
-    if (_controller == null || !_controller!.value.isInitialized) {
-      return;
-    }
-
-    try {
-      await _initializeControllerFuture;
-      final image = await _controller!.takePicture();
-      logger.d("Picture taken: ${image.path}");
-      if (!mounted) return;
-      setState(() {
-        _previewImagePath = image.path;
-      });
-    } catch (e) {
-      logger.e("Error taking picture: $e", error: e);
-    }
-  }
-
-  void _confirmPicture() {
-    if (_previewImagePath == null) return;
-    logger.d("Confirming picture: $_previewImagePath");
-    widget.onPictureConfirmed(_previewImagePath!);
-    if (mounted) {
-      setState(() {
-        _previewImagePath = null;
-      });
-    }
-  }
-
-  void _retakePicture() {
-    logger.d("Retaking picture.");
-    setState(() {
-      _previewImagePath = null;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+<<<<<<< Updated upstream
     return PopScope(
       canPop: _previewImagePath == null,
       onPopInvokedWithResult: (didPop, result) {
@@ -206,89 +155,79 @@ class _CameraWidgetState extends State<CameraWidget> {
   Widget _buildBody() {
     if (_initializeControllerFuture == null) {
       return const Center(child: CircularProgressIndicator());
+=======
+    if (_error != null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(widget.title)),
+        body: Center(child: Text(_error!)),
+      );
+>>>>>>> Stashed changes
     }
 
-    if (_cameraError != null) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.all(24.r),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                _permissionDenied
-                    ? Icons.camera_alt_outlined
-                    : Icons.error_outline,
-                size: 64.r,
-                color: Colors.red,
+    // 🔥 หน้า Preview
+    if (_previewImagePath != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("ภาพตัวอย่าง")),
+        body: Column(
+          children: [
+            Expanded(
+              child: Image.file(
+                File(_previewImagePath!),
+                fit: BoxFit.contain,
               ),
-              SizedBox(height: 16.h),
-              Text(
-                _cameraError!,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16.sp),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  OutlinedButton(
+                    onPressed: () {
+                      setState(() {
+                        _previewImagePath = null;
+                      });
+                    },
+                    child: const Text("ถ่ายใหม่"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final imagePath = _previewImagePath;
+
+                      // 🔥 ปิดกล้องก่อน pop ป้องกันค้าง
+                      await _controller?.dispose();
+                      _controller = null;
+
+                      if (!mounted) return;
+
+                      Navigator.pop(context, imagePath);
+                    },
+                    child: const Text("ยืนยัน"),
+                  ),
+                ],
               ),
-              if (_permissionDenied) ...[
-                SizedBox(height: 24.h),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    await openAppSettings();
-                  },
-                  icon: const Icon(Icons.settings),
-                  label: const Text('เปิดการตั้งค่า'),
-                ),
-              ],
-            ],
-          ),
+            )
+          ],
         ),
       );
     }
 
-    if (_previewImagePath != null) {
-      return Column(
-        children: [
-          Expanded(
-            child: Image.file(File(_previewImagePath!), fit: BoxFit.contain),
-          ),
-          Container(
-            color: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 32.w),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: _retakePicture,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    side: BorderSide(color: Colors.red.withValues(alpha: 0.5)),
-                  ),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('ถ่ายใหม่'),
-                ),
-                ElevatedButton.icon(
-                  onPressed: _confirmPicture,
-                  icon: const Icon(Icons.check),
-                  label: const Text('ยืนยัน'),
-                ),
-              ],
-            ),
-          ),
-        ],
-      );
-    }
-
-    return FutureBuilder<void>(
-      future: _initializeControllerFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          if (_controller != null && _controller!.value.isInitialized) {
+    // 🔥 หน้า Camera
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.title)),
+      body: FutureBuilder(
+        future: _initializeControllerFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done &&
+              _controller != null) {
             return CameraPreview(_controller!);
           }
-          return const Center(child: Text("Error initializing camera"));
-        } else {
           return const Center(child: CircularProgressIndicator());
-        }
-      },
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _takePicture,
+        child: const Icon(Icons.camera_alt),
+      ),
     );
   }
 }

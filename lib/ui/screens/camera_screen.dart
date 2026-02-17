@@ -23,102 +23,79 @@ class CameraScreen extends StatefulWidget {
 class _CameraScreenState extends State<CameraScreen> {
   final logger = Logger();
   int _currentStep = 0;
-  final List<String> _imagePaths = [];
+  final List<String> _capturedImagePaths = [];
 
   bool get _isMultiStep => widget.steps != null && widget.steps!.isNotEmpty;
 
-  @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _openCamera();
-    });
-  }
-
-  Future<void> _openCamera() async {
-    String currentTitle = widget.baseTitle;
-
-    if (_isMultiStep) {
-      currentTitle =
-          '${widget.baseTitle} - ${widget.steps![_currentStep]}';
-    }
-
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CameraWidget(title: currentTitle),
-      ),
-    );
-
-    if (result == null) return;
-
+  /// ฟังก์ชันจัดการเมื่อผู้ใช้กดยืนยันรูปภาพจาก CameraWidget
+  Future<void> _onPictureConfirmed(String tempPath) async {
     try {
-      final Directory extDir =
-          await getApplicationDocumentsDirectory();
-
-      final String dirPath =
-          '${extDir.path}/Pictures/th_cow_passport';
-
+      // 1. เตรียม Path สำหรับบันถึกไฟล์ถาวร
+      final Directory extDir = await getApplicationDocumentsDirectory();
+      final String dirPath = '${extDir.path}/Pictures/th_cow_passport';
       await Directory(dirPath).create(recursive: true);
 
-      final String fileName =
-          '${DateTime.now().millisecondsSinceEpoch}.png';
-
+      // สร้างชื่อไฟล์ไม่ซ้ำกัน
+      final String fileName = '${DateTime.now().millisecondsSinceEpoch}_step$_currentStep.jpg';
       final String filePath = '$dirPath/$fileName';
 
-      final File newImage =
-          await File(result).copy(filePath);
+      // 2. Copy ไฟล์จาก Cache ของกล้องไปยัง Folder ของแอพ
+      final File newImage = await File(tempPath).copy(filePath);
+      logger.i("Saved image at: ${newImage.path}");
 
       if (!mounted) return;
 
+      // 3. Logic การเปลี่ยน Step
       if (_isMultiStep) {
-        _imagePaths.add(newImage.path);
+        _capturedImagePaths.add(newImage.path);
 
         if (_currentStep < widget.steps!.length - 1) {
+          // ยังไม่ครบทุกขั้นตอน -> ไปขั้นตอนถัดไป
           setState(() {
-            _currentStep++;
-          });
-
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              _openCamera();
-            }
+            _currentStep++; 
           });
         } else {
-          Navigator.of(context).pop(_imagePaths);
+          // ครบแล้ว -> ส่ง List รูปภาพกลับ
+          Navigator.of(context).pop(_capturedImagePaths);
         }
       } else {
+        // กรณีถ่ายรูปเดียว -> ส่ง Path รูปเดียวกลับ
         Navigator.of(context).pop(newImage.path);
       }
     } catch (e) {
       logger.e("Error saving image: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("บันทึกภาพไม่สำเร็จ: $e")),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< Updated upstream
     String currentTitle = widget.baseTitle;
     String? currentIcon;
+
     if (_isMultiStep) {
-      currentTitle =
-          '${widget.steps![_currentStep]} (${_currentStep + 1}/${widget.steps!.length})';
+      // ตัวอย่าง: "หน้าตรง (1/4)"
+      currentTitle = '${widget.steps![_currentStep]} (${_currentStep + 1}/${widget.steps!.length})';
+      
       if (widget.stepIcons != null && _currentStep < widget.stepIcons!.length) {
         currentIcon = widget.stepIcons![_currentStep];
       }
     }
 
-    return CameraWidget(
-      title: currentTitle,
-      titleIcon: currentIcon,
-      onPictureConfirmed: _onPictureConfirmed,
-=======
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
+    return Scaffold(
+      // ใช้ Scaffold ที่นี่เพื่อให้พื้นหลังเป็นสีมาตรฐานระหว่างเปลี่ยน Step
+      backgroundColor: Colors.black, 
+      body: SafeArea(
+        child: CameraWidget(
+          // 🔥 สำคัญมาก: Key เปลี่ยน = Widget ถูกสร้างใหม่ = กล้อง Reset ตัวเองอัตโนมัติ
+          key: ValueKey(_currentStep), 
+          title: currentTitle,
+          titleIcon: currentIcon,
+          onPictureConfirmed: _onPictureConfirmed,
+        ),
       ),
->>>>>>> Stashed changes
     );
   }
 }

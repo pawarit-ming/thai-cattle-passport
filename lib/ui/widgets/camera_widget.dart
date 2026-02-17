@@ -5,27 +5,22 @@ import 'package:permission_handler/permission_handler.dart';
 
 class CameraWidget extends StatefulWidget {
   final String title;
-<<<<<<< Updated upstream
   final String? titleIcon; // asset icon path
   final Function(String) onPictureConfirmed;
-=======
->>>>>>> Stashed changes
 
   const CameraWidget({
     super.key,
     required this.title,
-<<<<<<< Updated upstream
     this.titleIcon,
     required this.onPictureConfirmed,
-=======
->>>>>>> Stashed changes
   });
 
   @override
   State<CameraWidget> createState() => _CameraWidgetState();
 }
 
-class _CameraWidgetState extends State<CameraWidget> {
+class _CameraWidgetState extends State<CameraWidget>
+    with WidgetsBindingObserver {
   CameraController? _controller;
   Future<void>? _initializeControllerFuture;
   String? _previewImagePath;
@@ -34,30 +29,50 @@ class _CameraWidgetState extends State<CameraWidget> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initCamera();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // จัดการกล้องเมื่อมีการสลับแอป
+    final CameraController? cameraController = _controller;
+
+    if (cameraController == null || !cameraController.value.isInitialized) {
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive) {
+      cameraController.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      _initCamera();
+    }
   }
 
   Future<void> _initCamera() async {
     try {
       final status = await Permission.camera.request();
       if (!status.isGranted) {
-        setState(() {
-          _error = "ไม่ได้รับสิทธิ์กล้อง";
-        });
+        if (mounted) setState(() => _error = "ไม่ได้รับสิทธิ์กล้อง");
         return;
       }
 
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
-        setState(() {
-          _error = "ไม่พบกล้อง";
-        });
+        if (mounted) setState(() => _error = "ไม่พบกล้อง");
         return;
       }
 
       _controller = CameraController(
         cameras.first,
-        ResolutionPreset.medium,
+        ResolutionPreset.high, // แนะนำ High เพื่อความชัด
         enableAudio: false,
       );
 
@@ -66,9 +81,7 @@ class _CameraWidgetState extends State<CameraWidget> {
 
       if (mounted) setState(() {});
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
+      if (mounted) setState(() => _error = e.toString());
     }
   }
 
@@ -76,75 +89,67 @@ class _CameraWidgetState extends State<CameraWidget> {
     try {
       if (_controller == null || !_controller!.value.isInitialized) return;
 
+      // ปิด Flash หรือ Focus ก่อนถ่ายถ้าจำเป็น
       final image = await _controller!.takePicture();
 
-      setState(() {
-        _previewImagePath = image.path;
-      });
+      if (mounted) {
+        setState(() {
+          _previewImagePath = image.path;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
+      if (mounted) setState(() => _error = e.toString());
     }
   }
 
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
+  void _retakePicture() {
+    setState(() {
+      _previewImagePath = null;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< Updated upstream
+    // ใช้ PopScope เพื่อจัดการปุ่ม Back ของ Android
     return PopScope(
       canPop: _previewImagePath == null,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          _retakePicture();
-        }
+        if (didPop) return;
+        _retakePicture();
       },
       child: Scaffold(
         appBar: AppBar(
-            title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (widget.titleIcon != null) ...[
-              Image.asset(widget.titleIcon!,
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.titleIcon != null) ...[
+                Image.asset(
+                  widget.titleIcon!,
                   width: 28,
                   height: 28,
-                  color: Theme.of(context).colorScheme.primary),
-              const SizedBox(width: 8),
-            ],
-            Flexible(
-              child: Text(_previewImagePath != null
-                  ? 'ภาพตัวอย่าง - ${widget.title}'
-                  : widget.title),
-            ),
-          ],
-        )),
-        body: _buildBody(),
-        floatingActionButton: _previewImagePath == null && _cameraError == null
-            ? GestureDetector(
-                onTap: _takePicture,
-                child: Container(
-                  height: 72.r,
-                  width: 72.r,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Theme.of(context).primaryColor,
-                      width: 4.w,
-                    ),
-                  ),
-                  padding: EdgeInsets.all(4.r),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
+                  // ถ้า Icon เป็นสีอยู่แล้ว ไม่ต้องใส่ color ก็ได้
+                  color: Theme.of(context).colorScheme.primary,
                 ),
+                const SizedBox(width: 8),
+              ],
+              Flexible(
+                child: Text(
+                  _previewImagePath != null
+                      ? 'ตัวอย่าง - ${widget.title}'
+                      : widget.title,
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
+            ],
+          ),
+        ),
+        body: _buildContent(),
+        // แสดงปุ่มถ่ายรูปเฉพาะตอนที่ยังไม่ได้ถ่าย และไม่มี error
+        floatingActionButton: (_previewImagePath == null && _error == null)
+            ? FloatingActionButton(
+                onPressed: _takePicture,
+                backgroundColor: Theme.of(context).primaryColor,
+                child: const Icon(Icons.camera_alt, color: Colors.white),
               )
             : null,
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -152,82 +157,80 @@ class _CameraWidgetState extends State<CameraWidget> {
     );
   }
 
-  Widget _buildBody() {
-    if (_initializeControllerFuture == null) {
-      return const Center(child: CircularProgressIndicator());
-=======
+  Widget _buildContent() {
+    // 1. กรณีมี Error
     if (_error != null) {
-      return Scaffold(
-        appBar: AppBar(title: Text(widget.title)),
-        body: Center(child: Text(_error!)),
-      );
->>>>>>> Stashed changes
-    }
-
-    // 🔥 หน้า Preview
-    if (_previewImagePath != null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text("ภาพตัวอย่าง")),
-        body: Column(
-          children: [
-            Expanded(
-              child: Image.file(
-                File(_previewImagePath!),
-                fit: BoxFit.contain,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  OutlinedButton(
-                    onPressed: () {
-                      setState(() {
-                        _previewImagePath = null;
-                      });
-                    },
-                    child: const Text("ถ่ายใหม่"),
-                  ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final imagePath = _previewImagePath;
-
-                      // 🔥 ปิดกล้องก่อน pop ป้องกันค้าง
-                      await _controller?.dispose();
-                      _controller = null;
-
-                      if (!mounted) return;
-
-                      Navigator.pop(context, imagePath);
-                    },
-                    child: const Text("ยืนยัน"),
-                  ),
-                ],
-              ),
-            )
-          ],
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const SizedBox(height: 10),
+              Text(_error!, textAlign: TextAlign.center),
+              ElevatedButton(
+                onPressed: _initCamera,
+                child: const Text("ลองใหม่"),
+              )
+            ],
+          ),
         ),
       );
     }
 
-    // 🔥 หน้า Camera
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
-      body: FutureBuilder(
-        future: _initializeControllerFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done &&
-              _controller != null) {
-            return CameraPreview(_controller!);
-          }
-          return const Center(child: CircularProgressIndicator());
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _takePicture,
-        child: const Icon(Icons.camera_alt),
-      ),
+    // 2. กรณี Loading
+    if (_initializeControllerFuture == null ||
+        _controller == null ||
+        !_controller!.value.isInitialized) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // 3. หน้า Preview (แสดงรูปที่ถ่ายแล้ว)
+    if (_previewImagePath != null) {
+      return Column(
+        children: [
+          Expanded(
+            child: Image.file(
+              File(_previewImagePath!),
+              fit: BoxFit.contain,
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(20),
+            color: Colors.black12,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _retakePicture,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text("ถ่ายใหม่"),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    if (_previewImagePath != null) {
+                      widget.onPictureConfirmed(_previewImagePath!);
+                    }
+                  },
+                  icon: const Icon(Icons.check),
+                  label: const Text("ยืนยัน"),
+                ),
+              ],
+            ),
+          )
+        ],
+      );
+    }
+
+    // 4. หน้า Camera Preview (เลนส์กล้อง)
+    return SizedBox(
+      width: double.infinity,
+      height: double.infinity,
+      child: CameraPreview(_controller!),
     );
   }
 }

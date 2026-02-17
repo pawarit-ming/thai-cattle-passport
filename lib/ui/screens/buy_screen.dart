@@ -267,7 +267,8 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
       _filteredItems = _allItems.where((item) {
         final matchSearch = item.name.toLowerCase().contains(query) ||
             item.seller.toLowerCase().contains(query) ||
-            item.breed.toLowerCase().contains(query);
+            item.breed.toLowerCase().contains(query) ||
+            item.location.toLowerCase().contains(query);
 
         if (_selectedGender != null && item.sex != _selectedGender) {
           return false;
@@ -514,7 +515,7 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
                     child: TextField(
                       controller: _searchController,
                       decoration: InputDecoration(
-                        hintText: 'ค้นหาชื่อวัว สายพันธุ์ หรือ ผู้ขาย...',
+                        hintText: 'ค้นหาชื่อวัว, สายพันธุ์, ผู้ขาย หรือจังหวัด...',
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
@@ -680,10 +681,9 @@ class _MarketItemCardState extends State<_MarketItemCard> {
           Navigator.of(context, rootNavigator: true).push(
             MaterialPageRoute(
               builder: (context) => CowDetailScreen(
-                // แก้ไข: ใช้ int.tryParse เพื่อแปลง String เป็น int
-                // หากแปลงไม่ได้ (เป็นค่าว่าง) ให้ใส่ค่า 0 แทน (หรือค่า default อื่นๆ)
                 cowId: int.tryParse(item.id) ?? 0,
                 isReadOnly: true,
+                hideBackButton: false, // ✅ ระบุชัดเจนว่าให้แสดงปุ่ม Back (แม้จะเป็น default)
               ),
             ),
           );

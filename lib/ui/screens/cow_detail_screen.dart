@@ -7,21 +7,23 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
 import 'package:th_cow_passport/services/cow_management/cow_activity/activity_service.dart';
 import 'package:th_cow_passport/ui/screens/camera_screen.dart';
-
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/activity/activity_tab.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/general/general_tab.dart';
-
 import 'package:th_cow_passport/ui/widgets/cow_detail_widget.dart';
+import 'dart:typed_data';
+import 'package:screenshot/screenshot.dart';
+import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 
 class CowDetailScreen extends ConsumerStatefulWidget {
   final int cowId;
   final bool isReadOnly;
+  final bool hideBackButton; // ✅ 1. เพิ่มตัวแปรนี้เพื่อคุมการแสดงปุ่มถอยกลับ
 
   const CowDetailScreen({
     super.key,
     required this.cowId,
-    // 2. กำหนดค่าเริ่มต้นเป็น false (เพื่อให้หน้าอื่นๆ ยังแก้ไขได้ปกติ)
     this.isReadOnly = false,
+    this.hideBackButton = false, // ✅ 2. ค่า Default เป็น false (แสดงปุ่มตามปกติ)
   });
 
   @override
@@ -41,9 +43,8 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
       if (_tabController.indexIsChanging) {
         logger.d('Tab changed to index: ${_tabController.index}');
       }
-      setState(() {}); // รีเฟรช UI เมื่อ Tab เปลี่ยน
+      setState(() {});
     });
-    // ดึงข้อมูลเมื่อเข้าหน้าจอ
     logger.i('Fetching details for cow ID: ${widget.cowId}');
     Future.microtask(
         () => ref.read(cowDetailServiceProvider).fetchCowById(widget.cowId));
@@ -68,7 +69,6 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
     }
 
     if (cow == null) {
-      // Auto-refetch if data is missing (e.g., after invalidation)
       if (!detailState.isLoading) {
         Future.microtask(() =>
             ref.read(cowDetailServiceProvider).fetchCowById(widget.cowId));
@@ -85,19 +85,19 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
       ],
       tabController: _tabController,
 
-      // ถ้าเป็น isReadOnly (ดูผ่านเว็บ) ให้ส่งค่า null เพื่อซ่อนปุ่ม
-      // ถ้าไม่ใช่ (ดูผ่านแอป) ให้ส่งฟังก์ชันถอยหลังตามปกติ
-      onBack: widget.isReadOnly
+      // ✅ 3. ปรับ Logic ตรงนี้: ถ้า hideBackButton เป็น true ให้ส่ง null (เพื่อซ่อนปุ่ม)
+      // (หมายเหตุ: CowDetailWidget ต้องรองรับค่า null ใน onBack เพื่อซ่อนปุ่ม Leading)
+      onBack: widget.hideBackButton
           ? null
           : () {
-              if (context.canPop()) {
-                context.pop();
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
               } else {
                 context.go('/');
               }
             },
+
       actions: [
-        // เพิ่มเงื่อนไขเช็คตรงนี้
         if (!widget.isReadOnly)
           IconButton(
             icon: const Icon(Icons.qr_code_2),
@@ -110,16 +110,13 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
         Tab(text: 'กิจกรรม'),
       ],
       tabViews: [
-        // แก้ไข: ส่งค่า isReadOnly เข้าไป
         GeneralTab(isReadOnly: widget.isReadOnly),
-        ActivityTab(cowId: cow.animalId!),
+        ActivityTab(cowId: widget.cowId),
       ],
       bottomBar: widget.isReadOnly
           ? null
           : _buildBottomBar(
               context, colorScheme, theme, cow.animalId!, cow.animalId!),
-
-      // --- แก้ไขจุดนี้: ถ้าเป็น ReadOnly ให้ส่ง null ---
       floatingActionButton: widget.isReadOnly
           ? null
           : FloatingActionButton(
@@ -131,7 +128,10 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
     );
   }
 
+  // ... (ส่วนอื่นๆ ของไฟล์เหมือนเดิม ไม่มีการเปลี่ยนแปลง)
+
   void _showScanInstructionDialog(BuildContext context) {
+    // ... โค้ดเดิม ...
     final theme = Theme.of(context);
     showDialog(
       context: context,
@@ -354,41 +354,48 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    const String baseUrl = 'https://th-cow-passport-web.web.app/#/cow-detail';
+    // ✅ 1. สร้าง ScreenshotController
+    final screenshotController = ScreenshotController();
 
+    const String baseUrl = 'https://th-cow-passport-web.web.app/#/cow-detail';
     final String qrData = '$baseUrl/$cowId';
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          actionsAlignment: MainAxisAlignment.center,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
-          title: Center(
-              child: Text('Cow ID: $cowId',
-                  style: TextStyle(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.bold))),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                padding: EdgeInsets.all(10.r),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(
-                      color: theme.scaffoldBackgroundColor, width: 2.w),
+              Text(
+                'Cow ID: $cowId',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.primary, // ใช้สีน้ำตาลตามธีมหลัก
                 ),
-                child: SizedBox(
-                  width: 200.w,
-                  height: 200.h,
-                  child: QrImageView(
-                    data: qrData,
-                    version: QrVersions.auto,
-                    size: 200.r,
-                    backgroundColor: Colors.white,
+              ),
+              SizedBox(height: 16.h), // เพิ่มระยะห่างก่อนถึงตัว QR Code
+
+              Screenshot(
+                controller: screenshotController,
+                child: Container(
+                  padding: EdgeInsets.all(10.r),
+                  decoration: BoxDecoration(
+                    color: Colors
+                        .white, // ✅ สำคัญ: ต้องใส่สีพื้นหลัง ไม่งั้นรูปจะโปร่งใส
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                        color: theme.scaffoldBackgroundColor, width: 2.w),
+                  ),
+                  child: SizedBox(
+                    width: 200.w,
+                    height: 200.h,
+                    child: QrImageView(
+                      data: qrData,
+                      version: QrVersions.auto,
+                      size: 200.r,
+                      backgroundColor: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -398,23 +405,86 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              style: TextButton.styleFrom(foregroundColor: Colors.grey),
-              child: const Text('ปิด'),
-            ),
-            SizedBox(width: 8.w),
-            FilledButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.r)),
+            Padding(
+              padding: EdgeInsets.only(
+                left: 8.w,
+                right: 8.w,
+                bottom: 8.h,
               ),
-              icon: const Icon(Icons.save_alt),
-              label: const Text('บันทึก'),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        side: BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                      child: Text(
+                        'ปิด',
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () async {
+                        try {
+                          // 1. สั่งจับภาพจาก Screenshot Widget
+                          final Uint8List? image =
+                              await screenshotController.capture();
+
+                          if (image != null) {
+                            // 2. บันทึกลงแกลเลอรีเครื่อง
+                            await ImageGallerySaverPlus.saveImage(
+                              image,
+                              name: "QR_COW_$cowId",
+                              quality: 100,
+                            );
+
+                            if (mounted) {
+                              Navigator.pop(
+                                  context); // ปิด Dialog หลังบันทึกสำเร็จ
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'บันทึกรูป QR Code ลงแกลเลอรีเรียบร้อยแล้ว'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          }
+                        } catch (e) {
+                          debugPrint("Error saving QR: $e");
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content:
+                                      Text('เกิดข้อผิดพลาดในการบันทึก: $e')),
+                            );
+                          }
+                        }
+                      },
+                      icon: Icon(Icons.save_alt, size: 20.r),
+                      label: const Text('บันทึก'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         );

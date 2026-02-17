@@ -143,29 +143,36 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
 
   // QR Scanning Logic
   Future<void> _scanQrCode() async {
-    final result = await Navigator.push<String>(
-      context,
+    final result =
+        await Navigator.of(context, rootNavigator: true).push<String>(
       MaterialPageRoute(builder: (context) => const QRScannerScreen()),
     );
 
     if (result != null && result.isNotEmpty) {
       logger.i('QR Code Result: $result');
 
-      // Find cow by NID
+      // 1. ตรวจสอบว่าเป็นรูปแบบ URL หรือไม่ (สำหรับ QR ที่สร้างจากแอป)
+      if (result.contains('/cow-detail/')) {
+        final parts = result.split('/');
+        final cowId = parts.last; // ดึง ID ตัวสุดท้ายออกมา
+        if (mounted) {
+          context.push('/cow-detail/$cowId');
+        }
+        return;
+      }
+
+      // 2. ค้นหาด้วยหมายเลข NID ปกติ (กรณีสแกนจากบัตรประจำตัววัว)
       final allCows = ref.read(cowServiceProvider).cows;
       try {
         final foundCow = allCows.firstWhere((cow) => cow.nidNumber == result);
-
-        // Navigate to details
         if (mounted) {
           context.push('/cow-detail/${foundCow.animalId}');
         }
       } catch (e) {
-        // Not found
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('ไม่พบวัวที่มีหมายเลข NID: $result'),
+              content: Text('ไม่พบข้อมูลวัวจากรหัส: $result'),
               backgroundColor: Colors.red,
             ),
           );
@@ -264,6 +271,12 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
               )
             : null,
         actions: [
+          if (!_isEditMode)
+            IconButton(
+              icon: const Icon(Icons.qr_code_scanner),
+              tooltip: 'สแกน QR Code',
+              onPressed: _scanQrCode,
+            ),
           if (_isEditMode) ...[
             IconButton(
               icon: const Icon(Icons.select_all),
@@ -318,25 +331,15 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                   decoration: InputDecoration(
                     hintText: 'ค้นหาชื่อ หรือ เลข NID',
                     prefixIcon: const Icon(Icons.search),
-                    suffixIcon: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (_searchQuery.isNotEmpty)
-                          IconButton(
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
                             icon: const Icon(Icons.clear, color: Colors.grey),
                             onPressed: () {
                               _searchController.clear();
                               setState(() => _searchQuery = '');
                             },
-                          ),
-                        IconButton(
-                          icon: const Icon(Icons.qr_code_scanner),
-                          tooltip: 'สแกน QR Code',
-                          color: colorScheme.primary,
-                          onPressed: _scanQrCode,
-                        ),
-                      ],
-                    ),
+                          )
+                        : null,
                     contentPadding:
                         EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                     border: OutlineInputBorder(

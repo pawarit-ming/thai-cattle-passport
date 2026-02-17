@@ -28,28 +28,38 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
       data: (activities) {
         final filteredActivities = _filterActivities(activities);
 
-        return Column(
-          children: [
-            _buildFilters(context),
-            Expanded(
-              child: filteredActivities.isEmpty
-                  ? const Center(child: Text('ไม่มีกิจกรรม'))
-                  : RefreshIndicator(
-                      onRefresh: () =>
-                          ref.refresh(activitiesProvider(widget.cowId).future),
-                      child: ListView.builder(
-                        padding: EdgeInsets.all(16.r),
-                        itemCount: filteredActivities.length,
-                        itemBuilder: (context, index) {
-                          return ActivityCard(
-                            activity: filteredActivities[index],
-                            isLast: index == filteredActivities.length - 1,
-                          );
-                        },
-                      ),
-                    ),
-            ),
-          ],
+        return RefreshIndicator(
+          onRefresh: () => ref.refresh(activitiesProvider(widget.cowId).future),
+          child: ListView.builder(
+            padding: EdgeInsets.zero, 
+            // เพิ่มจำนวน itemCount อีก 1 สำหรับตัวกรอง
+            itemCount:
+                filteredActivities.isEmpty ? 2 : filteredActivities.length + 1,
+            itemBuilder: (context, index) {
+              // --- ลำดับที่ 0: แสดงตัวกรอง (จะเลื่อนหายไปเมื่อ scroll) ---
+              if (index == 0) {
+                return _buildFilters(context);
+              }
+
+              // --- กรณีไม่มีข้อมูลกิจกรรม ( index == 1 และรายการว่าง) ---
+              if (filteredActivities.isEmpty) {
+                return SizedBox(
+                  height: 300.h,
+                  child: const Center(child: Text('ไม่มีกิจกรรม')),
+                );
+              }
+
+              // --- รายการกิจกรรม ( index เริ่มที่ 1, 2, 3... ) ---
+              final activity = filteredActivities[index - 1];
+              return Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: ActivityCard(
+                  activity: activity,
+                  isLast: index - 1 == filteredActivities.length - 1,
+                ),
+              );
+            },
+          ),
         );
       },
     );

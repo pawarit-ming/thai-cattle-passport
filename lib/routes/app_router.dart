@@ -81,7 +81,8 @@ final router = GoRouter(
         final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
         return CowDetailScreen(
           cowId: id,
-          isReadOnly: true, // เปิดโหมดดูอย่างเดียว (ซ่อนปุ่มแก้ไข/เมนู)
+          isReadOnly: true,     
+          hideBackButton: true,
         );
       },
     ),

@@ -61,6 +61,10 @@
 	<true/>
 
 	<!-- Permissions -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>แอปพลิเคชันต้องการขออนุญาตเพื่อบันทึกรูป QR Code ลงในแกลเลอรีของคุณ</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>แอปพลิเคชันต้องการขออนุญาตเพื่อเข้าถึงแกลเลอรีของคุณ</string>
 
 	<!-- Camera -->
 	<key>NSCameraUsageDescription</key>

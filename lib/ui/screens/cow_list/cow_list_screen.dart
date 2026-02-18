@@ -7,7 +7,8 @@ import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_servic
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
 import 'package:th_cow_passport/ui/screens/cow_list/widgets/cow_card.dart';
 import 'package:th_cow_passport/ui/screens/cow_list/widgets/filter_bottom_sheet.dart';
-import 'package:th_cow_passport/ui/screens/qr_scanner_screen.dart'; // Import QR Screen
+import 'package:th_cow_passport/ui/screens/qr_scanner_screen.dart';
+import 'package:th_cow_passport/ui/screens/cow_detail_screen.dart';
 import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -151,12 +152,27 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
     if (result != null && result.isNotEmpty) {
       logger.i('QR Code Result: $result');
 
+      void navigateToDetail(String idStr) {
+        final id = int.tryParse(idStr) ?? 0;
+
+        // ฟังก์ชันช่วยนำทางแบบ Manual (เพื่อให้กำหนด hideBackButton: false ได้)
+        Navigator.of(context, rootNavigator: true).push(
+          MaterialPageRoute(
+            builder: (context) => CowDetailScreen(
+              cowId: id,
+              isReadOnly: true,
+              hideBackButton: false,
+            ),
+          ),
+        );
+      }
+
       // 1. ตรวจสอบว่าเป็นรูปแบบ URL หรือไม่ (สำหรับ QR ที่สร้างจากแอป)
       if (result.contains('/cow-detail/')) {
         final parts = result.split('/');
-        final cowId = parts.last; // ดึง ID ตัวสุดท้ายออกมา
+        final cowId = parts.last;
         if (mounted) {
-          context.push('/cow-detail/$cowId');
+          navigateToDetail(cowId);
         }
         return;
       }

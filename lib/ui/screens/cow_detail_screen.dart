@@ -23,7 +23,8 @@ class CowDetailScreen extends ConsumerStatefulWidget {
     super.key,
     required this.cowId,
     this.isReadOnly = false,
-    this.hideBackButton = false, // ✅ 2. ค่า Default เป็น false (แสดงปุ่มตามปกติ)
+    this.hideBackButton =
+        false, // ✅ 2. ค่า Default เป็น false (แสดงปุ่มตามปกติ)
   });
 
   @override
@@ -64,6 +65,21 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
     final detailState = ref.watch(cowDetailServiceProvider);
     final cow = detailState.currentCow;
 
+    // ตรวจสอบว่าหน้านี้เป็นหน้าปัจจุบันหรือไม่ (ป้องกันการโหลดซ้อนตอนอยู่หน้าอื่น)
+    final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? false;
+
+    // ถ้ามีข้อมูลวัวอยู่ (cow != null) แต่ ID ไม่ตรงกับที่หน้านี้ต้องการ (cow.animalId != widget.cowId)
+    // และหน้านี้กำลังแสดงผลอยู่ (isCurrentRoute) -> ให้โหลดข้อมูลใหม่กลับมาเป็นของแม่โค
+    if (cow != null && cow.animalId != widget.cowId && isCurrentRoute) {
+      if (!detailState.isLoading) {
+        logger.i('Reloading parent cow data: ID ${widget.cowId}');
+        Future.microtask(() =>
+            ref.read(cowDetailServiceProvider).fetchCowById(widget.cowId));
+      }
+      // แสดง Loading ระหว่างรอโหลดข้อมูลแม่โคกลับมา
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     if (detailState.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -102,7 +118,8 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
           IconButton(
             icon: const Icon(Icons.qr_code_2),
             tooltip: 'แสดง QR Code',
-            onPressed: () => _showQrDialog(context, cow.animalId.toString()),
+            onPressed: () =>
+                _showQrDialog(context, cow.animalId.toString(), cow.nidNumber),
           ),
       ],
       tabs: const [
@@ -128,10 +145,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
     );
   }
 
-  // ... (ส่วนอื่นๆ ของไฟล์เหมือนเดิม ไม่มีการเปลี่ยนแปลง)
-
   void _showScanInstructionDialog(BuildContext context) {
-    // ... โค้ดเดิม ...
     final theme = Theme.of(context);
     showDialog(
       context: context,
@@ -350,11 +364,9 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
     );
   }
 
-  void _showQrDialog(BuildContext context, String cowId) {
+  void _showQrDialog(BuildContext context, String cowId, String tagId) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
-    // ✅ 1. สร้าง ScreenshotController
     final screenshotController = ScreenshotController();
 
     const String baseUrl = 'https://th-cow-passport-web.web.app/#/cow-detail';
@@ -368,10 +380,10 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Cow ID: $cowId',
+                'Tag ID: $tagId',
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: colorScheme.primary, // ใช้สีน้ำตาลตามธีมหลัก
+                  color: colorScheme.primary,
                 ),
               ),
               SizedBox(height: 16.h), // เพิ่มระยะห่างก่อนถึงตัว QR Code

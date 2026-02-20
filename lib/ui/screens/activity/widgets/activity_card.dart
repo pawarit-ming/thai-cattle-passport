@@ -205,6 +205,7 @@ class ActivityCard extends StatelessWidget {
     final validEntries = data.entries
         .where((e) => e.value != null && e.value.toString().isNotEmpty)
         .where((e) => e.key != 'sickness_ref')
+        .where((e) => e.key != 'vaccine_id')
         .toList();
 
     if (validEntries.isEmpty) return const SizedBox.shrink();
@@ -390,6 +391,12 @@ class ActivityCard extends StatelessWidget {
       // Vaccine
       case 'vaccine_name':
         return 'ชื่อวัคซีน';
+      case 'vaccine_id':
+        return ''; // Hidden, use vaccine_name instead
+      case 'dose_number':
+        return 'เข็มที่';
+      case 'vaccine_note':
+        return 'หมายเหตุ';
 
       // Birth (Calf info)
       case 'animal_name':
@@ -487,6 +494,13 @@ class ActivityCard extends StatelessWidget {
   String _formatValue(String key, dynamic value) {
     if (value == null) return '-';
     final strVal = value.toString();
+
+    // Dose number formatting
+    if (key == 'dose_number') {
+      final num = int.tryParse(strVal);
+      if (num != null) return 'เข็มที่ $num';
+      return strVal;
+    }
 
     // Enum Translations
     if (key == 'breeding_method') {

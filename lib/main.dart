@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:th_cow_passport/routes/app_router.dart';
+import 'package:th_cow_passport/services/notification/notification_service.dart';
 import 'package:th_cow_passport/supabase_config.dart';
 import 'package:th_cow_passport/ui/theme/app_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -12,14 +13,17 @@ Future<void> main() async {
     url: SupabaseConfig.url,
     anonKey: SupabaseConfig.anonKey,
   );
-  
+
+  // Initialize notification service
+  await NotificationService().initialize();
+
   // If there's already a session when the app starts (e.g., from previous login
   // or hot restart with session persistence), mark it as recognized so the router
   // doesn't force a redirect to /login.
   if (supabase.auth.currentSession != null) {
     sessionRecognized = true;
   }
-  
+
   runApp(const ProviderScope(child: MainApp()));
 }
 

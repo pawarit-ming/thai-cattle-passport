@@ -1,21 +1,363 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:th_cow_passport/services/cow_management/models/vaccine_model.dart';
 import 'package:th_cow_passport/ui/screens/activity/widgets/form_widgets.dart';
 
 // --- Abstract Base / Interface (Implicit in usage) ---
 
 // --- Vaccine Form ---
 class VaccineForm extends StatelessWidget {
-  final TextEditingController nameController;
+  final List<dynamic> vaccines;
+  final String? selectedVaccineId;
+  final int? selectedDoseNumber;
+  final TextEditingController noteController;
+  final ValueChanged<String?> onVaccineChanged;
+  final ValueChanged<int?> onDoseChanged;
+  final Map<String, List<Map<String, dynamic>>> vaccineHistory;
+  final String? cowSex; // 'MALE' or 'FEMALE'
 
-  const VaccineForm({super.key, required this.nameController});
+  const VaccineForm({
+    super.key,
+    required this.vaccines,
+    required this.selectedVaccineId,
+    required this.selectedDoseNumber,
+    required this.noteController,
+    required this.onVaccineChanged,
+    required this.onDoseChanged,
+    this.vaccineHistory = const {},
+    this.cowSex,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return FormTextField(
-      controller: nameController,
-      labelText: 'ชื่อวัคซีน',
-      hintText: 'เช่น วัคซีนป้องกันโรคปากและเท้าเปื่อย',
+    final theme = Theme.of(context);
+    // Find selected vaccine object
+    Vaccine? selectedVaccine;
+    if (selectedVaccineId != null) {
+      try {
+        selectedVaccine =
+            vaccines.firstWhere((v) => (v as Vaccine).id == selectedVaccineId)
+                as Vaccine;
+      } catch (_) {
+        selectedVaccine = null;
+      }
+    }
+
+    // Get completed doses for the selected vaccine
+    final completedDoses = selectedVaccineId != null
+        ? (vaccineHistory[selectedVaccineId] ?? [])
+        : <Map<String, dynamic>>[];
+    final completedDoseNumbers =
+        completedDoses.map((d) => d['dose_number'] as int).toSet();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // --- Vaccine Selection ---
+        Text(
+          'เลือกวัคซีน *',
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade700,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        ...vaccines.where((vaccine) {
+          // Filter by gender
+          final v = vaccine as Vaccine;
+          if (v.genderFilter == null) return true;
+          return v.genderFilter == cowSex;
+        }).map((vaccine) {
+          final v = vaccine as Vaccine;
+          final isSelected = v.id == selectedVaccineId;
+          final history = vaccineHistory[v.id] ?? [];
+          final givenCount = history.length;
+          final allDone = givenCount >= v.totalDoses;
+          return Padding(
+            padding: EdgeInsets.only(bottom: 8.h),
+            child: InkWell(
+              onTap: () {
+                onVaccineChanged(v.id);
+                // Auto-select next available dose
+                final givenNums =
+                    history.map((d) => d['dose_number'] as int).toSet();
+                int? nextDose;
+                for (int i = 1; i <= v.totalDoses; i++) {
+                  if (!givenNums.contains(i)) {
+                    nextDose = i;
+                    break;
+                  }
+                }
+                onDoseChanged(nextDose);
+              },
+              borderRadius: BorderRadius.circular(12.r),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(
+                    color: isSelected
+                        ? theme.colorScheme.primary
+                        : Colors.grey.shade300,
+                    width: isSelected ? 1.5 : 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Radio-like indicator
+                    Container(
+                      width: 20.r,
+                      height: 20.r,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected
+                              ? theme.colorScheme.primary
+                              : Colors.grey.shade400,
+                          width: 2,
+                        ),
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : Colors.transparent,
+                      ),
+                      child: isSelected
+                          ? Icon(Icons.check, size: 14.r, color: Colors.white)
+                          : null,
+                    ),
+                    SizedBox(width: 12.w),
+                    // Vaccine info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            v.nameTh,
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              color: isSelected
+                                  ? theme.colorScheme.primary
+                                  : Colors.black87,
+                            ),
+                          ),
+                          Text(
+                            v.nameEn,
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Dose progress badge
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: allDone
+                            ? Colors.green.shade50
+                            : Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Text(
+                        allDone ? '✅ ครบ' : '$givenCount/${v.totalDoses} เข็ม',
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          color: allDone
+                              ? Colors.green.shade700
+                              : Colors.grey.shade600,
+                          fontWeight:
+                              allDone ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
+
+        // --- Dose Selection with history ---
+        if (selectedVaccine != null) ...[
+          SizedBox(height: 16.h),
+          Text(
+            'เข็มที่ *',
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          // Dose timeline
+          ...selectedVaccine.doseOptions.map((doseNum) {
+            final isDone = completedDoseNumbers.contains(doseNum);
+            final isCurrentlySelected = selectedDoseNumber == doseNum;
+            String? doneDate;
+            if (isDone) {
+              final record =
+                  completedDoses.firstWhere((d) => d['dose_number'] == doseNum);
+              final dateStr = record['activity_date']?.toString();
+              if (dateStr != null) {
+                final dt = DateTime.tryParse(dateStr);
+                if (dt != null)
+                  doneDate = '${dt.day}/${dt.month}/${dt.year + 543}';
+              }
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(bottom: 6.h),
+              child: InkWell(
+                onTap: isDone ? null : () => onDoseChanged(doseNum),
+                borderRadius: BorderRadius.circular(10.r),
+                child: Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                  decoration: BoxDecoration(
+                    color: isDone
+                        ? Colors.grey.shade100
+                        : isCurrentlySelected
+                            ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                            : Colors.white,
+                    borderRadius: BorderRadius.circular(10.r),
+                    border: Border.all(
+                      color: isDone
+                          ? Colors.grey.shade300
+                          : isCurrentlySelected
+                              ? theme.colorScheme.primary
+                              : Colors.grey.shade300,
+                      width: isCurrentlySelected && !isDone ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isDone
+                            ? Icons.check_circle
+                            : isCurrentlySelected
+                                ? Icons.radio_button_checked
+                                : Icons.radio_button_off,
+                        size: 20.r,
+                        color: isDone
+                            ? Colors.green
+                            : isCurrentlySelected
+                                ? theme.colorScheme.primary
+                                : Colors.grey.shade400,
+                      ),
+                      SizedBox(width: 10.w),
+                      Expanded(
+                        child: Text(
+                          selectedVaccine!.getDoseLabel(doseNum),
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            fontWeight: isCurrentlySelected
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color:
+                                isDone ? Colors.grey.shade500 : Colors.black87,
+                            decoration:
+                                isDone ? TextDecoration.lineThrough : null,
+                          ),
+                        ),
+                      ),
+                      if (isDone && doneDate != null)
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 8.w, vertical: 3.h),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(6.r),
+                          ),
+                          child: Text(
+                            '✅ $doneDate',
+                            style: TextStyle(
+                                fontSize: 10.sp, color: Colors.green.shade700),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+
+          // All-done banner
+          if (completedDoseNumbers.length >= selectedVaccine.totalDoses) ...[
+            SizedBox(height: 8.h),
+            Container(
+              padding: EdgeInsets.all(10.r),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: Colors.green.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.check_circle_outline,
+                      size: 16.r, color: Colors.green.shade700),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      'วัคซีนนี้ฉีดครบทุกเข็มแล้ว',
+                      style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.green.shade700,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+
+        // Note (if vaccine has one)
+        if (selectedVaccine != null && selectedVaccine.note != null) ...[
+          SizedBox(height: 8.h),
+          Container(
+            padding: EdgeInsets.all(10.r),
+            decoration: BoxDecoration(
+              color: Colors.amber.shade50,
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(color: Colors.amber.shade200),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline,
+                    size: 16.r, color: Colors.amber.shade700),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Text(
+                    selectedVaccine.note!,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: Colors.amber.shade800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+
+        // --- Note ---
+        SizedBox(height: 16.h),
+        FormTextField(
+          controller: noteController,
+          labelText: 'หมายเหตุ',
+          hintText: 'เพิ่มเติม (ถ้ามี)',
+          isRequired: false,
+          maxLines: 2,
+        ),
+      ],
     );
   }
 }

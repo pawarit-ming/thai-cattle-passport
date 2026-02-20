@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
 import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_service.dart';
+import 'package:th_cow_passport/services/cow_management/vaccine/vaccine_service.dart';
 import 'package:th_cow_passport/ui/screens/activity/activity_extensions.dart';
 import 'package:th_cow_passport/ui/screens/activity/forms/activity_forms.dart';
 import 'package:th_cow_passport/ui/screens/activity/wizard/wizard_constants.dart';
@@ -40,8 +41,12 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
   final _notesController = TextEditingController();
   late DateTime _selectedDate;
 
+  // Vaccine State
+  String? _selectedVaccineId;
+  int? _selectedDoseNumber;
+  final _vaccineNoteController = TextEditingController();
+
   // Specific Controllers
-  final _vaccineNameController = TextEditingController();
   final _calfNameController = TextEditingController();
   final _calfGenderController = TextEditingController();
   final _calfNidController = TextEditingController();
@@ -88,8 +93,14 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
   }
 
   void _restoreFormData(Map<String, dynamic> data) {
-    if (data.containsKey('vaccine_name')) {
-      _vaccineNameController.text = data['vaccine_name'];
+    if (data.containsKey('vaccine_id')) {
+      _selectedVaccineId = data['vaccine_id'];
+    }
+    if (data.containsKey('dose_number')) {
+      _selectedDoseNumber = data['dose_number'];
+    }
+    if (data.containsKey('vaccine_note')) {
+      _vaccineNoteController.text = data['vaccine_note'];
     }
     if (data.containsKey('animal_name')) {
       _calfNameController.text = data['animal_name'];
@@ -179,7 +190,7 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
   @override
   void dispose() {
     _notesController.dispose();
-    _vaccineNameController.dispose();
+    _vaccineNoteController.dispose();
     _calfNameController.dispose();
     _calfGenderController.dispose();
     _calfNidController.dispose();
@@ -260,8 +271,23 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
       // Collect Data based on type
       switch (widget.activityType) {
         case ActivityType.VACCINE:
-          if (_vaccineNameController.text.isNotEmpty) {
-            data['vaccine_name'] = _vaccineNameController.text;
+          if (_selectedVaccineId != null) {
+            data['vaccine_id'] = _selectedVaccineId;
+            // Find name from catalog
+            final vaccinesAsync = ref.read(vaccinesProvider);
+            vaccinesAsync.whenData((vaccines) {
+              try {
+                final v =
+                    vaccines.firstWhere((v) => v.id == _selectedVaccineId);
+                data['vaccine_name'] = v.nameTh;
+              } catch (_) {}
+            });
+          }
+          if (_selectedDoseNumber != null) {
+            data['dose_number'] = _selectedDoseNumber;
+          }
+          if (_vaccineNoteController.text.isNotEmpty) {
+            data['vaccine_note'] = _vaccineNoteController.text;
           }
           break;
         case ActivityType.BIRTH:
@@ -551,7 +577,33 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
   Widget _getFormByType(ActivityType type) {
     switch (type) {
       case ActivityType.VACCINE:
-        return VaccineForm(nameController: _vaccineNameController);
+        final vaccinesAsync = ref.watch(vaccinesProvider);
+        final historyAsync = ref.watch(cowVaccineHistoryProvider(widget.cowId));
+        // Wait for both providers
+        if (vaccinesAsync.isLoading || historyAsync.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (vaccinesAsync.hasError) {
+          return Text('ไม่สามารถโหลดรายการวัคซีนได้: ${vaccinesAsync.error}');
+        }
+        final vaccines = vaccinesAsync.value ?? [];
+        final history = historyAsync.value ?? {};
+        // Get cow sex for filtering
+        final allCows = ref.watch(cowServiceProvider).cows;
+        String? cowSex;
+        try {
+          cowSex = allCows.firstWhere((c) => c.animalId == widget.cowId).sex;
+        } catch (_) {}
+        return VaccineForm(
+          vaccines: vaccines,
+          selectedVaccineId: _selectedVaccineId,
+          selectedDoseNumber: _selectedDoseNumber,
+          noteController: _vaccineNoteController,
+          onVaccineChanged: (id) => setState(() => _selectedVaccineId = id),
+          onDoseChanged: (dose) => setState(() => _selectedDoseNumber = dose),
+          vaccineHistory: history,
+          cowSex: cowSex,
+        );
       case ActivityType.BIRTH:
         final allCows = ref.watch(cowServiceProvider).cows;
         // Birth always needs a Father (Sire) -> Filter for MALES

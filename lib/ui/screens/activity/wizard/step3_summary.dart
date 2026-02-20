@@ -225,6 +225,10 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
         return 'อายุครรภ์';
       case 'death_cause':
         return 'สาเหตุการตาย';
+      case 'dose_number':
+        return 'เข็มที่';
+      case 'vaccine_note':
+        return 'หมายเหตุ';
       case 'illness_symptoms':
         return 'อาการที่พบ';
       case 'disease_type':
@@ -249,12 +253,19 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
   }
 
   bool _isInternalKey(String key) {
-    return const {'sickness_ref'}.contains(key);
+    return const {'sickness_ref', 'vaccine_id'}.contains(key);
   }
 
   String _formatValue(String key, dynamic value) {
     if (value == null) return '-';
     final strVal = value.toString();
+
+    // Dose number formatting
+    if (key == 'dose_number') {
+      final num = int.tryParse(strVal);
+      if (num != null) return 'เข็มที่ $num';
+      return strVal;
+    }
 
     if (key == 'breeding_method') {
       if (strVal == 'NATURAL') return 'ตามธรรมชาติ';

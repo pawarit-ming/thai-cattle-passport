@@ -17,18 +17,32 @@ build/
 android/.gradle
 android/app/build
 android/local.properties
+android/app/src/main/java/**/GeneratedPluginRegistrant.java
 
 # iOS
 ios/Pods/
 ios/Runner/GeneratedPluginRegistrant.*
+ios/Flutter/Flutter.podspec
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/Generated.xcconfig
+
+# macOS
+macos/Flutter/GeneratedPluginRegistrant.swift
+macos/Flutter/flutter_export_environment.sh
+macos/Flutter/Flutter-Generated.xcconfig
+
+# Linux
+linux/flutter/ephemeral/
+
+# Windows
+windows/flutter/ephemeral/
+windows/flutter/generated_plugins.cmake
 
 # ขยะจาก OS
 .DS_Store
 Thumbs.db
 
 # แคชเพิ่มเติมของ Flutter
-.flutter-plugins
-.flutter-plugins-dependencies
 .pub-cache/
 .pub/
 
@@ -45,8 +59,5 @@ Captures/
 Pods/
 DerivedData/
 *.moved-aside
-
-# pubspec.lock is intentionally NOT ignored in this file. For an application
-# (as opposed to a library), it is recommended to commit this file to ensure
-# that all developers on a team and all build servers are using the same
-# versions of dependencies.
+*.java
+*.podspec

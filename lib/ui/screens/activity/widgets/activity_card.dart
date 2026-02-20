@@ -7,10 +7,14 @@ class ActivityCard extends StatelessWidget {
   final Activity activity;
   final bool isLast;
 
+  /// Optional map of cow DB ID → display name (e.g. "NID - ชื่อ")
+  final Map<int, String> cowLookup;
+
   const ActivityCard({
     super.key,
     required this.activity,
     required this.isLast,
+    this.cowLookup = const {},
   });
 
   @override
@@ -446,7 +450,9 @@ class ActivityCard extends StatelessWidget {
       case 'sire_type':
         return 'แหล่งพ่อพันธุ์';
       case 'sire_id':
-        return 'พ่อพันธุ์ (ฟาร์ม)';
+        return 'พ่อพันธุ์';
+      case 'dam_id':
+        return 'แม่พันธุ์';
       case 'other_sire_name':
         return 'ชื่อพ่อพันธุ์';
       case 'other_sire_origin':
@@ -473,8 +479,6 @@ class ActivityCard extends StatelessWidget {
         return 'แหล่งที่มา';
       case 'import_date':
         return 'วันนำเข้า';
-      case 'dam_id':
-        return 'แม่พันธุ์';
       case 'face_pic':
         return 'รูปหน้าวัว';
       case 'body_pic':
@@ -494,6 +498,15 @@ class ActivityCard extends StatelessWidget {
   String _formatValue(String key, dynamic value) {
     if (value == null) return '-';
     final strVal = value.toString();
+
+    // Resolve cow IDs to readable names
+    if (key == 'sire_id' || key == 'dam_id') {
+      final id = value is int ? value : int.tryParse(strVal);
+      if (id != null && cowLookup.containsKey(id)) {
+        return cowLookup[id]!;
+      }
+      return '#$strVal'; // Fallback: show as #ID
+    }
 
     // Dose number formatting
     if (key == 'dose_number') {

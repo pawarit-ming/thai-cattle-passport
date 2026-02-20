@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:th_cow_passport/services/cow_management/cow_activity/activity_service.dart';
+import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_service.dart';
 import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
 import 'package:th_cow_passport/ui/screens/activity/widgets/activity_card.dart';
 
@@ -15,6 +16,12 @@ class HealthPreviewSection extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final activitiesAsync = ref.watch(activitiesProvider(cowId));
+    // Build cow lookup for display
+    final allCows = ref.watch(cowServiceProvider).cows;
+    final cowLookup = {
+      for (final c in allCows)
+        if (c.animalId != null) c.animalId!: '${c.nidNumber}',
+    };
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,6 +72,7 @@ class HealthPreviewSection extends ConsumerWidget {
                 ...displayList.map((activity) => ActivityCard(
                       activity: activity,
                       isLast: activity == displayList.last && !showViewMore,
+                      cowLookup: cowLookup,
                     )),
                 if (showViewMore)
                   Padding(
@@ -148,6 +156,11 @@ class HealthTab extends ConsumerWidget {
 
   Widget _buildActivityList(WidgetRef ref, ActivityType type) {
     final activitiesAsync = ref.watch(activitiesProvider(cowId));
+    final allCows = ref.watch(cowServiceProvider).cows;
+    final cowLookup = {
+      for (final c in allCows)
+        if (c.animalId != null) c.animalId!: '${c.nidNumber}',
+    };
 
     return activitiesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -186,6 +199,7 @@ class HealthTab extends ConsumerWidget {
               return ActivityCard(
                 activity: filteredActivities[index],
                 isLast: index == filteredActivities.length - 1,
+                cowLookup: cowLookup,
               );
             },
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:th_cow_passport/services/cow_management/cow_activity/activity_service.dart';
+import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_service.dart';
 import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
 import 'package:th_cow_passport/ui/screens/activity/widgets/activity_card.dart';
 
@@ -27,11 +28,17 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
       error: (error, stackTrace) => Center(child: Text('Error: $error')),
       data: (activities) {
         final filteredActivities = _filterActivities(activities);
+        // Build cow lookup for display
+        final allCows = ref.watch(cowServiceProvider).cows;
+        final cowLookup = {
+          for (final c in allCows)
+            if (c.animalId != null) c.animalId!: '${c.nidNumber}',
+        };
 
         return RefreshIndicator(
           onRefresh: () => ref.refresh(activitiesProvider(widget.cowId).future),
           child: ListView.builder(
-            padding: EdgeInsets.zero, 
+            padding: EdgeInsets.zero,
             // เพิ่มจำนวน itemCount อีก 1 สำหรับตัวกรอง
             itemCount:
                 filteredActivities.isEmpty ? 2 : filteredActivities.length + 1,
@@ -56,6 +63,7 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
                 child: ActivityCard(
                   activity: activity,
                   isLast: index - 1 == filteredActivities.length - 1,
+                  cowLookup: cowLookup,
                 ),
               );
             },
@@ -100,8 +108,9 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
         children: [
           Text(
             'กรองกิจกรรม',
-            style: theme.textTheme.titleSmall?.copyWith(
+            style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
+              fontSize: 14.sp,
             ),
           ),
           SizedBox(height: 12.h),

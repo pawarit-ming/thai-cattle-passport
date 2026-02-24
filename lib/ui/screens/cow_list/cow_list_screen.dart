@@ -334,189 +334,157 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
             ),
       body: RefreshIndicator(
         onRefresh: _refreshCows,
-        child: _buildBody(theme, colorScheme, cowService),
-      ),
-    );
-  }
-
-  Widget _buildBody(
-      ThemeData theme, ColorScheme colorScheme, CowService cowService) {
-    final displayCows = _filteredCows;
-
-    // Loading state
-    if (cowService.isLoading && cowService.cows.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    // Empty state
-    if (cowService.cows.isEmpty) {
-      return CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          SliverFillRemaining(
-            child: Center(
-              child: Text('ไม่พบข้อมูลวัว, ลองเพิ่มวัวตัวใหม่ดูสิ!'),
-            ),
-          ),
-        ],
-      );
-    }
-
-    // Filter empty state
-    if (displayCows.isEmpty) {
-      return CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          _buildHeaderSliver(theme, colorScheme, cowService),
-          SliverFillRemaining(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
-                  SizedBox(height: 16.h),
-                  const Text('ไม่พบวัวที่ตรงกับเงื่อนไขตัวกรอง'),
-                  TextButton(
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() {
-                        _searchQuery = '';
-                        _selectedGender = null;
-                        _selectedBreeds.clear();
-                        _ageRange = const RangeValues(0, 20);
-                        _weightRange = const RangeValues(0, 1500);
-                      });
-                    },
-                    child: const Text('ล้างตัวกรอง'),
-                  )
-                ],
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
-    // Main list — TRUE VIRTUALIZATION with CustomScrollView + SliverList
-    return CustomScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      slivers: [
-        // Search bar + Header (pinned at top, always rendered)
-        _buildHeaderSliver(theme, colorScheme, cowService),
-        // Cow cards — only visible items are rendered
-        SliverPadding(
-          padding: EdgeInsets.symmetric(horizontal: 16.r),
-          sliver: SliverList.builder(
-            itemCount: displayCows.length,
-            itemBuilder: (context, index) {
-              final cow = displayCows[index];
-              final isSelected = _selectedCowIds.contains(cow.animalId);
-
-              return CowCard(
-                cow: cow,
-                isEditMode: _isEditMode,
-                isSelected: isSelected,
-                onSelect: () {
-                  setState(() {
-                    if (isSelected) {
-                      _selectedCowIds.remove(cow.animalId);
-                    } else {
-                      _selectedCowIds.add(cow.animalId!);
-                    }
-                  });
-                },
-              );
-            },
-          ),
-        ),
-        // Bottom spacing for FAB
-        SliverToBoxAdapter(child: SizedBox(height: 80.h)),
-      ],
-    );
-  }
-
-  /// Builds the search bar + header as a SliverToBoxAdapter.
-  SliverToBoxAdapter _buildHeaderSliver(
-      ThemeData theme, ColorScheme colorScheme, CowService cowService) {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(16.r, 16.r, 16.r, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Search Bar
-            TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'ค้นหาชื่อ หรือ เลข NID',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, color: Colors.grey),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                      )
-                    : null,
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: colorScheme.primary),
-                ),
-                filled: true,
-                fillColor: Colors.grey.shade50,
-              ),
-            ),
-            SizedBox(height: 16.h),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: EdgeInsets.all(16.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "รายการวัวทั้งหมด",
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                // Search Bar
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'ค้นหาชื่อ หรือ เลข NID',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, color: Colors.grey),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
-                    Text(
-                      "จำนวน ${cowService.cows.length} ตัว",
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.secondary,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide(color: colorScheme.primary),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                  ),
+                ),
+                SizedBox(height: 16.h),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "รายการวัวทั้งหมด",
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          "จำนวน ${cowService.cows.length} ตัว",
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.secondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.filter_list),
+                        color: colorScheme.primary,
+                        tooltip: 'กรองข้อมูล',
+                        onPressed: _showFilterDialog,
                       ),
                     ),
                   ],
                 ),
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.filter_list),
-                    color: colorScheme.primary,
-                    tooltip: 'กรองข้อมูล',
-                    onPressed: _showFilterDialog,
-                  ),
-                ),
+                SizedBox(height: 16.h),
+                _buildCowList(cowService),
+                SizedBox(height: 80.h),
               ],
             ),
-            SizedBox(height: 16.h),
-          ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCowList(CowService cowService) {
+    // ใช้ข้อมูลที่ผ่านการกรองแล้ว
+    final displayCows = _filteredCows;
+
+    if (cowService.isLoading && cowService.cows.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (cowService.cows.isEmpty) {
+      return const Center(
+        child: Text('ไม่พบข้อมูลวัว, ลองเพิ่มวัวตัวใหม่ดูสิ!'),
+      );
+    }
+
+    // เพิ่มกรณีที่กรองแล้วไม่เจอกรณีที่มีวัวในระบบแต่ไม่ตรงเงื่อนไข
+    if (displayCows.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+            SizedBox(height: 16.h),
+            const Text('ไม่พบวัวที่ตรงกับเงื่อนไขตัวกรอง'),
+            TextButton(
+              onPressed: () {
+                _searchController.clear();
+                setState(() {
+                  _searchQuery = '';
+                  _selectedGender = null;
+                  _selectedBreeds.clear();
+                  _ageRange = const RangeValues(0, 20);
+                  _weightRange = const RangeValues(0, 1500);
+                });
+              },
+              child: const Text('ล้างตัวกรอง'),
+            )
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: displayCows.length,
+      itemBuilder: (context, index) {
+        final cow = displayCows[index];
+        final isSelected = _selectedCowIds.contains(cow.animalId);
+
+        return CowCard(
+          cow: cow,
+          isEditMode: _isEditMode,
+          isSelected: isSelected,
+          onSelect: () {
+            setState(() {
+              if (isSelected) {
+                _selectedCowIds.remove(cow.animalId);
+              } else {
+                _selectedCowIds.add(cow.animalId!);
+              }
+            });
+          },
+        );
+      },
     );
   }
 }

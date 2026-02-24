@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
-import 'package:th_cow_passport/ui/widgets/cached_cow_image.dart';
 
 class CowCard extends StatelessWidget {
   final Cow cow;
@@ -72,18 +71,44 @@ class CowCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                CachedCowImage(
-                  imageUrl: () {
-                    if (cow.facePic != null && cow.facePic!.isNotEmpty) {
-                      return cow.facePic!.first;
-                    } else if (cow.bodyPic != null && cow.bodyPic!.isNotEmpty) {
-                      return cow.bodyPic!.first;
+                Container(
+                  width: 60.r,
+                  height: 60.r,
+                  decoration: BoxDecoration(
+                    color: theme.scaffoldBackgroundColor,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                        color: colorScheme.secondary.withValues(alpha: 0.3)),
+                    image: () {
+                      String? imageUrl;
+                      if (cow.facePic != null && cow.facePic!.isNotEmpty) {
+                        imageUrl = cow.facePic!.first;
+                      } else if (cow.bodyPic != null &&
+                          cow.bodyPic!.isNotEmpty) {
+                        imageUrl = cow.bodyPic!.first;
+                      }
+
+                      if (imageUrl != null) {
+                        return DecorationImage(
+                          image: NetworkImage(imageUrl),
+                          fit: BoxFit.cover,
+                        );
+                      }
+                      return null;
+                    }(),
+                  ),
+                  child: () {
+                    final hasFace =
+                        cow.facePic != null && cow.facePic!.isNotEmpty;
+                    final hasBody =
+                        cow.bodyPic != null && cow.bodyPic!.isNotEmpty;
+
+                    if (!hasFace && !hasBody) {
+                      return Image.asset('assets/images/cow.png',
+                          width: 36.r, height: 36.r);
                     }
                     return null;
                   }(),
-                  width: 60,
-                  height: 60,
-                  borderRadius: 12,
                 ),
                 SizedBox(width: 16.w),
                 Expanded(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:th_cow_passport/ui/widgets/adaptive_map_widget.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -515,7 +515,8 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
                     child: TextField(
                       controller: _searchController,
                       decoration: InputDecoration(
-                        hintText: 'ค้นหาชื่อวัว, สายพันธุ์, ผู้ขาย หรือจังหวัด...',
+                        hintText:
+                            'ค้นหาชื่อวัว, สายพันธุ์, ผู้ขาย หรือจังหวัด...',
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
@@ -683,7 +684,8 @@ class _MarketItemCardState extends State<_MarketItemCard> {
               builder: (context) => CowDetailScreen(
                 cowId: int.tryParse(item.id) ?? 0,
                 isReadOnly: true,
-                hideBackButton: false, // ✅ ระบุชัดเจนว่าให้แสดงปุ่ม Back (แม้จะเป็น default)
+                hideBackButton:
+                    false, // ✅ ระบุชัดเจนว่าให้แสดงปุ่ม Back (แม้จะเป็น default)
               ),
             ),
           );
@@ -897,8 +899,8 @@ class _SellerDetailsSheetState extends State<SellerDetailsSheet> {
     final colorScheme = theme.colorScheme;
 
     // เตรียมตำแหน่งพิกัด (ถ้าไม่มีพิกัด ให้ไปลงที่กรุงเทพฯ เป็น Default)
-    final LatLng cattleLocation = LatLng(
-        widget.item.latitude ?? 13.7563, widget.item.longitude ?? 100.5018);
+    final double lat = widget.item.latitude ?? 13.7563;
+    final double lng = widget.item.longitude ?? 100.5018;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.7,
@@ -929,31 +931,18 @@ class _SellerDetailsSheetState extends State<SellerDetailsSheet> {
           Expanded(
             child: Container(
               width: double.infinity,
-              clipBehavior: Clip.antiAlias, // ทำให้ขอบแผนที่มนตาม Container
+              clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16.r),
                 border: Border.all(color: Colors.grey[200]!),
               ),
-              child: GoogleMap(
-                initialCameraPosition: CameraPosition(
-                  target: cattleLocation,
-                  zoom: 15,
-                ),
-                markers: {
-                  Marker(
-                    markerId: MarkerId(widget.item.id),
-                    position: cattleLocation,
-                    infoWindow: InfoWindow(
-                      title: widget.item.name,
-                      snippet: 'กดที่นี่เพื่อนำทาง', // เพิ่มคำอธิบายเล็กน้อย
-                    ),
-                    // แก้ไขส่วนนี้: เมื่อกดที่ตัวหมุดจะเรียกฟังก์ชันเปิดแอปทันที
-                    onTap: () => _launchMap(
-                        cattleLocation.latitude, cattleLocation.longitude),
-                  ),
-                },
-                myLocationButtonEnabled: false,
-                mapType: MapType.normal,
+              child: AdaptiveDisplayMap(
+                latitude: lat,
+                longitude: lng,
+                markerId: widget.item.id,
+                markerTitle: widget.item.name,
+                onMarkerTap: () => _launchMap(lat, lng),
+                zoom: 15,
               ),
             ),
           ),

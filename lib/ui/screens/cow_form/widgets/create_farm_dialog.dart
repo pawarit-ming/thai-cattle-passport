@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart'; // เพิ่ม: สำหรับแผนที่
+import 'package:th_cow_passport/ui/widgets/adaptive_map_widget.dart';
 import 'package:geolocator/geolocator.dart'; // เพิ่ม: สำหรับหาตำแหน่งปัจจุบัน
 import 'package:logger/logger.dart';
 import 'package:th_cow_passport/features/address/presentation/widgets/thai_address_picker.dart';
@@ -26,12 +26,10 @@ class _CreateFarmDialogState extends ConsumerState<CreateFarmDialog> {
   final _logger = Logger();
 
   // --- ส่วนจัดการแผนที่ ---
-  GoogleMapController? _mapController;
-  LatLng? _selectedLocation; // ตัวแปรเก็บพิกัดที่เลือก
-  bool _isGettingLocation = false; // สถานะตอนกำลังโหลด GPS
-
-  // พิกัดเริ่มต้น (อนุสาวรีย์ชัยฯ - หรือจุดกลางประเทศไทย)
-  static const LatLng _defaultLocation = LatLng(13.7563, 100.5018);
+  final _mapKey = GlobalKey<AdaptivePickerMapState>();
+  double? _selectedLat;
+  double? _selectedLng;
+  bool _isGettingLocation = false;
 
   @override
   void dispose() {
@@ -41,7 +39,6 @@ class _CreateFarmDialogState extends ConsumerState<CreateFarmDialog> {
     _districtController.dispose();
     _subDistrictController.dispose();
     _postalCodeController.dispose();
-    _mapController?.dispose();
     super.dispose();
   }
 
@@ -74,14 +71,16 @@ class _CreateFarmDialogState extends ConsumerState<CreateFarmDialog> {
 
       // 3. ดึงพิกัด
       Position position = await Geolocator.getCurrentPosition();
-      final latLng = LatLng(position.latitude, position.longitude);
+      final lat = position.latitude;
+      final lng = position.longitude;
 
       setState(() {
-        _selectedLocation = latLng;
+        _selectedLat = lat;
+        _selectedLng = lng;
       });
 
       // เลื่อนกล้องไปที่ตำแหน่งปัจจุบัน
-      _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 16));
+      _mapKey.currentState?.animateTo(lat, lng);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -142,31 +141,19 @@ class _CreateFarmDialogState extends ConsumerState<CreateFarmDialog> {
                 borderRadius: BorderRadius.circular(12.r),
                 child: Stack(
                   children: [
-                    GoogleMap(
-                      initialCameraPosition: const CameraPosition(
-                        target: _defaultLocation,
-                        zoom: 10,
-                      ),
-                      myLocationEnabled: true,
-                      myLocationButtonEnabled: false, // เราทำปุ่มกดเอง
-                      zoomControlsEnabled: true,
-                      mapType: MapType.normal,
-                      onMapCreated: (controller) => _mapController = controller,
-                      onTap: (latLng) {
+                    AdaptivePickerMap(
+                      key: _mapKey,
+                      initialLatitude: 13.7563,
+                      initialLongitude: 100.5018,
+                      initialZoom: 10,
+                      selectedLatitude: _selectedLat,
+                      selectedLongitude: _selectedLng,
+                      onLocationSelected: (loc) {
                         setState(() {
-                          _selectedLocation = latLng;
+                          _selectedLat = loc.lat;
+                          _selectedLng = loc.lng;
                         });
                       },
-                      markers: _selectedLocation == null
-                          ? {}
-                          : {
-                              Marker(
-                                markerId: const MarkerId('farm_loc'),
-                                position: _selectedLocation!,
-                                infoWindow:
-                                    const InfoWindow(title: 'ตำแหน่งฟาร์ม'),
-                              ),
-                            },
                     ),
                     // ปุ่มกดหาตำแหน่งปัจจุบัน
                     Positioned(
@@ -191,11 +178,11 @@ class _CreateFarmDialogState extends ConsumerState<CreateFarmDialog> {
                 ),
               ),
             ),
-            if (_selectedLocation != null)
+            if (_selectedLat != null && _selectedLng != null)
               Padding(
                 padding: EdgeInsets.only(top: 4.h),
                 child: Text(
-                  'พิกัด: ${_selectedLocation!.latitude.toStringAsFixed(5)}, ${_selectedLocation!.longitude.toStringAsFixed(5)}',
+                  'พิกัด: ${_selectedLat!.toStringAsFixed(5)}, ${_selectedLng!.toStringAsFixed(5)}',
                   style: TextStyle(fontSize: 12.sp, color: Colors.green),
                 ),
               )
@@ -258,7 +245,7 @@ class _CreateFarmDialogState extends ConsumerState<CreateFarmDialog> {
       return;
     }
 
-    if (_selectedLocation == null) {
+    if (_selectedLat == null || _selectedLng == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('กรุณาปักหมุดตำแหน่งฟาร์มในแผนที่'),
@@ -282,8 +269,8 @@ class _CreateFarmDialogState extends ConsumerState<CreateFarmDialog> {
         postalCode: _postalCodeController.text.trim(),
         // ต้องตรวจสอบว่า FarmService ของคุณรองรับพารามิเตอร์ 2 ตัวนี้แล้วหรือยัง
         // (ตามที่เราคุยกันก่อนหน้านี้ ให้ไปแก้ FarmService ด้วยครับ)
-        latitude: _selectedLocation!.latitude,
-        longitude: _selectedLocation!.longitude,
+        latitude: _selectedLat!,
+        longitude: _selectedLng!,
       );
 
       if (mounted) {

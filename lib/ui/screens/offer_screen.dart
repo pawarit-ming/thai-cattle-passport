@@ -276,16 +276,6 @@ class _OfferScreenState extends State<OfferScreen> {
                           width: 60,
                           height: 60,
                           borderRadius: 12,
-                          fallbackWidget: Container(
-                            width: 60.r,
-                            height: 60.r,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade200,
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                            child: Icon(Icons.pets,
-                                color: colorScheme.primary, size: 30.r),
-                          ),
                         ),
                         SizedBox(width: 12.w),
                         Expanded(

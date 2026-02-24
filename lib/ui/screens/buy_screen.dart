@@ -699,51 +699,65 @@ class _MarketItemCardState extends State<_MarketItemCard> {
             Container(
               height: 180.h,
               width: double.infinity,
-              color: Colors.grey.shade300,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  PageView.builder(
-                    itemCount: item.images.length,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _currentImageIndex = index;
-                      });
-                    },
-                    itemBuilder: (context, pageIndex) {
-                      return Image.network(
-                        item.images[pageIndex],
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Icon(
-                            Icons.image_not_supported,
-                            size: 50.r,
-                            color: Colors.grey),
-                      );
-                    },
-                  ),
-                  Positioned(
-                    bottom: 8.h,
-                    left: 0,
-                    right: 0,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: item.images.asMap().entries.map((entry) {
-                        return Container(
-                          width: 8.w,
-                          height: 8.h,
-                          margin: EdgeInsets.symmetric(horizontal: 4.w),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _currentImageIndex == entry.key
-                                ? Colors.white
-                                : Colors.white.withValues(alpha: 0.4),
+              color: Colors.grey.shade200,
+              child: item.images.isEmpty
+                  ? Center(
+                      child: Image.asset(
+                        'assets/images/cow.png',
+                        width: 100.r,
+                        height: 100.r,
+                      ),
+                    )
+                  : Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        PageView.builder(
+                          itemCount: item.images.length,
+                          onPageChanged: (index) {
+                            setState(() {
+                              _currentImageIndex = index;
+                            });
+                          },
+                          itemBuilder: (context, pageIndex) {
+                            return Image.network(
+                              item.images[pageIndex],
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Center(
+                                child: Image.asset(
+                                  'assets/images/cow.png',
+                                  width: 80.r,
+                                  height: 80.r,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        if (item.images.length > 1)
+                          Positioned(
+                            bottom: 8.h,
+                            left: 0,
+                            right: 0,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children:
+                                  item.images.asMap().entries.map((entry) {
+                                return Container(
+                                  width: 8.w,
+                                  height: 8.h,
+                                  margin: EdgeInsets.symmetric(horizontal: 4.w),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: _currentImageIndex == entry.key
+                                        ? Colors.white
+                                        : Colors.white.withValues(alpha: 0.4),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
                           ),
-                        );
-                      }).toList(),
+                      ],
                     ),
-                  ),
-                ],
-              ),
             ),
             Padding(
               padding: EdgeInsets.all(16.r),

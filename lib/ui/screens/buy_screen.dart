@@ -224,6 +224,9 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
       // กรองวัวที่ตายแล้วออก
       query = query.neq('status', 'DEATH');
 
+      // กรองวัวที่ถูกลบออก (Soft Delete)
+      query = query.eq('is_deleted', false);
+
       final data = await query.order('created_at', ascending: false);
 
       // 3. [เพิ่มใหม่] ดึงข้อมูล Offer ของเรามาเช็คว่าเคยเสนอซื้อตัวไหนไปแล้วบ้าง

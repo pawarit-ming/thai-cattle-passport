@@ -49,7 +49,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   String _parseErrorMessage(String error) {
     if (error.contains('invalid_credentials')) {
-      return 'อีเมล, เลขบัตรประชาชน หรือรหัสผ่านไม่ถูกต้อง';
+      return 'อีเมล, เบอร์โทรศัพท์ หรือรหัสผ่านไม่ถูกต้อง';
     }
     if (error.contains('invalid_email')) {
       return 'รูปแบบอีเมลไม่ถูกต้อง';
@@ -104,7 +104,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: 'อีเมลหรือเลขบัตรประชาชน',
+                  labelText: 'อีเมลหรือเบอร์โทรศัพท์',
                   // border: Use theme default
                   prefixIcon: const Icon(Icons.person),
                 ),

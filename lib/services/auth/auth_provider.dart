@@ -30,7 +30,7 @@ final signUpProvider = FutureProvider.autoDispose.family<
       String password,
       String firstName,
       String lastName,
-      String citizenId
+      String phone
     })>(
   (ref, params) async {
     final authService = ref.watch(authServiceProvider);
@@ -41,7 +41,7 @@ final signUpProvider = FutureProvider.autoDispose.family<
       password: params.password,
       firstName: params.firstName,
       lastName: params.lastName,
-      citizenId: params.citizenId,
+      phone: params.phone,
     );
   },
 );
@@ -62,9 +62,9 @@ final signInProvider =
         password: params.password,
       );
     } else {
-      // Assume citizen ID
-      await authService.signInWithCitizenId(
-        citizenId: input,
+      // Assume phone number
+      await authService.signInWithPhone(
+        phone: input,
         password: params.password,
       );
     }

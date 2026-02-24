@@ -31,7 +31,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _authFormKey = GlobalKey<FormState>();
   late TextEditingController _firstNameController;
   late TextEditingController _lastNameController;
-  late TextEditingController _citizenIdController;
+  late TextEditingController _phoneController;
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
   bool _obscurePassword = true;
@@ -55,7 +55,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.initState();
     _firstNameController = TextEditingController();
     _lastNameController = TextEditingController();
-    _citizenIdController = TextEditingController();
+    _phoneController = TextEditingController();
     _emailController = TextEditingController();
     _emailError = null;
     _passwordController = TextEditingController();
@@ -73,7 +73,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
-    _citizenIdController.dispose();
+    _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _farmNameController.dispose();
@@ -136,7 +136,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         password: _authPassword,
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
-        citizenId: _citizenIdController.text.trim(),
+        phone: _phoneController.text.trim(),
       );
 
       final userId = authResponse.user?.id;
@@ -393,13 +393,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ),
           SizedBox(height: 16.h),
           StyledTextField(
-            controller: _citizenIdController,
-            label: 'เลขบัตรประชาชน',
-            hintText: '1234567890123',
-            icon: Icons.credit_card,
-            keyboardType: TextInputType.number,
+            controller: _phoneController,
+            label: 'เบอร์โทรศัพท์',
+            hintText: '0812345678',
+            icon: Icons.phone,
+            keyboardType: TextInputType.phone,
             isRequired: true,
-            maxLength: 13,
+            maxLength: 10,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
           SizedBox(height: 16.h),

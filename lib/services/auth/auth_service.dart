@@ -15,18 +15,18 @@ class AuthService {
     required String password,
     required String firstName,
     required String lastName,
-    required String citizenId,
+    required String phone,
   }) async {
     try {
       logger.i(
-          '[AuthService] Signing up user: $email, name: $firstName $lastName, citizenId: $citizenId');
+          '[AuthService] Signing up user: $email, name: $firstName $lastName, phone: $phone');
       final response = await supabaseClient.auth.signUp(
         email: email,
         password: password,
         data: {
           'first_name': firstName,
           'last_name': lastName,
-          'citizen_id': citizenId,
+          'mobile_phone': phone,
         },
       );
 
@@ -81,36 +81,33 @@ class AuthService {
   }
 
   // Sign in with citizen ID and password
-  Future<AuthResponse> signInWithCitizenId({
-    required String citizenId,
+  Future<AuthResponse> signInWithPhone({
+    required String phone,
     required String password,
   }) async {
     try {
-      logger.i('[AuthService] Attempting lookup for citizenId: $citizenId');
+      logger.i('[AuthService] Attempting lookup for phone: $phone');
 
-      // 1. Lookup email from users table
-      // Note: This assumes public.users table has an 'email' column populated by trigger.
-      // If not, this needs a different approach (e.g. Edge Function).
+      // 1. Lookup email from users table using phone number
       final data = await supabaseClient
           .from('users')
           .select('email')
-          .eq('citizen_id', citizenId)
+          .eq('mobile_phone', phone)
           .maybeSingle();
 
       if (data == null || data['email'] == null) {
-        logger.w('[AuthService] No user found with citizenId: $citizenId');
-        throw 'invalid_credentials'; // Use generic error to match auth errors
+        logger.w('[AuthService] No user found with phone: $phone');
+        throw 'invalid_credentials';
       }
 
       final email = data['email'] as String;
-      logger.i('[AuthService] Found email for citizenId: $email');
+      logger.i('[AuthService] Found email for phone: $email');
 
       // 2. Sign in with the found email
       return await signIn(email: email, password: password);
     } catch (e) {
       if (e is PostgrestException) {
         logger.e('[AuthService] Database error during lookup', error: e);
-        // If column 'email' doesn't exist or other DB error
         throw 'database_error';
       }
       rethrow;

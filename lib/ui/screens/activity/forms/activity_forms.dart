@@ -208,8 +208,9 @@ class VaccineForm extends StatelessWidget {
               final dateStr = record['activity_date']?.toString();
               if (dateStr != null) {
                 final dt = DateTime.tryParse(dateStr);
-                if (dt != null)
+                if (dt != null) {
                   doneDate = '${dt.day}/${dt.month}/${dt.year + 543}';
+                }
               }
             }
 

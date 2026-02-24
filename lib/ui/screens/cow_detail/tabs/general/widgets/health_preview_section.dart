@@ -20,7 +20,7 @@ class HealthPreviewSection extends ConsumerWidget {
     final allCows = ref.watch(cowServiceProvider).cows;
     final cowLookup = {
       for (final c in allCows)
-        if (c.animalId != null) c.animalId!: '${c.nidNumber}',
+        if (c.animalId != null) c.animalId!: c.nidNumber,
     };
 
     return Column(
@@ -159,7 +159,7 @@ class HealthTab extends ConsumerWidget {
     final allCows = ref.watch(cowServiceProvider).cows;
     final cowLookup = {
       for (final c in allCows)
-        if (c.animalId != null) c.animalId!: '${c.nidNumber}',
+        if (c.animalId != null) c.animalId!: c.nidNumber,
     };
 
     return activitiesAsync.when(

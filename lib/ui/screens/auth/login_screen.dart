@@ -77,8 +77,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(Icons.pets,
-                  size: 80.w, color: Theme.of(context).primaryColor),
+              Image.asset(
+                'assets/images/CowD_logo.png',
+                height: 120.h,
+                fit: BoxFit.contain,
+              ),
               SizedBox(height: 20.h),
               Text(
                 'เข้าสู่ระบบ CowD',

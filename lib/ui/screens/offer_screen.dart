@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:th_cow_passport/ui/widgets/cached_cow_image.dart';
 import 'cow_detail_screen.dart';
 
 class OfferScreen extends StatefulWidget {
@@ -270,22 +271,21 @@ class _OfferScreenState extends State<OfferScreen> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 60.r,
-                          height: 60.r,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(12.r),
-                            image: (image != null && image.isNotEmpty)
-                                ? DecorationImage(
-                                    image: NetworkImage(image),
-                                    fit: BoxFit.cover)
-                                : null,
+                        CachedCowImage(
+                          imageUrl: image,
+                          width: 60,
+                          height: 60,
+                          borderRadius: 12,
+                          fallbackWidget: Container(
+                            width: 60.r,
+                            height: 60.r,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: Icon(Icons.pets,
+                                color: colorScheme.primary, size: 30.r),
                           ),
-                          child: (image == null || image.isEmpty)
-                              ? Icon(Icons.pets,
-                                  color: colorScheme.primary, size: 30.r)
-                              : null,
                         ),
                         SizedBox(width: 12.w),
                         Expanded(

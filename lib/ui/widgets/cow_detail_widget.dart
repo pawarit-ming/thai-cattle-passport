@@ -15,6 +15,7 @@ class CowDetailWidget extends StatelessWidget {
   final TabController tabController;
   final bool isEditable;
   final VoidCallback? onImageTap;
+  final Widget? banner;
 
   const CowDetailWidget({
     super.key,
@@ -30,6 +31,7 @@ class CowDetailWidget extends StatelessWidget {
     this.floatingActionButton,
     this.isEditable = false,
     this.onImageTap,
+    this.banner,
   });
 
   @override
@@ -68,6 +70,8 @@ class CowDetailWidget extends StatelessWidget {
                 ),
               ),
             ),
+            // Banner (เช่น แจ้งเตือนวัวตาย)
+            if (banner != null) SliverToBoxAdapter(child: banner!),
             SliverPersistentHeader(
               pinned: true,
               delegate: _StickyTabBarDelegate(

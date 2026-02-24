@@ -4,8 +4,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:logger/logger.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
 import 'package:th_cow_passport/services/cow_management/cow_activity/activity_service.dart';
+import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_service.dart';
 import 'package:th_cow_passport/ui/screens/camera_screen.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/activity/activity_tab.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail/tabs/general/general_tab.dart';
@@ -93,6 +95,8 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
       return const Scaffold(body: Center(child: Text("ไม่พบข้อมูลวัว")));
     }
 
+    final isDead = cow.status == 'DEATH';
+
     return CowDetailWidget(
       title: 'ข้อมูลประจำตัววัว',
       images: [
@@ -102,7 +106,6 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
       tabController: _tabController,
 
       // ✅ 3. ปรับ Logic ตรงนี้: ถ้า hideBackButton เป็น true ให้ส่ง null (เพื่อซ่อนปุ่ม)
-      // (หมายเหตุ: CowDetailWidget ต้องรองรับค่า null ใน onBack เพื่อซ่อนปุ่ม Leading)
       onBack: widget.hideBackButton
           ? null
           : () {
@@ -122,6 +125,30 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
                 _showQrDialog(context, cow.animalId.toString(), cow.nidNumber),
           ),
       ],
+      // แสดง banner เตือนเมื่อวัวตาย
+      banner: isDead && !widget.isReadOnly
+          ? Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+              color: Colors.grey.shade800,
+              child: Row(
+                children: [
+                  Icon(Icons.block, color: Colors.white, size: 18.r),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      'วัวตัวนี้ตายแล้ว — สามารถเปลี่ยนสถานะเท่านั้น',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : null,
       tabs: const [
         Tab(text: 'ข้อมูลทั่วไป'),
         Tab(text: 'กิจกรรม'),
@@ -132,9 +159,10 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
       ],
       bottomBar: widget.isReadOnly
           ? null
-          : _buildBottomBar(
-              context, colorScheme, theme, cow.animalId!, cow.animalId!),
-      floatingActionButton: widget.isReadOnly
+          : _buildBottomBar(context, colorScheme, theme, cow.animalId!,
+              cow.animalId!, isDead),
+      // ซ่อน FAB กล้องเมื่อวัวตาย
+      floatingActionButton: widget.isReadOnly || isDead
           ? null
           : FloatingActionButton(
               onPressed: () => _showScanInstructionDialog(context),
@@ -313,8 +341,13 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
   }
 
   Widget _buildBottomBar(BuildContext context, ColorScheme colorScheme,
-      ThemeData theme, int animalId, int cowId) {
+      ThemeData theme, int animalId, int cowId, bool isDead) {
     final isActivityTab = _tabController.index == 1;
+
+    // ถ้าวัวตาย + อยู่แท็บกิจกรรม → ซ่อน bottom bar
+    if (isDead && isActivityTab) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -330,37 +363,271 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
       child: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(16.r),
-          child: ElevatedButton.icon(
-            onPressed: () async {
-// ... (context handled by tool)
-              if (isActivityTab) {
-                context.push('/add-activity/$cowId');
-              } else {
-                // Navigate to edit screen and wait for result
-                final didEdit =
-                    await context.push<bool>('/edit-form/$animalId');
-                // If edit was successful, refresh activities
-                if (didEdit == true) {
-                  ref.invalidate(activitiesProvider(cowId));
-                }
-              }
-            },
-            icon: Icon(isActivityTab ? Icons.add : Icons.edit),
-            label: Text(
-              isActivityTab ? 'เพิ่มกิจกรรม' : 'แก้ไขข้อมูล',
-              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30.r)),
-            ),
-          ),
+          child: isDead
+              // ===== วัวตาย: ปุ่มเปลี่ยนสถานะ =====
+              ? ElevatedButton.icon(
+                  onPressed: () => _showStatusChangeModal(context, cowId),
+                  icon: const Icon(Icons.swap_horiz),
+                  label: Text(
+                    'เปลี่ยนสถานะ',
+                    style:
+                        TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey.shade700,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30.r)),
+                  ),
+                )
+              // ===== วัวปกติ: ปุ่มแก้ไข/เพิ่มกิจกรรม =====
+              : ElevatedButton.icon(
+                  onPressed: () async {
+                    if (isActivityTab) {
+                      context.push('/add-activity/$cowId');
+                    } else {
+                      final didEdit =
+                          await context.push<bool>('/edit-form/$animalId');
+                      if (didEdit == true) {
+                        ref.invalidate(activitiesProvider(cowId));
+                      }
+                    }
+                  },
+                  icon: Icon(isActivityTab ? Icons.add : Icons.edit),
+                  label: Text(
+                    isActivityTab ? 'เพิ่มกิจกรรม' : 'แก้ไขข้อมูล',
+                    style:
+                        TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30.r)),
+                  ),
+                ),
         ),
       ),
+    );
+  }
+
+  /// Bottom modal sheet สำหรับเปลี่ยนสถานะวัว (ใช้เมื่อวัวสถานะ DEATH)
+  void _showStatusChangeModal(BuildContext context, int cowId) {
+    String? selectedStatus;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 24.w,
+                right: 24.w,
+                top: 16.h,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24.h,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      width: 40.w,
+                      height: 4.h,
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary.withValues(alpha: 0.25),
+                        borderRadius: BorderRadius.circular(2.r),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+                  // Title
+                  Text(
+                    'เปลี่ยนสถานะวัว',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  SizedBox(height: 6.h),
+                  Text(
+                    'วัวตัวนี้มีสถานะ "ตายแล้ว" — เลือกสถานะใหม่ด้านล่าง',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+                  // Status options — ใช้สีที่เข้ากับ earth-tone theme
+                  ...[
+                    _StatusOption(
+                      value: 'ACTIVE',
+                      label: 'สุขภาพดี',
+                      icon: Icons.favorite_rounded,
+                      color: const Color(0xFF4CAF50), // Muted green
+                    ),
+                    _StatusOption(
+                      value: 'SICK',
+                      label: 'ป่วย',
+                      icon: Icons.local_hospital_rounded,
+                      color: const Color(0xFFE6A23C), // Warm amber
+                    ),
+                    _StatusOption(
+                      value: 'SOLD',
+                      label: 'ขายแล้ว',
+                      icon: Icons.sell_rounded,
+                      color: const Color(0xFF5C6BC0), // Muted indigo
+                    ),
+                  ].map((option) {
+                    final isSelected = selectedStatus == option.value;
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 10.h),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20.r),
+                        onTap: () {
+                          setModalState(() => selectedStatus = option.value);
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 16.w, vertical: 14.h),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? option.color.withValues(alpha: 0.08)
+                                : colorScheme.surface,
+                            borderRadius: BorderRadius.circular(20.r),
+                            border: Border.all(
+                              color: isSelected
+                                  ? option.color
+                                  : Colors.grey.shade200,
+                              width: isSelected ? 2 : 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              // Icon in tinted circle
+                              Container(
+                                width: 40.r,
+                                height: 40.r,
+                                decoration: BoxDecoration(
+                                  color: option.color.withValues(alpha: 0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(option.icon,
+                                    color: option.color, size: 22.r),
+                              ),
+                              SizedBox(width: 14.w),
+                              Text(
+                                option.label,
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.w500,
+                                  color: isSelected
+                                      ? option.color
+                                      : colorScheme.onSurface,
+                                ),
+                              ),
+                              const Spacer(),
+                              if (isSelected)
+                                Icon(Icons.check_circle_rounded,
+                                    color: option.color, size: 24.r),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                  SizedBox(height: 12.h),
+                  // Save button — pill shape ตาม theme
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: selectedStatus == null
+                          ? null
+                          : () async {
+                              try {
+                                await Supabase.instance.client
+                                    .from('animals')
+                                    .update({
+                                  'status': selectedStatus,
+                                  'updated_at':
+                                      DateTime.now().toIso8601String(),
+                                }).eq('animal_id', cowId);
+
+                                // Refresh cow detail + cow list
+                                ref
+                                    .read(cowDetailServiceProvider)
+                                    .fetchCowById(cowId);
+                                ref
+                                    .read(cowServiceProvider)
+                                    .fetchCows(forceRefresh: true);
+
+                                if (mounted) {
+                                  Navigator.pop(ctx);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Text(
+                                          'เปลี่ยนสถานะเรียบร้อยแล้ว'),
+                                      backgroundColor: colorScheme.primary,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12.r),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('เกิดข้อผิดพลาด: $e'),
+                                      backgroundColor: Colors.red.shade700,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12.r),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                        disabledBackgroundColor: Colors.grey.shade300,
+                        padding: EdgeInsets.symmetric(vertical: 16.h),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30.r)),
+                      ),
+                      child: Text(
+                        'บันทึก',
+                        style: TextStyle(
+                            fontSize: 16.sp, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -503,4 +770,19 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
       },
     );
   }
+}
+
+/// Helper class for status options in the bottom modal
+class _StatusOption {
+  final String value;
+  final String label;
+  final IconData icon;
+  final Color color;
+
+  const _StatusOption({
+    required this.value,
+    required this.label,
+    required this.icon,
+    required this.color,
+  });
 }

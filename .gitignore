@@ -61,3 +61,10 @@ DerivedData/
 *.moved-aside
 *.java
 *.podspec
+
+# ลบโฟลเดอร์สำรองที่อาจจะเผลอสร้างไว้
+ios_old/
+android_old/
+
+# บังคับข้าม ephemeral ทุก Platform
+/*/flutter/ephemeral/

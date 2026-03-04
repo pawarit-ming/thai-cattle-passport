@@ -896,15 +896,32 @@ class SellerDetailsSheet extends StatefulWidget {
 class _SellerDetailsSheetState extends State<SellerDetailsSheet> {
   bool _isSubmitting = false;
 
-  // ฟังก์ชันสำหรับเปิด Google Maps
+  // ฟังก์ชันสำหรับเปิดแอปแผนที่
   Future<void> _launchMap(double lat, double lng) async {
-    final Uri googleMapsUrl =
-        Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lng");
+    final bool isIos = Theme.of(context).platform == TargetPlatform.iOS;
 
-    if (await canLaunchUrl(googleMapsUrl)) {
-      await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+    // 1. ลองใช้ Apple Maps สำหรับ iOS
+    if (isIos) {
+      final Uri appleUrl = Uri.parse('https://maps.apple.com/?q=$lat,$lng');
+      if (await canLaunchUrl(appleUrl)) {
+        await launchUrl(appleUrl, mode: LaunchMode.externalApplication);
+        return;
+      }
+    }
+
+    // 2. ลองใช้ geo: สำหรับ Android (จะเปิดแอปแผนที่อะไรก็ได้ในเครื่อง เช่น Petal Maps, Google Maps)
+    final Uri geoUrl = Uri.parse('geo:$lat,$lng?q=$lat,$lng');
+    if (!isIos && await canLaunchUrl(geoUrl)) {
+      await launchUrl(geoUrl, mode: LaunchMode.externalApplication);
+      return;
+    }
+
+    // 3. ตัวสำรอง (Google Maps Web URL)
+    final Uri webUrl =
+        Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lng");
+    if (await canLaunchUrl(webUrl)) {
+      await launchUrl(webUrl, mode: LaunchMode.externalApplication);
     } else {
-      // กรณีเปิดไม่ได้ (เช่น ไม่มีเบราว์เซอร์หรือแอป)
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('ไม่สามารถเปิดแผนที่ได้')),

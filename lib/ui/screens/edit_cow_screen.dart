@@ -544,7 +544,6 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
               controller: _customColorController,
               icon: Icons.edit,
               hintText: 'เช่น เหลืองอ่อน, ส้มแดง',
-              isRequired: true,
             ),
           ],
           SizedBox(height: 16.h),

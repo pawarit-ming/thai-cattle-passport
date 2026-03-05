@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
 import 'package:th_cow_passport/core/constants/animal_constants.dart';
+import 'package:flutter/services.dart';
 import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
 import 'package:th_cow_passport/ui/widgets/cow_selection_field.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_search_dropdown.dart';
@@ -78,22 +79,34 @@ class _PhysicalInfoTabState extends State<PhysicalInfoTab> {
             children: [
               Expanded(
                 child: StyledTextField(
-                    label: 'น้ำหนัก (กก.)',
-                    hintText: 'เช่น 450.5',
-                    controller: widget.weightController,
-                    icon: Icons.monitor_weight,
-                    suffixText: 'กก.',
-                    keyboardType: TextInputType.number),
+                  label: 'น้ำหนัก (กก.)',
+                  hintText: 'เช่น 450.5',
+                  controller: widget.weightController,
+                  icon: Icons.monitor_weight,
+                  suffixText: 'กก.',
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d{0,4}(\.\d{0,2})?')),
+                  ],
+                ),
               ),
               SizedBox(width: 16.w),
               Expanded(
                 child: StyledTextField(
-                    label: 'ส่วนสูง (ซม.)',
-                    hintText: 'เช่น 150',
-                    controller: widget.heightController,
-                    icon: Icons.height,
-                    suffixText: 'ซม.',
-                    keyboardType: TextInputType.number),
+                  label: 'ส่วนสูง (ซม.)',
+                  hintText: 'เช่น 150',
+                  controller: widget.heightController,
+                  icon: Icons.height,
+                  suffixText: 'ซม.',
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d{0,4}(\.\d{0,2})?')),
+                  ],
+                ),
               ),
             ],
           ),

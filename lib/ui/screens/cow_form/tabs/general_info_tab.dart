@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 import 'package:th_cow_passport/services/farm/farm_service.dart';
 import 'package:th_cow_passport/services/farm/model/farm_model.dart';
@@ -176,6 +177,9 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
             hintText: 'เช่น 1234567890123',
             icon: Icons.confirmation_number,
             isRequired: true,
+            maxLength: 16,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
           SizedBox(height: 16.h),
           StyledTextField(
@@ -184,6 +188,7 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
             hintText: 'เช่น สมศรี, บุญรอด',
             icon: Icons.pets,
             isRequired: true,
+            maxLength: 50,
           ),
           SizedBox(height: 16.h),
           AppSearchDropdown<String>(
@@ -224,6 +229,7 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
               icon: Icons.edit,
               hintText: 'เช่น วากิวลูกผสม, บราห์มันแท้',
               isRequired: true,
+              maxLength: 50,
             ),
           ],
           SizedBox(height: 16.h),

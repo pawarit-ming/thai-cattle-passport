@@ -3,7 +3,7 @@ import '../../data/datasources/thai_address_datasource.dart';
 import '../../data/models/district_model.dart';
 import '../../data/models/province_model.dart';
 import '../../data/models/tambon_model.dart';
-import 'package:th_cow_passport/ui/widgets/styled_dropdown_field.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_search_dropdown.dart';
 import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
 
 class ThaiAddressPicker extends StatefulWidget {
@@ -98,34 +98,38 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
 
     return Column(
       children: [
-        StyledDropdownField<Province>(
+        AppSearchDropdown<Province>(
           label: 'จังหวัด',
           value: _selectedProvince,
+          hintText: 'เลือกจังหวัด',
           items: _provinces
               .map((p) => DropdownMenuItem(
                     value: p,
                     child: Text(p.nameTh, overflow: TextOverflow.ellipsis),
                   ))
               .toList(),
+          itemAsString: (p) => p.nameTh,
           onChanged: _onProvinceChanged,
           validator: (v) => v == null ? 'กรุณาเลือกจังหวัด' : null,
-          icon: Icons.map,
+          prefixIcon: const Icon(Icons.map),
         ),
         const SizedBox(height: 16),
-        StyledDropdownField<District>(
+        AppSearchDropdown<District>(
           label: 'อำเภอ/เขต',
           value: _selectedDistrict,
+          hintText: 'เลือกอำเภอ',
           items: _districts
               .map((d) => DropdownMenuItem(
                     value: d,
                     child: Text(d.nameTh, overflow: TextOverflow.ellipsis),
                   ))
               .toList(),
+          itemAsString: (d) => d.nameTh,
           onChanged: _selectedProvince == null
               ? null
               : _onDistrictChanged, // Disable if no province
           validator: (v) => v == null ? 'กรุณาเลือกอำเภอ' : null,
-          icon: Icons.map,
+          prefixIcon: const Icon(Icons.map),
         ),
         const SizedBox(height: 16),
         Row(
@@ -133,9 +137,10 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
               CrossAxisAlignment.start, // Align top for different heights
           children: [
             Expanded(
-              child: StyledDropdownField<Tambon>(
+              child: AppSearchDropdown<Tambon>(
                 label: 'ตำบล/แขวง',
                 value: _selectedTambon,
+                hintText: 'เลือกตำบล',
                 items: _tambons
                     .map((t) => DropdownMenuItem(
                           value: t,
@@ -143,9 +148,10 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
                               Text(t.nameTh, overflow: TextOverflow.ellipsis),
                         ))
                     .toList(),
+                itemAsString: (t) => t.nameTh,
                 onChanged: _districts.isEmpty ? null : _onTambonChanged,
                 validator: (v) => v == null ? 'กรุณาเลือกตำบล' : null,
-                icon: Icons.map,
+                prefixIcon: const Icon(Icons.map),
               ),
             ),
             const SizedBox(width: 16),

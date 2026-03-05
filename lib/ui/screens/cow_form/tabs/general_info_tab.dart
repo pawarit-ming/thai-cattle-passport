@@ -9,6 +9,7 @@ import 'package:th_cow_passport/ui/screens/cow_form/widgets/create_farm_dialog.d
 import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
 import 'package:th_cow_passport/ui/widgets/styled_dropdown_field.dart';
 import 'package:th_cow_passport/core/constants/animal_constants.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_search_dropdown.dart';
 
 class GeneralInfoTab extends ConsumerStatefulWidget {
   final TextEditingController nidNumberController;
@@ -144,18 +145,19 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
                       );
                     }
 
-                    return StyledDropdownField<Farm>(
+                    return AppSearchDropdown<Farm>(
                       label: 'ฟาร์ม',
                       isRequired: true,
                       value: widget.selectedFarm ??
                           (farms.isNotEmpty ? farms.first : null),
-                      icon: Icons.home,
+                      prefixIcon: const Icon(Icons.home),
                       items: farms
                           .map((farm) => DropdownMenuItem(
                                 value: farm,
                                 child: Text(farm.farmName),
                               ))
                           .toList(),
+                      itemAsString: (farm) => farm.farmName,
                       onChanged: widget.onFarmChanged,
                       validator: (value) {
                         if (value == null) {
@@ -184,18 +186,19 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
             isRequired: true,
           ),
           SizedBox(height: 16.h),
-          StyledDropdownField<String>(
+          AppSearchDropdown<String>(
             label: 'สายพันธุ์',
             isRequired: true,
             value: _selectedBreed,
             hintText: 'เลือกสายพันธุ์',
-            icon: Icons.category,
+            prefixIcon: const Icon(Icons.category),
             items: AnimalConstants.breedOptions.map((breed) {
               return DropdownMenuItem(
                 value: breed,
                 child: Text(breed),
               );
             }).toList(),
+            itemAsString: (breed) => breed,
             onChanged: (value) {
               setState(() {
                 _selectedBreed = value;

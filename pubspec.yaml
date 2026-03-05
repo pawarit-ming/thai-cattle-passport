@@ -34,6 +34,8 @@ dependencies:
   screenshot: ^3.0.0
   image_gallery_saver_plus: ^4.0.1
   google_api_availability: ^5.0.1
+  shimmer: ^3.0.0
+  dropdown_search: ^6.0.2
 
 dev_dependencies:
   flutter_test:

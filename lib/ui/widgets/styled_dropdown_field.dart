@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_dropdown.dart';
 
 /// A standardized Dropdown field with the label positioned above the input.
 ///
@@ -35,52 +36,24 @@ class StyledDropdownField<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Label Row
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(label, style: theme.textTheme.labelLarge),
-            if (isRequired)
-              const Text(' *', style: TextStyle(color: Colors.red)),
-          ],
-        ),
-        SizedBox(height: 8.h),
-
-        // The Dropdown
-        DropdownButtonFormField<T>(
-          initialValue: value,
-          decoration: InputDecoration(
-            hintText: hintText ?? 'เลือก$label',
-            helperText: helperText,
-            helperMaxLines: 2,
-            prefixIcon: assetIcon != null
-                ? Padding(
-                    padding: EdgeInsets.all(12.r),
-                    child: Image.asset(
-                      assetIcon!,
-                      width: 24.r,
-                      height: 24.r,
-                    ),
-                  )
-                : (icon != null ? Icon(icon) : null),
-            filled: true,
-            fillColor: Colors.grey.shade50,
-            contentPadding:
-                EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-          ),
-          items: items,
-          onChanged: onChanged,
-          validator: validator,
-          isExpanded: true, // Prevent RenderFlex overflow for long text
-        ),
-      ],
+    return AppDropdown<T>(
+      label: label,
+      value: value,
+      items: items,
+      onChanged: onChanged,
+      validator: validator,
+      isRequired: isRequired,
+      hintText: hintText ?? 'เลือก$label',
+      prefixIcon: assetIcon != null
+          ? Padding(
+              padding: EdgeInsets.all(12.r),
+              child: Image.asset(
+                assetIcon!,
+                width: 24.r,
+                height: 24.r,
+              ),
+            )
+          : (icon != null ? Icon(icon) : null),
     );
   }
 }

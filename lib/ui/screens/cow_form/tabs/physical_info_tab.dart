@@ -3,8 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
 import 'package:th_cow_passport/core/constants/animal_constants.dart';
 import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
-import 'package:th_cow_passport/ui/widgets/styled_dropdown_field.dart';
 import 'package:th_cow_passport/ui/widgets/cow_selection_field.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_search_dropdown.dart';
 
 class PhysicalInfoTab extends StatefulWidget {
   final TextEditingController weightController;
@@ -98,17 +98,18 @@ class _PhysicalInfoTabState extends State<PhysicalInfoTab> {
             ],
           ),
           SizedBox(height: 16.h),
-          StyledDropdownField<String>(
+          AppSearchDropdown<String>(
             label: 'สี',
             value: _selectedColor,
             hintText: 'เลือกสี',
-            icon: Icons.color_lens,
+            prefixIcon: const Icon(Icons.color_lens),
             items: AnimalConstants.colorOptions.map((String value) {
               return DropdownMenuItem<String>(
                 value: value,
                 child: Text(value),
               );
             }).toList(),
+            itemAsString: (color) => color,
             onChanged: (newValue) {
               setState(() {
                 _selectedColor = newValue;

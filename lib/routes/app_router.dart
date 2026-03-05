@@ -76,12 +76,13 @@ final router = GoRouter(
 
     GoRoute(
       path: '/cow-detail/:id', // ชื่อ path นี้ต้องตรงกับ QR Code ที่เจนออกมา
-      parentNavigatorKey: _rootNavigatorKey, // สำคัญ: ให้ทับ Shell Route ทั้งหมด
+      parentNavigatorKey:
+          _rootNavigatorKey, // สำคัญ: ให้ทับ Shell Route ทั้งหมด
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
         return CowDetailScreen(
           cowId: id,
-          isReadOnly: true,     
+          isReadOnly: true,
           hideBackButton: true,
         );
       },

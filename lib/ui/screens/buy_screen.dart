@@ -4,6 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:th_cow_passport/ui/widgets/adaptive_map_widget.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail_screen.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_shimmer.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_empty_state.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // 1. Model สำหรับรายการในตลาด
@@ -598,26 +600,44 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
 
             // --- ส่วนแสดงสถานะ (Index 1 กรณีไม่มีข้อมูล) ---
             if (_isLoading) {
-              return SizedBox(
-                height: 200.h,
-                child: Center(
-                    child: CircularProgressIndicator(
-                        color: theme.colorScheme.primary)),
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 3,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    child: AppShimmer(
+                      child: Container(
+                        height: 250.h,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16.r),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               );
             }
 
             if (_filteredItems.isEmpty) {
-              return SizedBox(
-                height: 200.h,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.search_off, size: 64.r, color: Colors.grey[300]),
-                    SizedBox(height: 16.h),
-                    const Text('ไม่พบวัวที่คุณค้นหา',
-                        style: TextStyle(color: Colors.grey)),
-                  ],
-                ),
+              return AppEmptyState(
+                title: 'ไม่พบวัวที่คุณค้นหา',
+                subtitle: 'ลองปรับตัวเลือกการกรองด้านบนเพื่อค้นหาใหม่',
+                imageAsset: 'assets/images/cow.png',
+                buttonText: 'ล้างตัวกรอง',
+                onButtonPressed: () {
+                  setState(() {
+                    _searchController.clear();
+                    _selectedGender = null;
+                    _selectedBreeds.clear();
+                    _ageRange = const RangeValues(0, 20);
+                    _weightRange = const RangeValues(0, 1500);
+                  });
+                  _applyFilters();
+                },
               );
             }
 

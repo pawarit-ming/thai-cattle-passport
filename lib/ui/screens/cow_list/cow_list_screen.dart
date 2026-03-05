@@ -11,6 +11,8 @@ import 'package:th_cow_passport/ui/screens/qr_scanner_screen.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail_screen.dart';
 import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_empty_state.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_shimmer.dart';
 
 class CowListScreen extends ConsumerStatefulWidget {
   const CowListScreen({super.key});
@@ -426,38 +428,55 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
     final displayCows = _filteredCows;
 
     if (cowService.isLoading && cowService.cows.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 3,
+        itemBuilder: (context, index) {
+          return AppShimmer(
+            child: Container(
+              height: 120.h,
+              margin: EdgeInsets.only(bottom: 16.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+            ),
+          );
+        },
+      );
     }
 
     if (cowService.cows.isEmpty) {
-      return const Center(
-        child: Text('ไม่พบข้อมูลวัว, ลองเพิ่มวัวตัวใหม่ดูสิ!'),
+      return Padding(
+        padding: EdgeInsets.only(top: 40.h),
+        child: AppEmptyState(
+          title: 'ไม่มีข้อมูลวัว',
+          subtitle: 'ไม่พบข้อมูลวัวในฟาร์ม\nลองเพิ่มวัวตัวใหม่ดูสิ!',
+          imageAsset: 'assets/images/cow.png',
+        ),
       );
     }
 
     // เพิ่มกรณีที่กรองแล้วไม่เจอกรณีที่มีวัวในระบบแต่ไม่ตรงเงื่อนไข
     if (displayCows.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
-            SizedBox(height: 16.h),
-            const Text('ไม่พบวัวที่ตรงกับเงื่อนไขตัวกรอง'),
-            TextButton(
-              onPressed: () {
-                _searchController.clear();
-                setState(() {
-                  _searchQuery = '';
-                  _selectedGender = null;
-                  _selectedBreeds.clear();
-                  _ageRange = const RangeValues(0, 20);
-                  _weightRange = const RangeValues(0, 1500);
-                });
-              },
-              child: const Text('ล้างตัวกรอง'),
-            )
-          ],
+      return Padding(
+        padding: EdgeInsets.only(top: 40.h),
+        child: AppEmptyState(
+          title: 'ไม่พบวัวที่ค้นหา',
+          subtitle: 'ไม่มีข้อมูลวัวที่ตรงกับหน้าตัวกรองหรือการค้นหา',
+          icon: Icons.search_off,
+          buttonText: 'ล้างตัวกรอง',
+          onButtonPressed: () {
+            _searchController.clear();
+            setState(() {
+              _searchQuery = '';
+              _selectedGender = null;
+              _selectedBreeds.clear();
+              _ageRange = const RangeValues(0, 20);
+              _weightRange = const RangeValues(0, 1500);
+            });
+          },
         ),
       );
     }

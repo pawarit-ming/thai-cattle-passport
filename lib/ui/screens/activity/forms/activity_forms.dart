@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import 'package:th_cow_passport/services/cow_management/models/vaccine_model.dart';
 import 'package:th_cow_passport/ui/screens/activity/widgets/form_widgets.dart';
 
@@ -318,6 +319,72 @@ class VaccineForm extends StatelessWidget {
               ),
             ),
           ],
+        ],
+
+        // Next-dose date banner
+        if (selectedVaccine != null && selectedDoseNumber != null) ...[
+          Builder(builder: (context) {
+            final nextDate = selectedVaccine!.getNextDoseDate(
+              selectedDoseNumber!,
+              DateTime.now(),
+            );
+            if (nextDate == null) return const SizedBox.shrink();
+            final isBooster = selectedDoseNumber! >= selectedVaccine.totalDoses;
+            const thaiMonths = [
+              'ม.ค.',
+              'ก.พ.',
+              'มี.ค.',
+              'เม.ย.',
+              'พ.ค.',
+              'มิ.ย.',
+              'ก.ค.',
+              'ส.ค.',
+              'ก.ย.',
+              'ต.ค.',
+              'พ.ย.',
+              'ธ.ค.',
+            ];
+            final dateStr =
+                '${nextDate.day} ${thaiMonths[nextDate.month - 1]} ${nextDate.year + 543}';
+            return Padding(
+              padding: EdgeInsets.only(top: 8.h),
+              child: Container(
+                padding: EdgeInsets.all(10.r),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.calendar_month,
+                        size: 16.r, color: Colors.blue.shade700),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          style: TextStyle(
+                              fontSize: 12.sp, color: Colors.blue.shade800),
+                          children: [
+                            TextSpan(
+                              text: isBooster
+                                  ? 'กำหนดฉีดกระตุ้นครั้งถัดไป: '
+                                  : 'กำหนดเข็ม ${selectedDoseNumber! + 1}: ',
+                            ),
+                            TextSpan(
+                              text: dateStr,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
         ],
 
         // Note (if vaccine has one)

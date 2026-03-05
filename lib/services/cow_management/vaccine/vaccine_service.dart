@@ -88,10 +88,14 @@ class VaccineService {
   }
 }
 
-/// Provider ที่ดึงประวัติวัคซีนของวัวตัวนั้น
+/// Provider ที่ดึงประวัติวัคซีนของวัวตัวนั้น (cached 30 นาที)
 final cowVaccineHistoryProvider =
     FutureProvider.family<Map<String, List<Map<String, dynamic>>>, int>(
         (ref, cowId) async {
+  final link = ref.keepAlive();
+  final timer = Timer(const Duration(minutes: 30), () => link.close());
+  ref.onDispose(() => timer.cancel());
+
   final service = ref.watch(vaccineServiceProvider);
   return service.fetchVaccineHistory(cowId);
 });

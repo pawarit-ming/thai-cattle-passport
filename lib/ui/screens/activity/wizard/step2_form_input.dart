@@ -273,15 +273,12 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
         case ActivityType.VACCINE:
           if (_selectedVaccineId != null) {
             data['vaccine_id'] = _selectedVaccineId;
-            // Find name from catalog
-            final vaccinesAsync = ref.read(vaccinesProvider);
-            vaccinesAsync.whenData((vaccines) {
-              try {
-                final v =
-                    vaccines.firstWhere((v) => v.id == _selectedVaccineId);
-                data['vaccine_name'] = v.nameTh;
-              } catch (_) {}
-            });
+            // Read vaccine name synchronously from already-loaded provider
+            final vaccines = ref.read(vaccinesProvider).value ?? [];
+            try {
+              final v = vaccines.firstWhere((v) => v.id == _selectedVaccineId);
+              data['vaccine_name'] = v.nameTh;
+            } catch (_) {}
           }
           if (_selectedDoseNumber != null) {
             data['dose_number'] = _selectedDoseNumber;

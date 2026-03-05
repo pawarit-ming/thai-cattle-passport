@@ -4,6 +4,9 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:logger/logger.dart';
 
 class NotificationService {
+  /// Set to true to fire notifications 1 minute from now (for testing).
+  /// Remember to set back to false before production!
+  static const bool kDebugNotification = true;
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
@@ -64,8 +67,10 @@ class NotificationService {
   }) async {
     if (!_initialized) await initialize();
 
-    // Schedule 1 day before the due date as reminder
-    final reminderDate = scheduledDate.subtract(const Duration(days: 1));
+    // Debug: fire 5 seconds from now. Production: 1 day before due date.
+    final reminderDate = kDebugNotification
+        ? DateTime.now().add(const Duration(seconds: 5))
+        : scheduledDate.subtract(const Duration(days: 1));
 
     // Don't schedule if the date is already past
     if (reminderDate.isBefore(DateTime.now())) {
@@ -92,7 +97,7 @@ class NotificationService {
         ),
         iOS: DarwinNotificationDetails(),
       ),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
 
     _logger.i(
@@ -102,6 +107,29 @@ class NotificationService {
   /// Cancel a specific notification
   Future<void> cancelNotification(int notificationId) async {
     await _plugin.cancel(id: notificationId);
+  }
+
+  /// DEBUG ONLY: Fires a notification immediately (no scheduling).
+  /// Call this to verify the plugin is initialized and permissions are granted.
+  Future<void> showImmediateTest() async {
+    if (!_initialized) await initialize();
+    await _plugin.show(
+      id: 9999,
+      title: '🐄 ทดสอบการแจ้งเตือน',
+      body: 'ถ้าเห็นข้อความนี้ แสดงว่า plugin ทำงานปกติ',
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'vaccine_reminders',
+          'แจ้งเตือนวัคซีน',
+          channelDescription: 'แจ้งเตือนกำหนดฉีดวัคซีนวัว',
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+    );
+    _logger.i('showImmediateTest: notification sent');
   }
 
   /// Generate a unique notification ID from cowId and vaccineId

@@ -182,12 +182,13 @@ class ActivityService {
   Future<String> _getCowName(int cowId) async {
     try {
       final data = await _supabaseClient
-          .from('cows')
-          .select('name, nid')
-          .eq('id', cowId)
+          .from('animals')
+          .select('animal_name, nid_number')
+          .eq('animal_id', cowId)
           .maybeSingle();
-      if (data != null && data['name'] != null) return data['name'];
-      if (data != null && data['nid'] != null) return data['nid'];
+      if (data != null && data['animal_name'] != null)
+        return data['animal_name'];
+      if (data != null && data['nid_number'] != null) return data['nid_number'];
       return 'วัว #$cowId';
     } catch (_) {
       return 'วัว #$cowId';

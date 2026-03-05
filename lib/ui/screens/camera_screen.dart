@@ -36,7 +36,8 @@ class _CameraScreenState extends State<CameraScreen> {
       await Directory(dirPath).create(recursive: true);
 
       // สร้างชื่อไฟล์ไม่ซ้ำกัน
-      final String fileName = '${DateTime.now().millisecondsSinceEpoch}_step$_currentStep.jpg';
+      final String fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_step$_currentStep.jpg';
       final String filePath = '$dirPath/$fileName';
 
       // 2. Copy ไฟล์จาก Cache ของกล้องไปยัง Folder ของแอพ
@@ -52,7 +53,7 @@ class _CameraScreenState extends State<CameraScreen> {
         if (_currentStep < widget.steps!.length - 1) {
           // ยังไม่ครบทุกขั้นตอน -> ไปขั้นตอนถัดไป
           setState(() {
-            _currentStep++; 
+            _currentStep++;
           });
         } else {
           // ครบแล้ว -> ส่ง List รูปภาพกลับ
@@ -77,8 +78,9 @@ class _CameraScreenState extends State<CameraScreen> {
 
     if (_isMultiStep) {
       // ตัวอย่าง: "หน้าตรง (1/4)"
-      currentTitle = '${widget.steps![_currentStep]} (${_currentStep + 1}/${widget.steps!.length})';
-      
+      currentTitle =
+          '${widget.steps![_currentStep]} (${_currentStep + 1}/${widget.steps!.length})';
+
       if (widget.stepIcons != null && _currentStep < widget.stepIcons!.length) {
         currentIcon = widget.stepIcons![_currentStep];
       }
@@ -86,11 +88,11 @@ class _CameraScreenState extends State<CameraScreen> {
 
     return Scaffold(
       // ใช้ Scaffold ที่นี่เพื่อให้พื้นหลังเป็นสีมาตรฐานระหว่างเปลี่ยน Step
-      backgroundColor: Colors.black, 
+      backgroundColor: Colors.black,
       body: SafeArea(
         child: CameraWidget(
           // 🔥 สำคัญมาก: Key เปลี่ยน = Widget ถูกสร้างใหม่ = กล้อง Reset ตัวเองอัตโนมัติ
-          key: ValueKey(_currentStep), 
+          key: ValueKey(_currentStep),
           title: currentTitle,
           titleIcon: currentIcon,
           onPictureConfirmed: _onPictureConfirmed,

@@ -9,6 +9,7 @@ import 'package:th_cow_passport/services/farm/farm_service.dart';
 import 'package:th_cow_passport/ui/screens/auth/steps/role_selection_step.dart';
 import 'package:th_cow_passport/features/address/presentation/widgets/thai_address_picker.dart';
 import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_text_field.dart';
 
 final logger = Logger();
 
@@ -415,23 +416,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 !v!.contains('@') ? 'กรุณากรอกอีเมลให้ถูกต้อง' : null,
           ),
           SizedBox(height: 16.h),
-          TextFormField(
+          AppTextField(
             controller: _passwordController,
-            decoration: InputDecoration(
-              labelText: 'รหัสผ่าน',
-              hintText: 'อย่างน้อย 6 ตัวอักษร',
-              prefixIcon: const Icon(Icons.lock),
-              suffixIcon: IconButton(
-                icon: Icon(
-                    _obscurePassword ? Icons.visibility_off : Icons.visibility),
-                onPressed: () =>
-                    setState(() => _obscurePassword = !_obscurePassword),
-              ),
+            label: 'รหัสผ่าน',
+            hintText: 'อย่างน้อย 6 ตัวอักษร',
+            isRequired: true,
+            prefixIcon: const Icon(Icons.lock),
+            suffixIcon: IconButton(
+              icon: Icon(
+                  _obscurePassword ? Icons.visibility_off : Icons.visibility),
+              onPressed: () =>
+                  setState(() => _obscurePassword = !_obscurePassword),
             ),
             obscureText: _obscurePassword,
-            textInputAction: TextInputAction.next,
-            validator: (v) =>
-                v!.length < 6 ? 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร' : null,
+            validator: (v) => v == null || v.length < 6
+                ? 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'
+                : null,
           ),
         ],
       ),

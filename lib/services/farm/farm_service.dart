@@ -7,7 +7,8 @@ final logger = Logger();
 
 final farmServiceProvider = Provider((ref) => FarmService());
 
-final userFarmsProvider = FutureProvider.family<List<Farm>, String>((ref, userId) async {
+final userFarmsProvider =
+    FutureProvider.family<List<Farm>, String>((ref, userId) async {
   final farmService = ref.watch(farmServiceProvider);
   return farmService.getUserFarms(userId);
 });
@@ -20,7 +21,7 @@ class FarmService {
   Future<List<Farm>> getUserFarms(String userId) async {
     try {
       logger.d('[FarmService] Fetching farms for user: $userId');
-      
+
       final response = await _supabaseClient
           .from(_tableName)
           .select()
@@ -73,7 +74,8 @@ class FarmService {
       // Derive userId from current session if not provided
       final idToUse = userId ?? _supabaseClient.auth.currentSession?.user.id;
       if (idToUse == null) {
-        logger.e('[FarmService] No authenticated session or userId provided for farm creation');
+        logger.e(
+            '[FarmService] No authenticated session or userId provided for farm creation');
         throw Exception('ไม่มีการยืนยันตัวตน: กรุณาเข้าสู่ระบบก่อนสร้างฟาร์ม');
       }
 

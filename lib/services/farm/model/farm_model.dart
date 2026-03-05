@@ -68,10 +68,14 @@ class Farm {
       district: map['district'],
       province: map['province'],
       postalCode: map['postal_code'],
-      latitude: map['latitude'] != null ? (map['latitude'] as num).toDouble() : null,
-      longitude: map['longitude'] != null ? (map['longitude'] as num).toDouble() : null,
+      latitude:
+          map['latitude'] != null ? (map['latitude'] as num).toDouble() : null,
+      longitude: map['longitude'] != null
+          ? (map['longitude'] as num).toDouble()
+          : null,
       status: map['status'] ?? true,
-      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
+      createdAt:
+          map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
     );
   }
 

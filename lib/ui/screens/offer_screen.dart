@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_shimmer.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_empty_state.dart';
 import 'cow_detail_screen.dart';
 
 class OfferScreen extends StatefulWidget {
@@ -72,6 +74,26 @@ class _OfferScreenState extends State<OfferScreen> {
 
   // --- ฟังก์ชันลบรายการเดียว ---
   Future<void> _deleteOffer(String offerId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('ยืนยันลบรายการ?'),
+        content: const Text('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('ยกเลิก')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('ลบรายการ'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
     try {
       await _supabase.from('offers').delete().eq('id', offerId);
 
@@ -164,14 +186,35 @@ class _OfferScreenState extends State<OfferScreen> {
         future: _offersFuture, // ใช้ตัวแปร Future แทน
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return ListView.builder(
+              padding: EdgeInsets.all(16.r),
+              itemCount: 3,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 16.h),
+                  child: AppShimmer(
+                    child: Container(
+                      height: 160.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
           }
           if (snapshot.hasError) {
             return Center(child: Text('เกิดข้อผิดพลาด: ${snapshot.error}'));
           }
           final offers = snapshot.data ?? [];
           if (offers.isEmpty) {
-            return const Center(child: Text('ไม่มีรายการคำขอเสนอซื้อ'));
+            return const AppEmptyState(
+              title: 'ไม่มีรายการคำขอเสนอซื้อ',
+              subtitle: 'เมื่อมีผู้ซื้อเสนอซื้อวัวของคุณ รายการจะแสดงที่นี่',
+              imageAsset: 'assets/images/cow.png',
+            );
           }
           // เพิ่ม RefreshIndicator ให้ลากลงเพื่อรีเฟรชได้ด้วย
           return RefreshIndicator(
@@ -200,13 +243,18 @@ class _OfferScreenState extends State<OfferScreen> {
     final animalId = offer['animal_id'];
 
     return FutureBuilder(
-        future: _supabase
-            .from('animals')
-            .select()
-            .eq('animal_id', animalId)
-            .single(),
-        builder: (context, AsyncSnapshot animalSnapshot) {
-          final animalData = animalSnapshot.data;
+        future: Future.wait([
+          _supabase.from('animals').select().eq('animal_id', animalId).single(),
+          _supabase
+              .from('users')
+              .select('first_name, last_name')
+              .eq('id', offer['buyer_id'])
+              .maybeSingle(),
+        ]),
+        builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
+          final animalData = snapshot.hasData ? snapshot.data![0] : null;
+          final buyerData = snapshot.hasData ? snapshot.data![1] : null;
+
           final cowName = animalData?['animal_name'] ?? 'กำลังโหลด...';
           final breed = animalData?['breed'] ?? '-';
 
@@ -222,6 +270,13 @@ class _OfferScreenState extends State<OfferScreen> {
 
           final status = offer['status'] ?? 'pending';
           final buyerId = offer['buyer_id'];
+
+          final buyerFirstName = buyerData?['first_name']?.toString() ?? '';
+          final buyerLastName = buyerData?['last_name']?.toString() ?? '';
+          final buyerNameDisplay = buyerFirstName.isNotEmpty
+              ? '$buyerFirstName $buyerLastName'.trim()
+              : '${buyerId.toString().substring(0, 5)}...';
+
           final createdAt =
               DateTime.tryParse(offer['created_at'] ?? '') ?? DateTime.now();
           final dateStr = DateFormat('d MMM yyyy', 'th').format(createdAt);
@@ -239,7 +294,7 @@ class _OfferScreenState extends State<OfferScreen> {
           final isCompleted = status != 'pending';
 
           // ตรวจสอบว่าโหลดข้อมูลวัวเสร็จเรียบร้อยแล้วหรือไม่
-          final hasData = animalSnapshot.hasData && animalData != null;
+          final hasData = snapshot.hasData && animalData != null;
 
           return Card(
             margin: EdgeInsets.only(bottom: 16.h),
@@ -329,14 +384,13 @@ class _OfferScreenState extends State<OfferScreen> {
                           ),
                       ],
                     ),
-                    Divider(height: 24.h),
+                    SizedBox(height: 16.h),
                     Row(
                       children: [
                         Icon(Icons.person,
                             size: 14.r, color: colorScheme.secondary),
                         SizedBox(width: 8.w),
-                        Text(
-                            'ผู้ซื้อ: ${buyerId.toString().substring(0, 5)}...',
+                        Text('ผู้ซื้อ: $buyerNameDisplay',
                             style: theme.textTheme.bodyMedium),
                         const Spacer(),
                         Text(dateStr,

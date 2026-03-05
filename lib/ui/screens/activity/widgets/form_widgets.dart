@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_text_field.dart';
 import 'package:th_cow_passport/ui/widgets/styled_dropdown_field.dart';
 
 class DatePickerField extends StatelessWidget {
@@ -16,15 +17,13 @@ class DatePickerField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
+    return AppTextField(
       controller: controller,
       readOnly: true,
       onTap: onTap,
-      decoration: InputDecoration(
-        labelText: labelText,
-        suffixIcon: const Icon(Icons.calendar_today),
-        border: const OutlineInputBorder(),
-      ),
+      label: labelText,
+      isRequired: true,
+      suffixIcon: const Icon(Icons.calendar_today),
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'กรุณาเลือกวันที่';
@@ -62,27 +61,24 @@ class FormTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
+    return AppTextField(
       controller: controller,
       maxLines: maxLines,
-      keyboardType: keyboardType,
-      decoration: InputDecoration(
-        labelText: '$labelText${isRequired ? ' *' : ''}',
-        hintText: hintText,
-        border: const OutlineInputBorder(),
-        alignLabelWithHint: true,
-        suffixText: suffixText,
-        prefixIcon: assetIcon != null
-            ? Padding(
-                padding: EdgeInsets.all(12.r),
-                child: Image.asset(
-                  assetIcon!,
-                  width: 24.r,
-                  height: 24.r,
-                ),
-              )
-            : (icon != null ? Icon(icon) : null),
-      ),
+      keyboardType: keyboardType ?? TextInputType.text,
+      label: labelText,
+      hintText: hintText,
+      isRequired: isRequired,
+      suffixText: suffixText,
+      prefixIcon: assetIcon != null
+          ? Padding(
+              padding: EdgeInsets.all(12.r),
+              child: Image.asset(
+                assetIcon!,
+                width: 24.r,
+                height: 24.r,
+              ),
+            )
+          : (icon != null ? Icon(icon) : null),
       validator: (value) {
         if (isRequired && (value == null || value.isEmpty)) {
           return 'กรุณากรอกข้อมูล$labelText';

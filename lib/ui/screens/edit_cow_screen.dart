@@ -14,6 +14,7 @@ import 'package:th_cow_passport/ui/widgets/cow_selection_field.dart';
 import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:th_cow_passport/ui/widgets/styled_dropdown_field.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_search_dropdown.dart';
 
 class EditCowScreen extends ConsumerStatefulWidget {
   final int cowId;
@@ -321,6 +322,29 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
     });
   }
 
+  Future<bool> _onWillPop() async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('ละทิ้งการเปลี่ยนแปลง?'),
+        content: const Text(
+            'ข้อมูลที่คุณแก้ไขยังไม่ได้บันทึก คุณต้องการออกจากหน้านี้ใช่หรือไม่?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('ยกเลิก'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('ออกจากหน้า'),
+          ),
+        ],
+      ),
+    );
+    return confirm ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -331,24 +355,39 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return Form(
-      key: _formKey,
-      child: CowDetailWidget(
-        title: 'แก้ไขข้อมูล: ${cow.animalName}',
-        images: _getDisplayImages(cow),
-        isEditable: true,
-        onImageTap: _handleImageTap,
-        tabController: _tabController,
-        tabs: const [
-          Tab(text: 'ข้อมูลทั่วไป'),
-          Tab(text: 'ข้อมูลกายภาพ'),
-        ],
-        tabViews: [
-          _buildGeneralTab(), // Tab 1
-          _buildPhysicalTab(), // Tab 2
-        ],
-        bottomBar: _buildBottomSaveBar(colorScheme),
-        onBack: () => context.pop(),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await _onWillPop();
+        if (shouldPop && context.mounted) {
+          Navigator.pop(context, result);
+        }
+      },
+      child: Form(
+        key: _formKey,
+        child: CowDetailWidget(
+          title: 'แก้ไขข้อมูล: ${cow.animalName}',
+          images: _getDisplayImages(cow),
+          isEditable: true,
+          onImageTap: _handleImageTap,
+          tabController: _tabController,
+          tabs: const [
+            Tab(text: 'ข้อมูลทั่วไป'),
+            Tab(text: 'ข้อมูลกายภาพ'),
+          ],
+          tabViews: [
+            _buildGeneralTab(), // Tab 1
+            _buildPhysicalTab(), // Tab 2
+          ],
+          bottomBar: _buildBottomSaveBar(colorScheme),
+          onBack: () async {
+            final shouldPop = await _onWillPop();
+            if (shouldPop && context.mounted) {
+              context.pop();
+            }
+          },
+        ),
       ),
     );
   }
@@ -372,18 +411,19 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
               icon: Icons.tag,
               isRequired: true),
           SizedBox(height: 16.h),
-          StyledDropdownField<String>(
+          AppSearchDropdown<String>(
             label: 'สายพันธุ์',
             isRequired: true,
             hintText: 'เลือกสายพันธุ์',
             value: _selectedBreed,
-            icon: Icons.category,
+            prefixIcon: const Icon(Icons.category),
             items: AnimalConstants.breedOptions.map((breed) {
               return DropdownMenuItem(
                 value: breed,
                 child: Text(breed),
               );
             }).toList(),
+            itemAsString: (breed) => breed,
             onChanged: (value) {
               setState(() {
                 _selectedBreed = value;
@@ -479,17 +519,18 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
             ],
           ),
           SizedBox(height: 16.h),
-          StyledDropdownField<String>(
+          AppSearchDropdown<String>(
             label: 'สีตัว',
             hintText: 'เลือกสี',
             value: _selectedColor,
-            icon: Icons.palette,
+            prefixIcon: const Icon(Icons.palette),
             items: AnimalConstants.colorOptions.map((color) {
               return DropdownMenuItem(
                 value: color,
                 child: Text(color),
               );
             }).toList(),
+            itemAsString: (color) => color,
             onChanged: (value) {
               setState(() {
                 _selectedColor = value;

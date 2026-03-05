@@ -33,15 +33,16 @@ class ProfileScreen extends ConsumerWidget {
         data: (user) {
           if (user == null) {
             return Center(
-              child: Text('ไม่พบข้อมูลผู้ใช้',
-                  style: theme.textTheme.bodyLarge),
+              child:
+                  Text('ไม่พบข้อมูลผู้ใช้', style: theme.textTheme.bodyLarge),
             );
           }
 
           final fullName = '${user.firstName} ${user.lastName}'.trim();
           final email = supabase.auth.currentUser?.email ?? 'ไม่ระบุอีเมล';
 
-          logger.i('[ProfileScreen] Loaded user: $fullName, Role: ${user.role}');
+          logger
+              .i('[ProfileScreen] Loaded user: $fullName, Role: ${user.role}');
 
           return SingleChildScrollView(
             child: Column(
@@ -82,8 +83,8 @@ class ProfileScreen extends ConsumerWidget {
                               decoration: BoxDecoration(
                                 color: colorScheme.secondary,
                                 shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: Colors.white, width: 2.w),
+                                border:
+                                    Border.all(color: Colors.white, width: 2.w),
                               ),
                               child: Icon(Icons.edit,
                                   color: Colors.white, size: 16.r),
@@ -111,8 +112,8 @@ class ProfileScreen extends ConsumerWidget {
                         padding: EdgeInsets.symmetric(
                             horizontal: 12.w, vertical: 6.h),
                         decoration: BoxDecoration(
-                          color:
-                              colorScheme.primaryContainer.withValues(alpha: 0.3),
+                          color: colorScheme.primaryContainer
+                              .withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(20.r),
                         ),
                         child: Text(
@@ -145,30 +146,51 @@ class ProfileScreen extends ConsumerWidget {
 
                 // เมนูตัวเลือก
                 _buildProfileMenu(context,
-                    icon: Icons.person_outline,
-                    text: 'แก้ไขข้อมูลส่วนตัว'),
+                    icon: Icons.person_outline, text: 'แก้ไขข้อมูลส่วนตัว'),
                 _buildProfileMenu(context,
-                    icon: Icons.location_on_outlined,
-                    text: 'ที่อยู่ฟาร์ม'),
+                    icon: Icons.location_on_outlined, text: 'ที่อยู่ฟาร์ม'),
                 _buildProfileMenu(context,
                     icon: Icons.history, text: 'ประวัติการซื้อขาย'),
                 _buildProfileMenu(context,
-                    icon: Icons.notifications_outlined,
-                    text: 'การแจ้งเตือน'),
+                    icon: Icons.notifications_outlined, text: 'การแจ้งเตือน'),
 
                 _buildProfileMenu(context,
                     icon: Icons.logout,
                     text: 'ออกจากระบบ',
                     textColor: colorScheme.error,
-                    iconColor: colorScheme.error,
-                    onTap: () async {
+                    iconColor: colorScheme.error, onTap: () async {
+                  final bool? confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('ยืนยันออกจากระบบ?'),
+                        content:
+                            const Text('คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบ?'),
+                        actions: <Widget>[
+                          TextButton(
+                            child: const Text('ยกเลิก'),
+                            onPressed: () => Navigator.of(context).pop(false),
+                          ),
+                          TextButton(
+                            child: const Text('ออกจากระบบ',
+                                style: TextStyle(color: Colors.red)),
+                            onPressed: () => Navigator.of(context).pop(true),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                  if (confirm != true) return;
+
                   logger.i('[ProfileScreen] User initiating sign out');
                   try {
                     final authService = AuthService();
                     await authService.signOut();
                     logger.i('[ProfileScreen] [SUCCESS] Sign out completed');
                   } catch (e) {
-                    logger.e('[ProfileScreen] [ERROR] Sign out failed', error: e);
+                    logger.e('[ProfileScreen] [ERROR] Sign out failed',
+                        error: e);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -262,7 +284,8 @@ class ProfileScreen extends ConsumerWidget {
         width: 40.r,
         height: 40.r,
         decoration: BoxDecoration(
-          color: (iconColor ?? theme.colorScheme.primary).withValues(alpha: 0.1),
+          color:
+              (iconColor ?? theme.colorScheme.primary).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Icon(icon, color: iconColor ?? theme.colorScheme.primary),

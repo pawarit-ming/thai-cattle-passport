@@ -16,6 +16,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+  bool _obscurePassword = true;
 
   Future<void> _signIn() async {
     setState(() {
@@ -120,8 +121,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   labelText: 'รหัสผ่าน',
                   // border: Use theme default
                   prefixIcon: const Icon(Icons.lock),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
                 ),
-                obscureText: true,
+                obscureText: _obscurePassword,
               ),
               SizedBox(height: 24.h),
               ElevatedButton(

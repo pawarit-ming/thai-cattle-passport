@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:th_cow_passport/ui/screens/camera_screen.dart';
 
@@ -11,6 +10,7 @@ class ImagePickerStep extends StatefulWidget {
   final Function(File) onFaceImageChanged;
   final Function(File) onBodyImageChanged;
   final VoidCallback onNext;
+  final VoidCallback onBack;
 
   const ImagePickerStep({
     super.key,
@@ -19,6 +19,7 @@ class ImagePickerStep extends StatefulWidget {
     required this.onFaceImageChanged,
     required this.onBodyImageChanged,
     required this.onNext,
+    required this.onBack,
   });
 
   @override
@@ -98,13 +99,7 @@ class _ImagePickerStepState extends State<ImagePickerStep> {
         title: const Text('เพิ่มวัวใหม่ (ขั้นตอนที่ 1/2)'),
         centerTitle: true,
         leading: BackButton(
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/');
-            }
-          },
+          onPressed: widget.onBack,
         ),
       ),
       body: Padding(

@@ -8,6 +8,7 @@ import 'package:th_cow_passport/services/cow_management/vaccine/vaccine_service.
 import 'package:th_cow_passport/ui/screens/activity/activity_extensions.dart';
 import 'package:th_cow_passport/ui/screens/activity/forms/activity_forms.dart';
 import 'package:th_cow_passport/ui/screens/activity/wizard/wizard_constants.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_text_field.dart';
 
 class Step2FormInput extends ConsumerStatefulWidget {
   final int cowId; // Added cowId
@@ -500,28 +501,12 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
                   SizedBox(height: 24.h),
 
                   // Notes Section
-                  Text(
-                    'บันทึกเพิ่มเติม',
-                    style: WizardStyles.labelLarge.copyWith(color: Colors.grey),
-                  ),
-                  SizedBox(height: 8.h),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: WizardColors.cardBackground,
-                      borderRadius: BorderRadius.circular(16.r),
-                      border:
-                          Border.all(color: WizardColors.stepIndicatorInactive),
-                    ),
-                    child: TextFormField(
-                      controller: _notesController,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        hintText:
-                            'เพิ่มรายละเอียด เช่น อาการ พฤติกรรม หรือปริมาณอาหาร...',
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.all(16.r),
-                      ),
-                    ),
+                  AppTextField(
+                    controller: _notesController,
+                    label: 'บันทึกเพิ่มเติม',
+                    hintText:
+                        'เพิ่มรายละเอียด เช่น อาการ พฤติกรรม หรือปริมาณอาหาร...',
+                    maxLines: 4,
                   ),
                 ],
               ),

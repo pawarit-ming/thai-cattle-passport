@@ -183,14 +183,48 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
     }
   }
 
+  Future<bool> _onWillPop() async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('ละทิ้งข้อมูล?'),
+        content: const Text(
+            'ข้อมูลที่คุณกรอกจะยังไม่ถูกบันทึก คุณต้องการออกจากหน้านี้ใช่หรือไม่?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('ยกเลิก'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('ออกจากหน้า'),
+          ),
+        ],
+      ),
+    );
+    return confirm ?? false;
+  }
+
   // --- UI Building ---
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: _isImagePickerStep,
-      onPopInvokedWithResult: (didPop, result) {
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        setState(() => _isImagePickerStep = true);
+        if (!_isImagePickerStep) {
+          setState(() => _isImagePickerStep = true);
+        } else {
+          final shouldPop = await _onWillPop();
+          if (shouldPop && context.mounted) {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          }
+        }
       },
       child: _isImagePickerStep ? _buildImagePickerStep() : _buildFormStep(),
     );
@@ -203,6 +237,16 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
       onFaceImageChanged: (file) => setState(() => _faceImage = file),
       onBodyImageChanged: (file) => setState(() => _bodyImage = file),
       onNext: () => setState(() => _isImagePickerStep = false),
+      onBack: () async {
+        final shouldPop = await _onWillPop();
+        if (shouldPop && context.mounted) {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/');
+          }
+        }
+      },
     );
   }
 

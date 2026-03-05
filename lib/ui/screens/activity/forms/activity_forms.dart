@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:th_cow_passport/services/cow_management/models/vaccine_model.dart';
 import 'package:th_cow_passport/ui/screens/activity/widgets/form_widgets.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_search_dropdown.dart';
 
 // --- Abstract Base / Interface (Implicit in usage) ---
 
@@ -514,17 +515,23 @@ class BirthForm extends StatelessWidget {
         SizedBox(height: 16.h),
 
         if (sireType == 'FARM') ...[
-          FormDropdownField<int>(
+          AppSearchDropdown<int>(
             label: 'เลือกพ่อพันธุ์ในฟาร์ม',
             isRequired: true,
             value: selectedSireId,
-            hintText: farmSires.isEmpty ? 'ไม่มีพ่อพันธุ์ในฟาร์ม' : 'เลือกวัว',
+            hintText: farmSires.isEmpty
+                ? 'ไม่มีพ่อพันธุ์ในฟาร์ม'
+                : 'พิมพ์ชื่อหรือ NID...',
             items: farmSires.map((cow) {
               return DropdownMenuItem<int>(
                 value: cow.animalId,
                 child: Text('${cow.animalName} (${cow.nidNumber})'),
               );
             }).toList(),
+            itemAsString: (id) {
+              final cow = farmSires.firstWhere((c) => c.animalId == id);
+              return '${cow.animalName} (${cow.nidNumber})';
+            },
             onChanged: onSireIdChanged,
           ),
           SizedBox(height: 16.h),
@@ -695,7 +702,7 @@ class TreatmentForm extends StatelessWidget {
         ],
 
         // ── 2. Disease Name Dropdown ──
-        FormDropdownField<String>(
+        AppSearchDropdown<String>(
           label: 'ชื่อโรค / สาเหตุ',
           value: diseaseType,
           items: const [
@@ -708,6 +715,28 @@ class TreatmentForm extends StatelessWidget {
             DropdownMenuItem(value: 'DIARRHEA', child: Text('ท้องเสีย')),
             DropdownMenuItem(value: 'OTHER', child: Text('อื่นๆ (ระบุ)')),
           ],
+          itemAsString: (val) {
+            switch (val) {
+              case 'LUMPY_SKIN':
+                return 'ลัมปีสกิน';
+              case 'PARASITE':
+                return 'พยาธิ';
+              case 'BLOAT':
+                return 'ท้องอืด';
+              case 'PNEUMONIA':
+                return 'ปอดบวม';
+              case 'MASTITIS':
+                return 'เต้านมอักเสบ';
+              case 'FOOT_ROT':
+                return 'โรคกีบเน่า';
+              case 'DIARRHEA':
+                return 'ท้องเสีย';
+              case 'OTHER':
+                return 'อื่นๆ (ระบุ)';
+              default:
+                return val;
+            }
+          },
           onChanged: onDiseaseTypeChanged,
         ),
         SizedBox(height: 16.h),
@@ -1001,18 +1030,23 @@ class BreedingForm extends StatelessWidget {
 
         // 3. Conditional Inputs
         if (sireType == 'FARM') ...[
-          FormDropdownField<int>(
+          AppSearchDropdown<int>(
             label: 'เลือก$partnerLabelในฟาร์ม',
             isRequired: true,
             value: selectedSireId,
-            hintText:
-                farmSires.isEmpty ? 'ไม่มี$partnerLabelในฟาร์ม' : 'เลือกวัว',
+            hintText: farmSires.isEmpty
+                ? 'ไม่มี$partnerLabelในฟาร์ม'
+                : 'พิมพ์เพื่อค้นหาวัว...',
             items: farmSires.map((cow) {
               return DropdownMenuItem<int>(
                 value: cow.animalId,
                 child: Text('${cow.animalName} (${cow.nidNumber})'),
               );
             }).toList(),
+            itemAsString: (id) {
+              final cow = farmSires.firstWhere((c) => c.animalId == id);
+              return '${cow.animalName} (${cow.nidNumber})';
+            },
             onChanged: onSireIdChanged,
           ),
         ] else if (sireType == 'OTHER') ...[

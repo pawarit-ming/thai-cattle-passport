@@ -5,6 +5,7 @@ import 'package:th_cow_passport/services/cow_management/cow_activity/activity_se
 import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_service.dart';
 import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
 import 'package:th_cow_passport/ui/screens/activity/widgets/activity_card.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_dropdown.dart';
 
 class ActivityTab extends ConsumerStatefulWidget {
   final int cowId;
@@ -115,17 +116,10 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
           ),
           SizedBox(height: 12.h),
           // Activity Type Dropdown (Full Width)
-          DropdownButtonFormField<ActivityType>(
-            initialValue: _selectedType,
-            decoration: InputDecoration(
-              labelText: 'ประเภทกิจกรรม',
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              prefixIcon: const Icon(Icons.category),
-            ),
+          AppDropdown<ActivityType>(
+            label: 'ประเภทกิจกรรม',
+            value: _selectedType,
+            prefixIcon: const Icon(Icons.category),
             items: [
               const DropdownMenuItem<ActivityType>(
                 value: null,
@@ -143,26 +137,16 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
               });
             },
           ),
-          SizedBox(height: 12.h),
           // Month and Year Row
           Row(
             children: [
               // Month Dropdown
               Expanded(
                 flex: 1,
-                child: DropdownButtonFormField<int>(
-                  isExpanded:
-                      true, // Fix overflow by allowing text to truncate/wrap if needed
-                  initialValue: _selectedMonth,
-                  decoration: InputDecoration(
-                    labelText: 'เดือน',
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    prefixIcon: const Icon(Icons.calendar_view_month),
-                  ),
+                child: AppDropdown<int>(
+                  label: 'เดือน',
+                  value: _selectedMonth,
+                  prefixIcon: const Icon(Icons.calendar_view_month),
                   items: [
                     const DropdownMenuItem<int>(
                       value: null,
@@ -186,18 +170,10 @@ class _ActivityTabState extends ConsumerState<ActivityTab> {
               // Year Dropdown
               Expanded(
                 flex: 1,
-                child: DropdownButtonFormField<int>(
-                  isExpanded: true,
-                  initialValue: _selectedYear,
-                  decoration: InputDecoration(
-                    labelText: 'ปี',
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    prefixIcon: const Icon(Icons.calendar_today),
-                  ),
+                child: AppDropdown<int>(
+                  label: 'ปี',
+                  value: _selectedYear,
+                  prefixIcon: const Icon(Icons.calendar_today),
                   items: [
                     const DropdownMenuItem<int>(
                       value: null,

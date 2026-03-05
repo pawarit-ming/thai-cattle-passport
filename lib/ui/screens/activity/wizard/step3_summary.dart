@@ -104,13 +104,13 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
                         child: Icon(widget.type.icon,
                             size: 48.r, color: WizardColors.primarySpring),
                       ),
-                      SizedBox(height: 32.h),
+                      SizedBox(height: 24.h),
                       _buildSummaryRow('วันที่',
                           '${widget.date.day}/${widget.date.month}/${widget.date.year + 543}'),
-                      Divider(height: 32.h),
+                      SizedBox(height: 16.h),
                       _buildSummaryRow('ประเภท', widget.type.label),
                       if (widget.data.isNotEmpty) ...[
-                        Divider(height: 32.h),
+                        SizedBox(height: 24.h),
                         // Display key data
                         ...widget.data.entries
                             .where((e) => !_isInternalKey(e.key))
@@ -121,7 +121,7 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
                                 )),
                       ],
                       if (widget.notes != null && widget.notes!.isNotEmpty) ...[
-                        Divider(height: 32.h),
+                        SizedBox(height: 24.h),
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text('บันทึกเพิ่มเติม',

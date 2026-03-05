@@ -15,6 +15,7 @@ import 'package:th_cow_passport/ui/widgets/cow_detail_widget.dart';
 import 'dart:typed_data';
 import 'package:screenshot/screenshot.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_shimmer.dart';
 
 class CowDetailScreen extends ConsumerStatefulWidget {
   final int cowId;
@@ -79,18 +80,96 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
             ref.read(cowDetailServiceProvider).fetchCowById(widget.cowId));
       }
       // แสดง Loading ระหว่างรอโหลดข้อมูลแม่โคกลับมา
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: SafeArea(
+          child: Column(
+            children: [
+              AppShimmer(
+                child: Container(
+                  height: 300.h,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: AppShimmer(
+                  child: Container(
+                    height: 40.h,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     if (detailState.isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: SafeArea(
+          child: Column(
+            children: [
+              AppShimmer(
+                child: Container(
+                  height: 300.h,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: AppShimmer(
+                  child: Container(
+                    height: 40.h,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     if (cow == null) {
       if (!detailState.isLoading) {
         Future.microtask(() =>
             ref.read(cowDetailServiceProvider).fetchCowById(widget.cowId));
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        return Scaffold(
+          body: SafeArea(
+            child: Column(
+              children: [
+                AppShimmer(
+                  child: Container(
+                    height: 300.h,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: AppShimmer(
+                    child: Container(
+                      height: 40.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
       }
       return const Scaffold(body: Center(child: Text("ไม่พบข้อมูลวัว")));
     }
@@ -149,6 +228,74 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
               ),
             )
           : null,
+      profileHeader: Container(
+        color: theme.scaffoldBackgroundColor,
+        padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 4.h),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    '${cow.nidNumber}',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(cow.status).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20.r),
+                    border: Border.all(color: _getStatusColor(cow.status)),
+                  ),
+                  child: Text(
+                    _getStatusLabel(cow.status),
+                    style: TextStyle(
+                      color: _getStatusColor(cow.status),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              'ชื่อ: ${cow.animalName}',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: Colors.grey.shade700,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Row(
+              children: [
+                Icon(Icons.pets, size: 16.r, color: Colors.grey.shade600),
+                SizedBox(width: 4.w),
+                Text(cow.breed ?? 'ไม่ระบุสายพันธุ์',
+                    style: TextStyle(
+                        color: Colors.grey.shade600, fontSize: 14.sp)),
+                SizedBox(width: 16.w),
+                Icon(cow.sex == 'MALE' ? Icons.male : Icons.female,
+                    size: 16.r,
+                    color: cow.sex == 'MALE' ? Colors.blue : Colors.pink),
+                SizedBox(width: 4.w),
+                Text(cow.sex == 'MALE' ? 'พ่อพันธุ์' : 'แม่พันธุ์',
+                    style: TextStyle(
+                        color: Colors.grey.shade600, fontSize: 14.sp)),
+              ],
+            ),
+          ],
+        ),
+      ),
       tabs: const [
         Tab(text: 'ข้อมูลทั่วไป'),
         Tab(text: 'กิจกรรม'),
@@ -769,6 +916,36 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
         );
       },
     );
+  }
+
+  String _getStatusLabel(String status) {
+    switch (status) {
+      case 'ACTIVE':
+        return 'สุขภาพดี';
+      case 'SICK':
+        return 'ป่วย';
+      case 'SOLD':
+        return 'ขายแล้ว';
+      case 'DEATH':
+        return 'ตายแล้ว';
+      default:
+        return 'ไม่ระบุ';
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'ACTIVE':
+        return const Color(0xFF4CAF50);
+      case 'SICK':
+        return const Color(0xFFE6A23C);
+      case 'SOLD':
+        return const Color(0xFF5C6BC0);
+      case 'DEATH':
+        return Colors.grey.shade700;
+      default:
+        return Colors.grey;
+    }
   }
 }
 

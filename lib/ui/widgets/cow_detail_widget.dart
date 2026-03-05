@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_segmented_tab.dart';
 
 class CowDetailWidget extends StatelessWidget {
   final String title;
@@ -16,6 +17,7 @@ class CowDetailWidget extends StatelessWidget {
   final bool isEditable;
   final VoidCallback? onImageTap;
   final Widget? banner;
+  final Widget? profileHeader;
 
   const CowDetailWidget({
     super.key,
@@ -32,12 +34,12 @@ class CowDetailWidget extends StatelessWidget {
     this.isEditable = false,
     this.onImageTap,
     this.banner,
+    this.profileHeader,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       body: NestedScrollView(
@@ -72,17 +74,17 @@ class CowDetailWidget extends StatelessWidget {
             ),
             // Banner (เช่น แจ้งเตือนวัวตาย)
             if (banner != null) SliverToBoxAdapter(child: banner!),
+            // Profile Header (ดึงจาก Detail Screen มาใส่เพื่อให้มันอยู่เหนือ Tab และไม่หายไปตอนสลับ Tab)
+            if (profileHeader != null)
+              SliverToBoxAdapter(child: profileHeader!),
             SliverPersistentHeader(
               pinned: true,
               delegate: _StickyTabBarDelegate(
-                TabBar(
+                child: AppSegmentedTab(
                   controller: tabController,
-                  labelColor: colorScheme.primary,
-                  unselectedLabelColor: Colors.grey,
-                  indicatorColor: colorScheme.primary,
-                  indicatorWeight: 3.w,
                   tabs: tabs,
                 ),
+                height: 64.h,
                 backgroundColor: theme.scaffoldBackgroundColor,
               ),
             ),
@@ -200,7 +202,19 @@ class _ImageCarouselState extends State<_ImageCarousel> {
           },
           itemBuilder: (context, index) {
             return GestureDetector(
-              onTap: widget.isEditable ? widget.onTap : null,
+              onTap: widget.isEditable
+                  ? widget.onTap
+                  : () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => _FullScreenImageViewer(
+                            images: widget.images,
+                            initialIndex: index,
+                          ),
+                        ),
+                      );
+                    },
               child: _buildSingleImage(widget.images[index]),
             );
           },
@@ -235,27 +249,136 @@ class _ImageCarouselState extends State<_ImageCarousel> {
 }
 
 class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar _tabBar;
+  final Widget child;
+  final double height;
   final Color backgroundColor;
 
-  _StickyTabBarDelegate(this._tabBar, {required this.backgroundColor});
+  _StickyTabBarDelegate({
+    required this.child,
+    required this.height,
+    required this.backgroundColor,
+  });
 
   @override
-  double get minExtent => _tabBar.preferredSize.height;
+  double get minExtent => height;
   @override
-  double get maxExtent => _tabBar.preferredSize.height;
+  double get maxExtent => height;
 
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
       color: backgroundColor,
-      child: _tabBar,
+      child: child,
     );
   }
 
   @override
   bool shouldRebuild(_StickyTabBarDelegate oldDelegate) {
-    return false;
+    return child != oldDelegate.child ||
+        height != oldDelegate.height ||
+        backgroundColor != oldDelegate.backgroundColor;
+  }
+}
+
+class _FullScreenImageViewer extends StatefulWidget {
+  final List<String> images;
+  final int initialIndex;
+
+  const _FullScreenImageViewer({
+    required this.images,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_FullScreenImageViewer> createState() => _FullScreenImageViewerState();
+}
+
+class _FullScreenImageViewerState extends State<_FullScreenImageViewer> {
+  late PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            itemCount: widget.images.length,
+            onPageChanged: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              final url = widget.images[index];
+              final isNetworkImage = url.startsWith('http');
+              final imageProvider = isNetworkImage
+                  ? NetworkImage(url)
+                  : FileImage(File(url)) as ImageProvider;
+
+              return InteractiveViewer(
+                clipBehavior: Clip.none,
+                minScale: 1.0,
+                maxScale: 4.0,
+                child: Center(
+                  child: Image(
+                    image: imageProvider,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              );
+            },
+          ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 10.h,
+            left: 10.w,
+            child: IconButton(
+              icon: Icon(Icons.close, color: Colors.white, size: 30.r),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+          if (widget.images.length > 1)
+            Positioned(
+              bottom: 40.h,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(20.r),
+                  ),
+                  child: Text(
+                    '${_currentIndex + 1} / ${widget.images.length}',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }

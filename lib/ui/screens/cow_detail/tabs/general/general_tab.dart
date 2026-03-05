@@ -47,12 +47,7 @@ class GeneralTab extends ConsumerWidget {
                       color: theme.colorScheme.primary,
                     ),
                   ),
-                  Divider(height: 24.h),
-                  _buildDetailRow(theme, 'Tag ID:', cow.nidNumber),
-                  _buildDetailRow(theme, 'ชื่อ:', cow.animalName),
-                  _buildDetailRow(theme, 'สายพันธุ์:', cow.breed ?? '-'),
-                  _buildDetailRow(theme, 'เพศ:',
-                      cow.sex == 'MALE' ? 'พ่อพันธุ์' : 'แม่พันธุ์'),
+                  SizedBox(height: 12.h),
                   _buildDetailRow(theme, 'วันเกิด:',
                       cow.birthDate?.toIso8601String().substring(0, 10) ?? '-'),
                   _buildDetailRow(
@@ -60,12 +55,11 @@ class GeneralTab extends ConsumerWidget {
                   _buildDetailRow(
                       theme, 'ส่วนสูง:', '${cow.height ?? '-'} ซม.'),
                   _buildDetailRow(theme, 'สีตัว:', cow.color ?? '-'),
-                  Divider(height: 24.h),
+                  SizedBox(height: 12.h),
                   _buildDetailRow(
                       theme, 'แม่พันธุ์:', _getDamNid(cow.damId, allCows)),
                   _buildDetailRow(
                       theme, 'พ่อพันธุ์:', _getSireNid(cow.sireId, allCows)),
-                  _buildDetailRow(theme, 'สถานะ:', _getStatusLabel(cow.status)),
                 ],
               ),
             ),
@@ -137,21 +131,6 @@ class GeneralTab extends ConsumerWidget {
       return dam.nidNumber ?? '-';
     } catch (_) {
       return '-';
-    }
-  }
-
-  String _getStatusLabel(String status) {
-    switch (status) {
-      case 'ACTIVE':
-        return 'สุขภาพดี';
-      case 'SICK':
-        return 'ป่วย';
-      case 'SOLD':
-        return 'ขายแล้ว';
-      case 'DEATH':
-        return 'ตายแล้ว';
-      default:
-        return 'ไม่ระบุ';
     }
   }
 }

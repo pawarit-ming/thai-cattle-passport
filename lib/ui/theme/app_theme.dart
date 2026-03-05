@@ -165,12 +165,26 @@ class AppTheme {
         unselectedLabelStyle: GoogleFonts.prompt(),
       ),
 
-      // --- Bottom Navigation Bar ---
-      bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        selectedItemColor: _primary,
-        unselectedItemColor: _textSecondary,
-        selectedLabelStyle: GoogleFonts.prompt(fontWeight: FontWeight.bold),
-        unselectedLabelStyle: GoogleFonts.prompt(),
+      // --- Navigation Bar (Material 3) ---
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: _surface,
+        indicatorColor: _primaryLight.withValues(alpha: 0.5),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return GoogleFonts.prompt(
+                fontWeight: FontWeight.bold, fontSize: 12.sp, color: _primary);
+          }
+          return GoogleFonts.prompt(
+              fontWeight: FontWeight.normal,
+              fontSize: 12.sp,
+              color: _textSecondary);
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const IconThemeData(color: _primary);
+          }
+          return const IconThemeData(color: _textSecondary);
+        }),
       ),
     );
   }

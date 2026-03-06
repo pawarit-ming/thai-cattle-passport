@@ -43,9 +43,7 @@ class GeneralInfoTab extends ConsumerStatefulWidget {
 class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
   final _logger = Logger();
 
-  // State
   String? _selectedBreed;
-  final TextEditingController _customBreedController = TextEditingController();
 
   @override
   void initState() {
@@ -55,28 +53,11 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
 
   void _initializeBreedFields() {
     final currentBreed = widget.breedController.text;
-    if (currentBreed.isNotEmpty) {
-      if (AnimalConstants.breedOptions.contains(currentBreed)) {
-        _selectedBreed = currentBreed;
-      } else {
-        _selectedBreed = AnimalConstants.customOption;
-        _customBreedController.text = currentBreed;
-      }
-    } else {
-      _selectedBreed = null;
-    }
-
-    // Listen to custom controller to update main controller
-    _customBreedController.addListener(() {
-      if (_selectedBreed == AnimalConstants.customOption) {
-        widget.breedController.text = _customBreedController.text;
-      }
-    });
+    _selectedBreed = currentBreed.isNotEmpty ? currentBreed : null;
   }
 
   @override
   void dispose() {
-    _customBreedController.dispose();
     super.dispose();
   }
 
@@ -195,9 +176,12 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
             label: 'สายพันธุ์',
             isRequired: true,
             value: _selectedBreed,
-            hintText: 'เลือกสายพันธุ์',
+            hintText: 'เลือก หรือพิมพ์เพื่อระบุ',
             prefixIcon: const Icon(Icons.category),
-            items: AnimalConstants.breedOptions.map((breed) {
+            allowCustomText: true,
+            items: AnimalConstants.breedOptions
+                .where((b) => b != AnimalConstants.customOption)
+                .map((breed) {
               return DropdownMenuItem(
                 value: breed,
                 child: Text(breed),
@@ -207,11 +191,7 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
             onChanged: (value) {
               setState(() {
                 _selectedBreed = value;
-                if (value == AnimalConstants.customOption) {
-                  widget.breedController.text = _customBreedController.text;
-                } else {
-                  widget.breedController.text = value ?? '';
-                }
+                widget.breedController.text = value ?? '';
               });
             },
             validator: (value) {
@@ -221,17 +201,6 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
               return null;
             },
           ),
-          if (_selectedBreed == AnimalConstants.customOption) ...[
-            SizedBox(height: 16.h),
-            StyledTextField(
-              label: 'ระบุสายพันธุ์',
-              controller: _customBreedController,
-              icon: Icons.edit,
-              hintText: 'เช่น วากิวลูกผสม, บราห์มันแท้',
-              isRequired: true,
-              maxLength: 50,
-            ),
-          ],
           SizedBox(height: 16.h),
           StyledTextField(
             controller: TextEditingController(

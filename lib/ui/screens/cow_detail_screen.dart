@@ -16,6 +16,7 @@ import 'dart:typed_data';
 import 'package:screenshot/screenshot.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_shimmer.dart';
+import 'package:th_cow_passport/core/utils/cow_status_utils.dart';
 
 class CowDetailScreen extends ConsumerStatefulWidget {
   final int cowId;
@@ -252,14 +253,15 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
                   padding:
                       EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(cow.status).withValues(alpha: 0.1),
+                    color: CowStatusUtils.getColor(cow.status).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20.r),
-                    border: Border.all(color: _getStatusColor(cow.status)),
+                    border:
+                        Border.all(color: CowStatusUtils.getColor(cow.status)),
                   ),
                   child: Text(
-                    _getStatusLabel(cow.status),
+                    CowStatusUtils.getLabel(cow.status),
                     style: TextStyle(
-                      color: _getStatusColor(cow.status),
+                      color: CowStatusUtils.getColor(cow.status),
                       fontWeight: FontWeight.bold,
                       fontSize: 12.sp,
                     ),
@@ -916,36 +918,6 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
         );
       },
     );
-  }
-
-  String _getStatusLabel(String status) {
-    switch (status) {
-      case 'ACTIVE':
-        return 'สุขภาพดี';
-      case 'SICK':
-        return 'ป่วย';
-      case 'SOLD':
-        return 'ขายแล้ว';
-      case 'DEATH':
-        return 'ตายแล้ว';
-      default:
-        return 'ไม่ระบุ';
-    }
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'ACTIVE':
-        return const Color(0xFF4CAF50);
-      case 'SICK':
-        return const Color(0xFFE6A23C);
-      case 'SOLD':
-        return const Color(0xFF5C6BC0);
-      case 'DEATH':
-        return Colors.grey.shade700;
-      default:
-        return Colors.grey;
-    }
   }
 }
 

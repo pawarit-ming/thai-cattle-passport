@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
+import 'package:th_cow_passport/core/utils/cow_status_utils.dart';
 
 class CowCard extends StatelessWidget {
   final Cow cow;
@@ -184,26 +185,14 @@ class CowCard extends StatelessWidget {
   }
 
   Widget _buildHealthTag() {
-    switch (cow.status) {
-      case 'SICK':
-        return _buildStatusTag(
-          label: 'ป่วย',
-          color: Colors.red.shade100,
-          textColor: Colors.red.shade800,
-        );
-      case 'DEATH':
-        return _buildStatusTag(
-          label: 'ตาย',
-          color: Colors.grey.shade300,
-          textColor: Colors.grey.shade800,
-        );
-      default:
-        return _buildStatusTag(
-          label: 'สุขภาพดี',
-          color: Colors.green.shade100,
-          textColor: Colors.green.shade800,
-        );
-    }
+    final status = cow.status;
+    final label = CowStatusUtils.getLabel(status);
+    final color = CowStatusUtils.getColor(status);
+    return _buildStatusTag(
+      label: label,
+      color: color.withValues(alpha: 0.15),
+      textColor: color,
+    );
   }
 
   Widget _buildStatusTag(

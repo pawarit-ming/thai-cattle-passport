@@ -12,6 +12,7 @@ class AppSearchDropdown<T> extends StatefulWidget {
   final Widget? prefixIcon;
   final String? errorText;
   final String Function(T) itemAsString;
+  final bool allowCustomText;
 
   const AppSearchDropdown({
     super.key,
@@ -25,6 +26,7 @@ class AppSearchDropdown<T> extends StatefulWidget {
     this.isRequired = false,
     this.prefixIcon,
     this.errorText,
+    this.allowCustomText = false,
   });
 
   @override
@@ -40,6 +42,7 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
   final FocusNode _searchFocusNode = FocusNode();
   final GlobalKey _inputKey = GlobalKey();
   final ScrollController _scrollController = ScrollController();
+  FormFieldState<T>? _formFieldState;
 
   late List<DropdownMenuItem<T>> _filteredItems;
 
@@ -86,14 +89,22 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
   void didUpdateWidget(covariant AppSearchDropdown<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.value != oldWidget.value) {
-      setState(() {
-        _selectedValue = widget.value;
-        _searchController.text = _getDisplayText(_selectedValue);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _selectedValue = widget.value;
+            _searchController.text = _getDisplayText(_selectedValue);
+          });
+        }
       });
     }
     if (widget.items != oldWidget.items) {
       _filteredItems = List.from(widget.items);
-      _overlayEntry?.markNeedsBuild();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _overlayEntry != null) {
+          _overlayEntry?.markNeedsBuild();
+        }
+      });
     }
   }
 
@@ -116,7 +127,13 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
             childText.contains(lowerQuery);
       }).toList();
     }
-    _overlayEntry?.markNeedsBuild();
+    if (_overlayEntry != null && _overlayEntry!.mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _overlayEntry?.markNeedsBuild();
+        }
+      });
+    }
   }
 
   void _openDropdown(FormFieldState<T> state) {
@@ -140,20 +157,40 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
     final size = renderBox.size;
 
     _overlayEntry = _createOverlayEntry(size, state);
-    Overlay.of(context).insert(_overlayEntry!);
 
-    setState(() {
-      _isOpen = true;
+    // Defer insertion into Overlay safely
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Overlay.of(context).insert(_overlayEntry!);
+        setState(() {
+          _isOpen = true;
+        });
+      }
     });
   }
 
-  void _closeDropdown() {
+  void _closeDropdown({bool fromSelection = false}) {
     if (!_isOpen) return;
     _isOpen = false;
     _searchFocusNode.unfocus();
 
-    // Restore text to matched value if they didn't select anything
-    _searchController.text = _getDisplayText(_selectedValue);
+    if (!fromSelection) {
+      if (widget.allowCustomText && (T == String || T == dynamic)) {
+        final text = _searchController.text.trim();
+        if (text.isNotEmpty) {
+          _selectedValue = text as T;
+          _formFieldState?.didChange(_selectedValue);
+          if (widget.onChanged != null) widget.onChanged!(_selectedValue);
+        } else {
+          _selectedValue = null;
+          _formFieldState?.didChange(null);
+          if (widget.onChanged != null) widget.onChanged!(null);
+        }
+      } else {
+        // Restore text to matched value if they didn't select anything
+        _searchController.text = _getDisplayText(_selectedValue);
+      }
+    }
 
     if (_overlayEntry != null && _overlayEntry!.mounted) {
       _overlayEntry!.remove();
@@ -198,14 +235,28 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
                       ),
                       borderRadius: BorderRadius.circular(12.r),
                     ),
-                    child: _filteredItems.isEmpty
-                        ? Padding(
+                    child: Builder(
+                      builder: (context) {
+                        final query = _searchController.text.trim();
+                        final hasCustomOption = widget.allowCustomText &&
+                            query.isNotEmpty &&
+                            !_filteredItems.any((item) {
+                              final text = item.child is Text
+                                  ? (item.child as Text).data ?? ''
+                                  : widget.itemAsString(item.value as T);
+                              return text.toLowerCase() ==
+                                  query.toLowerCase();
+                            });
+
+                        if (_filteredItems.isEmpty && !hasCustomOption) {
+                          return Padding(
                             padding: EdgeInsets.all(24.r),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(Icons.search_off,
-                                    size: 36.sp, color: Colors.grey.shade400),
+                                    size: 36.sp,
+                                    color: Colors.grey.shade400),
                                 SizedBox(height: 8.h),
                                 Text('ไม่พบข้อมูล',
                                     style: TextStyle(
@@ -213,80 +264,155 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
                                         fontSize: 14.sp)),
                               ],
                             ),
-                          )
-                        : Scrollbar(
-                            controller: _scrollController,
-                            thumbVisibility: true,
-                            child: ListView.builder(
-                              controller: _scrollController,
-                              padding: EdgeInsets.zero,
-                              shrinkWrap: true,
-                              itemCount: _filteredItems.length,
-                              itemBuilder: (context, index) {
-                                final item = _filteredItems[index];
-                                final isSelected = item.value == _selectedValue;
+                          );
+                        }
 
+                        return Scrollbar(
+                          controller: _scrollController,
+                          thumbVisibility:
+                              _filteredItems.isNotEmpty,
+                          child: ListView.builder(
+                            controller: _scrollController,
+                            padding: EdgeInsets.zero,
+                            shrinkWrap: true,
+                            itemCount: _filteredItems.length +
+                                (hasCustomOption ? 1 : 0),
+                            itemBuilder: (context, index) {
+                              // Custom 'use typed text' option
+                              if (hasCustomOption &&
+                                  index == _filteredItems.length) {
                                 return InkWell(
                                   onTap: () {
-                                    final newValue = item.value;
-                                    state.didChange(newValue);
-                                    setState(() {
-                                      _selectedValue = newValue;
-                                      _searchController.text =
-                                          _getDisplayText(newValue);
-                                    });
-                                    _closeDropdown();
+                                    final customValue = query as T;
+                                    _selectedValue = customValue;
+                                    _searchController.text = query;
+                                    state.didChange(customValue);
+                                    _formFieldState
+                                        ?.didChange(customValue);
+                                    _closeDropdown(
+                                        fromSelection: true);
                                     if (widget.onChanged != null) {
-                                      widget.onChanged!(newValue);
+                                      widget.onChanged!(customValue);
                                     }
                                   },
                                   child: Container(
                                     padding: EdgeInsets.symmetric(
-                                        horizontal: 16.w, vertical: 14.h),
+                                        horizontal: 16.w,
+                                        vertical: 14.h),
                                     decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? colorScheme.primary
-                                              .withValues(alpha: 0.08)
-                                          : Colors.transparent,
+                                      color: colorScheme.primary
+                                          .withValues(alpha: 0.06),
                                       border: Border(
-                                        bottom: BorderSide(
-                                          color: theme.dividerColor
-                                              .withValues(alpha: 0.05),
-                                        ),
+                                        top: _filteredItems.isNotEmpty
+                                            ? BorderSide(
+                                                color: theme.dividerColor
+                                                    .withValues(alpha: 0.15),
+                                              )
+                                            : BorderSide.none,
                                       ),
                                     ),
                                     child: Row(
                                       children: [
+                                        Icon(
+                                          Icons.add_circle_outline_rounded,
+                                          size: 18.sp,
+                                          color: colorScheme.primary,
+                                        ),
+                                        SizedBox(width: 10.w),
                                         Expanded(
-                                          child: DefaultTextStyle(
-                                            style: theme.textTheme.bodyMedium!
-                                                .copyWith(
-                                              color: isSelected
-                                                  ? colorScheme.primary
-                                                  : colorScheme.onSurface,
-                                              fontWeight: isSelected
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
+                                          child: RichText(
+                                            text: TextSpan(
+                                              style: theme
+                                                  .textTheme.bodyMedium
+                                                  ?.copyWith(
+                                                color:
+                                                    colorScheme.primary,
+                                                fontWeight:
+                                                    FontWeight.w600,
+                                              ),
+                                              children: [
+                                                const TextSpan(
+                                                    text: 'บันทึก "'),
+                                                TextSpan(text: query),
+                                                const TextSpan(
+                                                    text: '" โดยตรง'),
+                                              ],
                                             ),
-                                            child: item.child,
                                           ),
                                         ),
-                                        if (isSelected)
-                                          Icon(Icons.check,
-                                              color: colorScheme.primary,
-                                              size: 20.sp),
                                       ],
                                     ),
                                   ),
                                 );
-                              },
-                            ),
+                              }
+
+                              final item = _filteredItems[index];
+                              final isSelected =
+                                  item.value == _selectedValue;
+
+                              return InkWell(
+                                onTap: () {
+                                  final newValue = item.value;
+                                  state.didChange(newValue);
+                                  setState(() {
+                                    _selectedValue = newValue;
+                                    _searchController.text =
+                                        _getDisplayText(newValue);
+                                  });
+                                  _closeDropdown(fromSelection: true);
+                                  if (widget.onChanged != null) {
+                                    widget.onChanged!(newValue);
+                                  }
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 16.w, vertical: 14.h),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? colorScheme.primary
+                                            .withValues(alpha: 0.08)
+                                        : Colors.transparent,
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: theme.dividerColor
+                                            .withValues(alpha: 0.05),
+                                      ),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: DefaultTextStyle(
+                                          style: theme
+                                              .textTheme.bodyMedium!
+                                              .copyWith(
+                                            color: isSelected
+                                                ? colorScheme.primary
+                                                : colorScheme.onSurface,
+                                            fontWeight: isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
+                                          ),
+                                          child: item.child,
+                                        ),
+                                      ),
+                                      if (isSelected)
+                                        Icon(Icons.check,
+                                            color: colorScheme.primary,
+                                            size: 20.sp),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                  ),
+                        );
+                      },
+                    ),
                 ),
               ),
             ),
-          ],
+        )],
         );
       },
     );
@@ -302,6 +428,7 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
       initialValue: _selectedValue,
       validator: widget.validator,
       builder: (FormFieldState<T> state) {
+        _formFieldState = state;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

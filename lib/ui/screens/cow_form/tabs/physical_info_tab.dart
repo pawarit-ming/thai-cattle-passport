@@ -32,9 +32,7 @@ class PhysicalInfoTab extends StatefulWidget {
 }
 
 class _PhysicalInfoTabState extends State<PhysicalInfoTab> {
-  // State
   String? _selectedColor;
-  final TextEditingController _customColorController = TextEditingController();
 
   @override
   void initState() {
@@ -44,28 +42,11 @@ class _PhysicalInfoTabState extends State<PhysicalInfoTab> {
 
   void _initializeColorFields() {
     final currentColor = widget.colorController.text;
-    if (currentColor.isNotEmpty) {
-      if (AnimalConstants.colorOptions.contains(currentColor)) {
-        _selectedColor = currentColor;
-      } else {
-        _selectedColor = AnimalConstants.customOption;
-        _customColorController.text = currentColor;
-      }
-    } else {
-      _selectedColor = null;
-    }
-
-    // Listen to custom controller to update main controller
-    _customColorController.addListener(() {
-      if (_selectedColor == AnimalConstants.customOption) {
-        widget.colorController.text = _customColorController.text;
-      }
-    });
+    _selectedColor = currentColor.isNotEmpty ? currentColor : null;
   }
 
   @override
   void dispose() {
-    _customColorController.dispose();
     super.dispose();
   }
 
@@ -88,7 +69,7 @@ class _PhysicalInfoTabState extends State<PhysicalInfoTab> {
                       const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(
-                        RegExp(r'^\d{0,4}(\.\d{0,2})?')),
+                        RegExp(r'^\d{0,3}(\.\d{0,2})?')),
                   ],
                 ),
               ),
@@ -104,7 +85,7 @@ class _PhysicalInfoTabState extends State<PhysicalInfoTab> {
                       const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(
-                        RegExp(r'^\d{0,4}(\.\d{0,2})?')),
+                        RegExp(r'^\d{0,3}(\.\d{0,2})?')),
                   ],
                 ),
               ),
@@ -114,9 +95,12 @@ class _PhysicalInfoTabState extends State<PhysicalInfoTab> {
           AppSearchDropdown<String>(
             label: 'สี',
             value: _selectedColor,
-            hintText: 'เลือกสี',
+            hintText: 'เลือก หรือพิมพ์เพื่อระบุ',
             prefixIcon: const Icon(Icons.color_lens),
-            items: AnimalConstants.colorOptions.map((String value) {
+            allowCustomText: true,
+            items: AnimalConstants.colorOptions
+                .where((c) => c != AnimalConstants.customOption)
+                .map((String value) {
               return DropdownMenuItem<String>(
                 value: value,
                 child: Text(value),
@@ -126,24 +110,10 @@ class _PhysicalInfoTabState extends State<PhysicalInfoTab> {
             onChanged: (newValue) {
               setState(() {
                 _selectedColor = newValue;
-                if (newValue == AnimalConstants.customOption) {
-                  widget.colorController.text = _customColorController.text;
-                } else {
-                  widget.colorController.text = newValue ?? '';
-                }
+                widget.colorController.text = newValue ?? '';
               });
             },
           ),
-          if (_selectedColor == AnimalConstants.customOption) ...[
-            SizedBox(height: 16.h),
-            StyledTextField(
-              label: 'ระบุสี',
-              controller: _customColorController,
-              icon: Icons.palette,
-              hintText: 'เช่น เหลืองอ่อน, ส้มแดง',
-              isRequired: true,
-            ),
-          ],
           SizedBox(height: 16.h),
           CowSelectionField(
             label: 'พ่อพันธุ์',

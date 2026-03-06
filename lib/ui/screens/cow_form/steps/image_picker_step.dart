@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:th_cow_passport/ui/screens/camera_screen.dart';
+import 'package:th_cow_passport/core/utils/image_compression_utils.dart';
 
 class ImagePickerStep extends StatefulWidget {
   final File? faceImage;
@@ -34,7 +35,10 @@ class _ImagePickerStepState extends State<ImagePickerStep> {
     try {
       final pickedFile = await _picker.pickImage(source: source);
       if (pickedFile != null) {
-        onImageSelected(File(pickedFile.path));
+        // Compress before passing back
+        final compressedFile =
+            await ImageCompressionUtils.compress(File(pickedFile.path));
+        onImageSelected(compressedFile);
       }
     } catch (e) {
       if (mounted) {
@@ -55,7 +59,10 @@ class _ImagePickerStepState extends State<ImagePickerStep> {
     );
 
     if (imagePath != null) {
-      onImageSelected(File(imagePath));
+      // Compress before passing back
+      final compressedFile =
+          await ImageCompressionUtils.compress(File(imagePath));
+      onImageSelected(compressedFile);
     }
   }
 

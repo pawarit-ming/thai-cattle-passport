@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
 import '../../../supabase_config.dart';
@@ -30,7 +32,26 @@ class CowDetailService extends ChangeNotifier {
 
   // 1. Fetch ข้อมูลวัวรายตัวตาม ID
   Future<void> fetchCowById(int id) async {
-    _setLoading(true);
+    final cacheKey = 'cached_cow_detail_$id';
+    bool silentlyFetch = false;
+
+    // Load from cache first
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedData = prefs.getString(cacheKey);
+      if (cachedData != null) {
+        _currentCow = Cow.fromMap(jsonDecode(cachedData));
+        silentlyFetch = true;
+        notifyListeners();
+      }
+    } catch (e) {
+      logger.e('Error loading cow detail from cache: $e');
+    }
+
+    if (!silentlyFetch) {
+      _setLoading(true);
+    }
+
     try {
       final response = await supabase
           .from('animals')
@@ -40,10 +61,22 @@ class CowDetailService extends ChangeNotifier {
 
       _currentCow = Cow.fromMap(response);
       logger.d("Fetched detail for cow: ${_currentCow?.animalName}");
+
+      // Save to cache
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(cacheKey, jsonEncode(_currentCow!.toMap()));
+      } catch (e) {
+        logger.e('Error saving cow detail to cache: $e');
+      }
+
+      notifyListeners();
     } catch (e) {
       logger.e('Error fetching cow detail: $e');
     } finally {
-      _setLoading(false);
+      if (!silentlyFetch) {
+        _setLoading(false);
+      }
     }
   }
 
@@ -117,6 +150,12 @@ class CowDetailService extends ChangeNotifier {
       logger.e('Error updating cow: $e');
       return e.toString();
     } finally {
+      // Clear detail cache to ensure fresh data loads next time
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('cached_cow_detail_${updatedCow.animalId}');
+      } catch (_) {}
+
       _setLoading(false);
     }
   }

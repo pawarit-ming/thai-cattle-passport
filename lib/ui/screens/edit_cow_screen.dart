@@ -13,6 +13,7 @@ import 'package:th_cow_passport/ui/widgets/cow_detail_widget.dart';
 import 'package:th_cow_passport/ui/widgets/cow_selection_field.dart';
 import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:th_cow_passport/core/utils/image_compression_utils.dart';
 import 'package:th_cow_passport/ui/widgets/styled_dropdown_field.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_search_dropdown.dart';
 
@@ -274,7 +275,8 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
       }
 
       if (file != null) {
-        _addImageFile(type, file);
+        final compressedFile = await ImageCompressionUtils.compress(file);
+        _addImageFile(type, compressedFile);
       }
     }
   }
@@ -284,7 +286,9 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
-      _addImageFile(type, File(image.path));
+      final compressedFile =
+          await ImageCompressionUtils.compress(File(image.path));
+      _addImageFile(type, compressedFile);
     }
   }
 

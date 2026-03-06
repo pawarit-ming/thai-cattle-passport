@@ -23,6 +23,10 @@ class AppTextField extends StatelessWidget {
   final String? errorText;
   final String? helperText;
   final String? suffixText;
+  final String? assetIcon;
+  final FocusNode? focusNode;
+  final IconData? icon;
+  final String? Function(String?)? customValidator;
 
   const AppTextField({
     super.key,
@@ -44,6 +48,10 @@ class AppTextField extends StatelessWidget {
     this.errorText,
     this.helperText,
     this.suffixText,
+    this.assetIcon,
+    this.focusNode,
+    this.icon,
+    this.customValidator,
   });
 
   @override
@@ -78,13 +86,28 @@ class AppTextField extends StatelessWidget {
           SizedBox(height: 8.h),
           TextFormField(
             controller: controller,
+            focusNode: focusNode,
             keyboardType: keyboardType,
             obscureText: obscureText,
             maxLines: maxLines,
             readOnly: readOnly,
             onTap: onTap,
             onChanged: onChanged,
-            validator: validator,
+            validator: customValidator ??
+                validator ??
+                (value) {
+                  if (isRequired && (value == null || value.isEmpty)) {
+                    return 'กรุณากรอก $label';
+                  }
+                  if (keyboardType == TextInputType.number &&
+                      value != null &&
+                      value.isNotEmpty) {
+                    if (double.tryParse(value) == null) {
+                      return 'กรุณากรอกตัวเลขที่ถูกต้อง';
+                    }
+                  }
+                  return null;
+                },
             maxLength: maxLength,
             inputFormatters: inputFormatters,
             style: theme.textTheme.bodyLarge,
@@ -95,7 +118,18 @@ class AppTextField extends StatelessWidget {
               suffixText: suffixText,
               helperMaxLines: 2,
               hintStyle: TextStyle(color: theme.hintColor),
-              prefixIcon: prefixIcon,
+              prefixIcon: assetIcon != null
+                  ? Padding(
+                      padding: EdgeInsets.all(12.r),
+                      child: Image.asset(
+                        assetIcon!,
+                        width: 24.r,
+                        height: 24.r,
+                      ),
+                    )
+                  : (icon != null
+                      ? Icon(icon, color: theme.hintColor)
+                      : prefixIcon),
               suffixIcon: suffixIcon,
               filled: true,
               fillColor: readOnly

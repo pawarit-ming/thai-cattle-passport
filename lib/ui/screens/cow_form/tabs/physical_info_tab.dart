@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
 import 'package:th_cow_passport/core/constants/animal_constants.dart';
 import 'package:flutter/services.dart';
-import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_text_field.dart';
 import 'package:th_cow_passport/ui/widgets/cow_selection_field.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_search_dropdown.dart';
 
@@ -59,7 +59,7 @@ class _PhysicalInfoTabState extends State<PhysicalInfoTab> {
           Row(
             children: [
               Expanded(
-                child: StyledTextField(
+                child: AppTextField(
                   label: 'น้ำหนัก (กก.)',
                   hintText: 'เช่น 450.5',
                   controller: widget.weightController,
@@ -75,7 +75,7 @@ class _PhysicalInfoTabState extends State<PhysicalInfoTab> {
               ),
               SizedBox(width: 16.w),
               Expanded(
-                child: StyledTextField(
+                child: AppTextField(
                   label: 'ส่วนสูง (ซม.)',
                   hintText: 'เช่น 150',
                   controller: widget.heightController,

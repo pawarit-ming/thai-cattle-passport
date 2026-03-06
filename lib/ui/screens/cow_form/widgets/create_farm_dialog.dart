@@ -7,7 +7,7 @@ import 'package:logger/logger.dart';
 import 'package:th_cow_passport/features/address/presentation/widgets/thai_address_picker.dart';
 import 'package:th_cow_passport/services/farm/farm_service.dart';
 import 'package:th_cow_passport/supabase_config.dart';
-import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_text_field.dart';
 
 class CreateFarmDialog extends ConsumerStatefulWidget {
   const CreateFarmDialog({super.key});
@@ -106,7 +106,7 @@ class _CreateFarmDialogState extends ConsumerState<CreateFarmDialog> {
             SizedBox(height: 16.h),
 
             // 1. ชื่อฟาร์ม
-            StyledTextField(
+            AppTextField(
               controller: _nameController,
               label: 'ชื่อฟาร์ม',
               icon: Icons.agriculture,
@@ -116,7 +116,7 @@ class _CreateFarmDialogState extends ConsumerState<CreateFarmDialog> {
             SizedBox(height: 12.h),
 
             // 2. รายละเอียดที่อยู่
-            StyledTextField(
+            AppTextField(
               controller: _addressDetailsController,
               label: 'รายละเอียดที่อยู่',
               hintText: 'บ้านเลขที่, หมู่, ถนน, ซอย',

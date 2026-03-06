@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_text_field.dart';
-import 'package:th_cow_passport/ui/widgets/styled_dropdown_field.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_dropdown.dart';
 
 class DatePickerField extends StatelessWidget {
   final TextEditingController controller;
@@ -116,7 +116,7 @@ class FormDropdownField<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StyledDropdownField<T>(
+    return AppDropdown<T>(
       label: label,
       items: items,
       value: value,

@@ -7,7 +7,7 @@ import 'package:logger/logger.dart';
 import 'package:th_cow_passport/services/cow_management/cow_activity/activity_service.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
 import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
-import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_text_field.dart';
 
 class AddActivityScreen extends ConsumerStatefulWidget {
   final int cowId;
@@ -150,7 +150,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        StyledTextField(
+        AppTextField(
           controller: _activityDateController,
           label: 'วันที่และเวลาทำกิจกรรม',
           readOnly: true,
@@ -172,7 +172,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
           ActivityType.SOLD => _buildGenericForm('รายละเอียดการขาย'),
         },
         SizedBox(height: 16.h),
-        StyledTextField(
+        AppTextField(
           controller: _descriptionController,
           label: 'หมายเหตุ',
           maxLines: 3,
@@ -185,7 +185,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
 
   List<Widget> _buildVaccineForm() {
     return [
-      StyledTextField(
+      AppTextField(
         controller: _vaccineNameController,
         label: 'ชื่อวัคซีน',
         hintText: 'เช่น วัคซีนป้องกันโรคปากและเท้าเปื่อย',
@@ -197,7 +197,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
 
   List<Widget> _buildBirthForm() {
     return [
-      StyledTextField(
+      AppTextField(
         controller: _calfNameController,
         label: 'ชื่อลูกวัว',
         hintText: 'ชื่อของลูกวัว',
@@ -206,7 +206,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
         assetIcon: 'assets/images/calf.png',
       ),
       SizedBox(height: 16.h),
-      StyledTextField(
+      AppTextField(
         controller: _calfGenderController,
         label: 'เพศลูกวัว',
         hintText: 'เพศผู้ / เพศเมีย',
@@ -215,7 +215,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
         assetIcon: 'assets/images/gender.png',
       ),
       SizedBox(height: 16.h),
-      StyledTextField(
+      AppTextField(
         controller: _calfBreedController,
         label: 'พันธุ์ลูกวัว',
         hintText: 'พันธุ์ของลูกวัว',
@@ -223,14 +223,14 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
         icon: Icons.category,
       ),
       SizedBox(height: 16.h),
-      StyledTextField(
+      AppTextField(
         controller: _calfNidController,
         label: 'เลขประจำตัวลูกวัว (NID)',
         hintText: 'กรอกเลข NID',
         icon: Icons.tag,
       ),
       SizedBox(height: 16.h),
-      StyledTextField(
+      AppTextField(
         controller: _calfBirthWeightController,
         label: 'น้ำหนักแรกเกิด (กก.)',
         hintText: 'เช่น 25.5',
@@ -243,7 +243,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
 
   List<Widget> _buildTreatmentForm() {
     return [
-      StyledTextField(
+      AppTextField(
         controller: _symptomsController,
         label: 'อาการ',
         maxLines: 3,
@@ -252,7 +252,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
         icon: Icons.sick,
       ),
       SizedBox(height: 16.h),
-      StyledTextField(
+      AppTextField(
         controller: _treatmentDetailsController,
         label: 'รายละเอียดการรักษา',
         maxLines: 3,
@@ -265,7 +265,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
 
   List<Widget> _buildWeightUpdateForm() {
     return [
-      StyledTextField(
+      AppTextField(
         controller: _weightController,
         label: 'น้ำหนักปัจจุบัน (กก.)',
         hintText: 'เช่น 450.5',
@@ -279,7 +279,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
 
   List<Widget> _buildGenericForm(String label) {
     return [
-      StyledTextField(
+      AppTextField(
         controller:
             _descriptionController, // Re-using description controller for simplicity
         label: label,

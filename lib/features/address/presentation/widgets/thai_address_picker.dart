@@ -4,7 +4,7 @@ import '../../data/models/district_model.dart';
 import '../../data/models/province_model.dart';
 import '../../data/models/tambon_model.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_search_dropdown.dart';
-import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_text_field.dart';
 
 class ThaiAddressPicker extends StatefulWidget {
   final Function(Province?, District?, Tambon?) onAddressChanged;
@@ -156,7 +156,7 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: StyledTextField(
+              child: AppTextField(
                 label: 'รหัสไปรษณีย์',
                 controller: TextEditingController(
                     text: _selectedTambon?.zipCode.toString() ?? ''),

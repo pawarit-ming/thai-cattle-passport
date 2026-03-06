@@ -7,8 +7,8 @@ import 'package:th_cow_passport/services/farm/farm_service.dart';
 import 'package:th_cow_passport/services/farm/model/farm_model.dart';
 import 'package:th_cow_passport/supabase_config.dart';
 import 'package:th_cow_passport/ui/screens/cow_form/widgets/create_farm_dialog.dart';
-import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
-import 'package:th_cow_passport/ui/widgets/styled_dropdown_field.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_text_field.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_dropdown.dart';
 import 'package:th_cow_passport/core/constants/animal_constants.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_search_dropdown.dart';
 
@@ -152,7 +152,7 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
                 );
               },
             ),
-          StyledTextField(
+          AppTextField(
             controller: widget.nidNumberController,
             label: 'Tag ID (เลขหู)',
             hintText: 'เช่น 1234567890123',
@@ -163,7 +163,7 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
           SizedBox(height: 16.h),
-          StyledTextField(
+          AppTextField(
             controller: widget.animalNameController,
             label: 'ชื่อวัว',
             hintText: 'เช่น สมศรี, บุญรอด',
@@ -202,7 +202,7 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
             },
           ),
           SizedBox(height: 16.h),
-          StyledTextField(
+          AppTextField(
             controller: TextEditingController(
                 text: MaterialLocalizations.of(context)
                     .formatShortDate(widget.birthDate)),
@@ -223,7 +223,7 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
             },
           ),
           SizedBox(height: 16.h),
-          StyledDropdownField<String>(
+          AppDropdown<String>(
             label: 'เพศ',
             isRequired: true,
             value: widget.sex,

@@ -11,10 +11,10 @@ import 'package:th_cow_passport/ui/screens/camera_screen.dart'; // Import Camera
 import 'package:th_cow_passport/core/constants/animal_constants.dart';
 import 'package:th_cow_passport/ui/widgets/cow_detail_widget.dart';
 import 'package:th_cow_passport/ui/widgets/cow_selection_field.dart';
-import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_text_field.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:th_cow_passport/core/utils/image_compression_utils.dart';
-import 'package:th_cow_passport/ui/widgets/styled_dropdown_field.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_dropdown.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_search_dropdown.dart';
 
 class EditCowScreen extends ConsumerStatefulWidget {
@@ -377,7 +377,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
       padding: EdgeInsets.all(16.r),
       child: Column(
         children: [
-          StyledTextField(
+          AppTextField(
               label: 'ชื่อวัว',
               controller: _nameController,
               icon: Icons
@@ -385,7 +385,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
               assetIcon: 'assets/images/cow.png',
               isRequired: true),
           SizedBox(height: 16.h),
-          StyledTextField(
+          AppTextField(
               label: 'Tag ID',
               controller: _nidController,
               icon: Icons.tag,
@@ -416,7 +416,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
           SizedBox(height: 16.h),
 
           // เพิ่มส่วนเลือกวันที่และเพศเพื่อให้แก้ไขได้ทุกอย่าง
-          StyledTextField(
+          AppTextField(
             label: "วันเกิด",
             controller: TextEditingController(
                 text: _selectedBirthDate?.toIso8601String().substring(0, 10) ??
@@ -434,7 +434,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
             },
           ),
           SizedBox(height: 16.h),
-          StyledDropdownField<String>(
+          AppDropdown<String>(
             label: 'เพศ',
             value: _selectedSex,
             icon: Icons.wc,
@@ -448,7 +448,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
             },
           ),
           SizedBox(height: 16.h),
-          StyledDropdownField<String>(
+          AppDropdown<String>(
             label: 'สถานะ',
             value: _selectedStatus,
             icon: Icons.info,
@@ -475,7 +475,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
           Row(
             children: [
               Expanded(
-                  child: StyledTextField(
+                  child: AppTextField(
                       label: 'น้ำหนัก (กก.)',
                       controller: _weightController,
                       icon: Icons.monitor_weight,
@@ -483,7 +483,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen>
                       keyboardType: TextInputType.number)),
               SizedBox(width: 16.w),
               Expanded(
-                  child: StyledTextField(
+                  child: AppTextField(
                       label: 'ส่วนสูง (ซม.)',
                       controller: _heightController,
                       icon: Icons.height,

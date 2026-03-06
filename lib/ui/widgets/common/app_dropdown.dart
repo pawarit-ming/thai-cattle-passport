@@ -8,8 +8,10 @@ class AppDropdown<T> extends StatefulWidget {
   final ValueChanged<T?>? onChanged;
   final String? hintText;
   final Widget? prefixIcon;
+  final String? assetIcon;
   final FormFieldValidator<T>? validator;
   final bool isRequired;
+  final IconData? icon;
 
   const AppDropdown({
     super.key,
@@ -19,8 +21,10 @@ class AppDropdown<T> extends StatefulWidget {
     required this.onChanged,
     this.hintText,
     this.prefixIcon,
+    this.assetIcon,
     this.validator,
     this.isRequired = false,
+    this.icon,
   });
 
   @override
@@ -245,7 +249,18 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
                     child: InputDecorator(
                       decoration: InputDecoration(
                         errorText: state.errorText,
-                        prefixIcon: widget.prefixIcon,
+                        prefixIcon: widget.assetIcon != null
+                            ? Padding(
+                                padding: EdgeInsets.all(12.r),
+                                child: Image.asset(
+                                  widget.assetIcon!,
+                                  width: 24.r,
+                                  height: 24.r,
+                                ),
+                              )
+                            : (widget.icon != null
+                                ? Icon(widget.icon, color: theme.hintColor)
+                                : widget.prefixIcon),
                         filled: true,
                         fillColor: isEnabled
                             ? theme.cardColor

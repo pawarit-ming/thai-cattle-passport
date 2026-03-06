@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_service.dart';
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_text_field.dart';
 
 class CowSelectionField extends ConsumerStatefulWidget {
   final String label;
@@ -63,13 +64,6 @@ class _CowSelectionFieldState extends ConsumerState<CowSelectionField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(widget.label, style: Theme.of(context).textTheme.labelLarge),
-          ],
-        ),
-        SizedBox(height: 8.h),
         Autocomplete<Cow>(
           initialValue: TextEditingValue(text: _controller.text),
           optionsBuilder: (TextEditingValue textEditingValue) {
@@ -103,32 +97,24 @@ class _CowSelectionFieldState extends ConsumerState<CowSelectionField> {
           },
           fieldViewBuilder:
               (context, textEditingController, focusNode, onFieldSubmitted) {
-            // Sync internal controller if needed, or just use this one
-            // But we need to handle "clearing" if user types something invalid?
-            // Autocomplete usually handles text input. We just need to decorate it.
-            return TextField(
+            return AppTextField(
+              label: widget.label,
               controller: textEditingController,
               focusNode: focusNode,
-              decoration: InputDecoration(
-                hintText: 'ค้นหาด้วยชื่อ หรือ ID',
-                prefixIcon: Icon(widget.icon),
-                filled: true,
-                fillColor: Colors.grey.shade50,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r)),
-                suffixIcon: _selectedCow != null
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          textEditingController.clear();
-                          setState(() {
-                            _selectedCow = null;
-                          });
-                          widget.onCowSelected(null);
-                        },
-                      )
-                    : null,
-              ),
+              hintText: 'ค้นหาด้วยชื่อ หรือ ID',
+              prefixIcon: Icon(widget.icon),
+              suffixIcon: _selectedCow != null
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        textEditingController.clear();
+                        setState(() {
+                          _selectedCow = null;
+                        });
+                        widget.onCowSelected(null);
+                      },
+                    )
+                  : null,
             );
           },
           optionsViewBuilder: (context, onSelected, options) {

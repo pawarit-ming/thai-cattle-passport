@@ -8,7 +8,7 @@ import 'package:th_cow_passport/services/auth/auth_service.dart';
 import 'package:th_cow_passport/services/farm/farm_service.dart';
 import 'package:th_cow_passport/ui/screens/auth/steps/role_selection_step.dart';
 import 'package:th_cow_passport/features/address/presentation/widgets/thai_address_picker.dart';
-import 'package:th_cow_passport/ui/widgets/styled_text_field.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_text_field.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_text_field.dart';
 
 final logger = Logger();
@@ -364,7 +364,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           Row(
             children: [
               Expanded(
-                child: StyledTextField(
+                child: AppTextField(
                   controller: _firstNameController,
                   label: 'ชื่อ',
                   hintText: 'กรอกชื่อจริง',
@@ -378,7 +378,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: StyledTextField(
+                child: AppTextField(
                   controller: _lastNameController,
                   label: 'นามสกุล',
                   hintText: 'กรอกนามสกุล',
@@ -393,7 +393,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ],
           ),
           SizedBox(height: 16.h),
-          StyledTextField(
+          AppTextField(
             controller: _phoneController,
             label: 'เบอร์โทรศัพท์',
             hintText: '0812345678',
@@ -404,7 +404,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
           SizedBox(height: 16.h),
-          StyledTextField(
+          AppTextField(
             controller: _emailController,
             label: 'อีเมล',
             hintText: 'example@email.com',
@@ -457,7 +457,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               style: TextStyle(color: Colors.grey.shade600)),
           SizedBox(height: 24.h),
 
-          StyledTextField(
+          AppTextField(
             controller: _farmNameController,
             label: 'ชื่อฟาร์ม',
             icon: Icons.agriculture,
@@ -466,7 +466,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           SizedBox(height: 16.h),
 
           // Simplified Address Field
-          StyledTextField(
+          AppTextField(
             controller: _addressDetailsController,
             label: 'รายละเอียดที่อยู่',
             hintText: 'บ้านเลขที่, หมู่, ถนน, ซอย',

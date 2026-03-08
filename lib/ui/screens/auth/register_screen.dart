@@ -9,7 +9,6 @@ import 'package:th_cow_passport/services/farm/farm_service.dart';
 import 'package:th_cow_passport/ui/screens/auth/steps/role_selection_step.dart';
 import 'package:th_cow_passport/features/address/presentation/widgets/thai_address_picker.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_text_field.dart';
-import 'package:th_cow_passport/ui/widgets/common/app_text_field.dart';
 
 final logger = Logger();
 

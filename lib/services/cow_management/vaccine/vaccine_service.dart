@@ -53,7 +53,7 @@ class VaccineService {
   }
 
   /// ดึงประวัติวัคซีนของวัวตัวนั้น
-  /// Returns Map<vaccineId, List<{dose_number, activity_date}>>
+  /// Returns `Map<vaccineId, List<{dose_number, activity_date}>>`
   Future<Map<String, List<Map<String, dynamic>>>> fetchVaccineHistory(
       int cowId) async {
     try {

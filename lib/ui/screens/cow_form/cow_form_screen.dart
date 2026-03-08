@@ -217,7 +217,8 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
           setState(() => _isImagePickerStep = true);
         } else {
           final shouldPop = await _onWillPop();
-          if (shouldPop && context.mounted) {
+          if (!context.mounted) return;
+          if (shouldPop) {
             if (context.canPop()) {
               context.pop();
             } else {
@@ -239,11 +240,14 @@ class _CowFormScreenState extends ConsumerState<CowFormScreen>
       onNext: () => setState(() => _isImagePickerStep = false),
       onBack: () async {
         final shouldPop = await _onWillPop();
-        if (shouldPop && context.mounted) {
-          if (context.canPop()) {
-            context.pop();
-          } else {
-            context.go('/');
+        if (!mounted) return;
+        if (shouldPop) {
+          if (mounted) {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
           }
         }
       },

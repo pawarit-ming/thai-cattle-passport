@@ -186,8 +186,9 @@ class ActivityService {
           .select('animal_name, nid_number')
           .eq('animal_id', cowId)
           .maybeSingle();
-      if (data != null && data['animal_name'] != null)
+      if (data != null && data['animal_name'] != null) {
         return data['animal_name'];
+      }
       if (data != null && data['nid_number'] != null) return data['nid_number'];
       return 'วัว #$cowId';
     } catch (_) {

@@ -83,7 +83,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
       lastDate: DateTime(2101),
     );
     if (pickedDate != null) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(_selectedDate),

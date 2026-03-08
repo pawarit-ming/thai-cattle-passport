@@ -147,9 +147,7 @@ class Cow {
       'animal_name': animalName,
       'breed': breed,
       'sex': sex,
-      'birth_date': birthDate != null
-          ? birthDate!.toIso8601String().substring(0, 10)
-          : null,
+      'birth_date': birthDate?.toIso8601String().substring(0, 10),
       'sire_id': sireId,
       'dam_id': damId,
       'color': color,
@@ -158,9 +156,7 @@ class Cow {
       'face_pic': facePic,
       'body_pic': bodyPic,
       'origin': origin,
-      'import_date': importDate != null
-          ? importDate!.toIso8601String().substring(0, 10)
-          : null,
+      'import_date': importDate?.toIso8601String().substring(0, 10),
       'status': status,
       'is_deleted': isDeleted,
       'created_at': createdAt?.toIso8601String(),

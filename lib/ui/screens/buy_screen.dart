@@ -85,7 +85,7 @@ class MarketItem {
         }
       }
     } catch (e) {
-      print('เกิดข้อผิดพลาดตอนดึงพิกัด: $e');
+      debugPrint('เกิดข้อผิดพลาดตอนดึงพิกัด: $e');
     }
 
     dynamic rawProfiles = json['profiles'];
@@ -167,7 +167,6 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
   // เพิ่มตัวแปรเก็บ ID วัวที่เราเคยเสนอซื้อไปแล้ว
   Set<String> _myOfferIds = {};
 
-  final bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
 
   String? _selectedGender;
@@ -580,16 +579,13 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
                         ),
 
                         // ปุ่ม Filter (ด้านขวา)
-                        Container(
-                          child: IconButton(
-                            icon: Icon(Icons.filter_list,
-                                color: theme.colorScheme.primary),
-                            tooltip: 'ตัวกรอง',
-                            onPressed: _showFilterSheet,
-                            padding: EdgeInsets.all(8.r),
-                            constraints:
-                                const BoxConstraints(), // ให้ปุ่มกระชับ
-                          ),
+                        IconButton(
+                          icon: Icon(Icons.filter_list,
+                              color: theme.colorScheme.primary),
+                          tooltip: 'ตัวกรอง',
+                          onPressed: _showFilterSheet,
+                          padding: EdgeInsets.all(8.r),
+                          constraints: const BoxConstraints(), // ให้ปุ่มกระชับ
                         ),
                       ],
                     ),

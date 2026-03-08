@@ -182,7 +182,6 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
     // Note: estimated_age format changed. Not restoring legacy partial data for simplicity in this iteration.
     // If strict migration needed, would parse "X สัปดาห์ Y วัน" here.
     if (data.containsKey('estimated_age')) {
-      final val = data['estimated_age'].toString();
       // Simple check if it matches new format "X สัปดาห์ Y วัน"
       // Not critical for now as this is new feature dev
     }
@@ -234,7 +233,8 @@ class _Step2FormInputState extends ConsumerState<Step2FormInput> {
         );
       },
     );
-    if (picked != null && mounted) {
+    if (picked != null) {
+      if (!context.mounted) return;
       final TimeOfDay? time = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(_selectedDate),

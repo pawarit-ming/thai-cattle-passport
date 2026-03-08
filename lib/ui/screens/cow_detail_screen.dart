@@ -240,7 +240,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
               children: [
                 Expanded(
                   child: Text(
-                    '${cow.nidNumber}',
+                    cow.nidNumber,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: colorScheme.onSurface,
@@ -253,7 +253,8 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
                   padding:
                       EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: CowStatusUtils.getColor(cow.status).withOpacity(0.1),
+                    color: CowStatusUtils.getColor(cow.status)
+                        .withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20.r),
                     border:
                         Border.all(color: CowStatusUtils.getColor(cow.status)),
@@ -723,7 +724,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
                                     .read(cowServiceProvider)
                                     .fetchCows(forceRefresh: true);
 
-                                if (mounted) {
+                                if (ctx.mounted && context.mounted) {
                                   Navigator.pop(ctx);
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -739,7 +740,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
                                   );
                                 }
                               } catch (e) {
-                                if (mounted) {
+                                if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text('เกิดข้อผิดพลาด: $e'),
@@ -877,7 +878,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
                               quality: 100,
                             );
 
-                            if (mounted) {
+                            if (context.mounted) {
                               Navigator.pop(
                                   context); // ปิด Dialog หลังบันทึกสำเร็จ
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -891,7 +892,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
                           }
                         } catch (e) {
                           debugPrint("Error saving QR: $e");
-                          if (mounted) {
+                          if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                   content:

@@ -323,7 +323,7 @@ class ActivityCard extends StatelessWidget {
                             border: Border.all(color: Colors.grey.shade300),
                           ),
                           child: Text(
-                            _formatValue(key, oldValue) ?? '-',
+                            _formatValue(key, oldValue),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: Colors.grey.shade600,
                               decoration: TextDecoration.lineThrough,
@@ -349,7 +349,7 @@ class ActivityCard extends StatelessWidget {
                                     .withValues(alpha: 0.8)),
                           ),
                           child: Text(
-                            _formatValue(key, newValue) ?? '-',
+                            _formatValue(key, newValue),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,

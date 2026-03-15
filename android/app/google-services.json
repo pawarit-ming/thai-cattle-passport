@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "433541533931",
+    "project_id": "cowd-485909",
+    "storage_bucket": "cowd-485909.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:433541533931:android:d40adc20707dfe06c8aeae",
+        "android_client_info": {
+          "package_name": "com.example.th_cow_passport"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9zivapluHLUDh56vrcKIWvUJmSrLNi9U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

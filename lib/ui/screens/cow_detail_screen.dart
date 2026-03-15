@@ -786,7 +786,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
     final colorScheme = theme.colorScheme;
     final screenshotController = ScreenshotController();
 
-    const String baseUrl = 'https://th-cow-passport-web.web.app/#/cow-detail';
+    const String baseUrl = 'https://cowd-485909.web.app/#/cow-detail';
     final String qrData = '$baseUrl/$cowId';
 
     showDialog(

@@ -268,7 +268,9 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
+      height: height,
       color: backgroundColor,
+      alignment: Alignment.center,
       child: child,
     );
   }

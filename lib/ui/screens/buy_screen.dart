@@ -17,6 +17,7 @@ class MarketItem {
   final DateTime birthDate;
   final double weight;
   final String seller;
+  final bool isVerified;
   final String location;
   final List<String> images;
   final String sellerId;
@@ -31,6 +32,7 @@ class MarketItem {
     required this.birthDate,
     required this.weight,
     required this.seller,
+    this.isVerified = false,
     required this.location,
     required this.images,
     required this.sellerId,
@@ -100,11 +102,13 @@ class MarketItem {
     }
 
     String sellerDisplayName = 'ไม่ระบุชื่อผู้ขาย';
+    bool isSellerVerified = false;
 
     if (profileData != null) {
       final firstName = profileData['first_name']?.toString() ?? '';
       final lastName = profileData['last_name']?.toString() ?? '';
       sellerDisplayName = '$firstName $lastName'.trim();
+      isSellerVerified = profileData['is_dld_verified'] ?? false;
 
       // ถ้าดึงชื่อมาได้แต่ดันเป็นค่าว่าง ให้แสดงรหัส ID แทน
       if (sellerDisplayName.isEmpty) {
@@ -138,6 +142,7 @@ class MarketItem {
       weight: double.tryParse(json['weight']?.toString() ?? '0') ?? 0.0,
       sellerId: json['user_id']?.toString() ?? '',
       seller: sellerDisplayName,
+      isVerified: isSellerVerified,
       location: displayLocation,
       images: imgList,
       latitude: farmData?['latitude'] != null
@@ -204,7 +209,8 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
       *,
       profiles:user_id (
       first_name,
-      last_name
+      last_name,
+      is_dld_verified
       ),
       farms:farm_id (
         farm_name,
@@ -840,10 +846,25 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                           size: 18.r, color: Colors.grey.shade600),
                       SizedBox(width: 8.w),
                       Expanded(
-                        child: Text(
-                          'ผู้ขาย: ${item.seller}',
-                          style: theme.textTheme.bodyMedium,
-                          overflow: TextOverflow.ellipsis,
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                'ผู้ขาย: ${item.seller}',
+                                style: theme.textTheme.bodyMedium,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (item.isVerified)
+                              Padding(
+                                padding: EdgeInsets.only(left: 4.w),
+                                child: Icon(
+                                  Icons.verified,
+                                  color: Colors.blue,
+                                  size: 16.r,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ],
@@ -1020,10 +1041,23 @@ class _SellerDetailsSheetState extends State<SellerDetailsSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        widget.item.seller,
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                      Row(
+                        children: [
+                          Text(
+                            widget.item.seller,
+                            style: theme.textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          if (widget.item.isVerified)
+                            Padding(
+                              padding: EdgeInsets.only(left: 4.w),
+                              child: Icon(
+                                Icons.verified,
+                                color: Colors.blue,
+                                size: 20.r,
+                              ),
+                            ),
+                        ],
                       ),
                       Text(
                         'เบอร์โทร: 08x-xxx-xxxx',

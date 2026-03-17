@@ -20,7 +20,8 @@ class User {
   final String? mobilePhone;
   final String? address;
   final String? province;
-  final String? citizenId;
+  final bool isDldVerified;
+  final DateTime? dldVerifiedAt;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -34,7 +35,8 @@ class User {
     this.mobilePhone,
     this.address,
     this.province,
-    this.citizenId,
+    this.isDldVerified = false,
+    this.dldVerifiedAt,
     this.createdAt,
     this.updatedAt,
   });
@@ -51,7 +53,8 @@ class User {
     String? mobilePhone,
     String? address,
     String? province,
-    String? citizenId,
+    bool? isDldVerified,
+    DateTime? dldVerifiedAt,
     DateTime? updatedAt,
   }) {
     return User(
@@ -64,7 +67,8 @@ class User {
       mobilePhone: mobilePhone ?? this.mobilePhone,
       address: address ?? this.address,
       province: province ?? this.province,
-      citizenId: citizenId ?? this.citizenId,
+      isDldVerified: isDldVerified ?? this.isDldVerified,
+      dldVerifiedAt: dldVerifiedAt ?? this.dldVerifiedAt,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -76,14 +80,17 @@ class User {
       id: map['id'],
       role: UserRole.fromJson(map['role'] ?? 'FARMER'),
       title: map['title'],
-      firstName: map['first_name'],
-      lastName: map['last_name'],
+      firstName: map['first_name'] ?? '',
+      lastName: map['last_name'] ?? '',
       birthDate:
           map['birth_date'] != null ? DateTime.parse(map['birth_date']) : null,
       mobilePhone: map['mobile_phone'],
       address: map['address'],
       province: map['province'],
-      citizenId: map['citizen_id'],
+      isDldVerified: map['is_dld_verified'] ?? false,
+      dldVerifiedAt: map['dld_verified_at'] != null
+          ? DateTime.parse(map['dld_verified_at'])
+          : null,
       createdAt:
           map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
       updatedAt:
@@ -112,7 +119,8 @@ class User {
       'mobile_phone': mobilePhone,
       'address': address,
       'province': province,
-      'citizen_id': citizenId,
+      'is_dld_verified': isDldVerified,
+      'dld_verified_at': dldVerifiedAt?.toIso8601String(),
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };

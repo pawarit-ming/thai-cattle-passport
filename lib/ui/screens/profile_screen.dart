@@ -1,15 +1,270 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'package:th_cow_passport/services/auth/auth_provider.dart';
 import 'package:th_cow_passport/services/auth/auth_service.dart';
+import 'package:th_cow_passport/services/profile/models/user_model.dart';
+import 'package:th_cow_passport/services/profile/services/dld_verification_service.dart';
 import 'package:th_cow_passport/supabase_config.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 final logger = Logger();
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
+
+  Future<void> _showVerificationDialog(
+      BuildContext context, WidgetRef ref, User user) async {
+    final theme = Theme.of(context);
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        bool isLoading = false;
+        bool isSuccess = false;
+        return StatefulBuilder(
+          builder: (stContext, setState) {
+            if (isSuccess) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+                contentPadding: EdgeInsets.all(24.r),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(16.r),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.check_circle_outline, color: Colors.green.shade600, size: 64.r),
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      'ยินดีด้วย!',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green.shade700,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      'คุณได้รับการยืนยันการเป็นเกษตรกร\nกับกรมปศุสัตว์เรียบร้อยแล้ว',
+                      style: theme.textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 24.h),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(dialogContext);
+                          // ignore: discarded_futures
+                          ref.refresh(currentUserProvider.future);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade600,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30.r),
+                          ),
+                        ),
+                        child: Text(
+                          'ตกลง',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+              title: Text(
+                'ยืนยันตัวตนเกษตรกร',
+                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              content: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'กรุณากรอกเลขบัตรประชาชน 13 หลัก เพื่อตรวจสอบสถานะเกษตรกรกับกรมปศุสัตว์ (DLD)',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    SizedBox(height: 20.h),
+                    TextFormField(
+                      controller: controller,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      maxLength: 13,
+                      enabled: !isLoading,
+                      style: theme.textTheme.bodyLarge,
+                      decoration: InputDecoration(
+                        labelText: 'เลขบัตรประชาชน',
+                        labelStyle: theme.textTheme.bodyMedium,
+                        hintText: 'X-XXXX-XXXXX-XX-X',
+                        prefixIcon: const Icon(Icons.badge_outlined),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'กรุณากรอกเลขบัตรประชาชน';
+                        }
+                        if (value.length != 13) {
+                          return 'กรุณากรอกให้ครบ 13 หลัก';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isLoading ? null : () => Navigator.pop(dialogContext),
+                  child: Text(
+                    'ยกเลิก',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: isLoading ? Colors.grey.shade400 : Colors.grey,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          if (formKey.currentState!.validate()) {
+                            final citizenId = controller.text.trim();
+                            setState(() {
+                              isLoading = true;
+                            });
+
+                            try {
+                              final service = DldVerificationService();
+                              final success = await service.verifyFarmer(citizenId, user.id);
+
+                              if (dialogContext.mounted) {
+                                if (success) {
+                                  setState(() {
+                                    isLoading = false;
+                                    isSuccess = true;
+                                  });
+                                } else {
+                                  Navigator.pop(dialogContext); // ปิด dialog
+                                  if (context.mounted) {
+                                    _showFailedRegistrationDialog(context, theme);
+                                  }
+                                }
+                              }
+                            } catch (e) {
+                              if (dialogContext.mounted) {
+                                setState(() {
+                                  isLoading = false;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+                                );
+                              }
+                            }
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
+                  ),
+                  child: isLoading
+                      ? SizedBox(
+                          width: 20.h,
+                          height: 20.h,
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          'ตรวจสอบข้อมูล',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showFailedRegistrationDialog(BuildContext context, ThemeData theme) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: theme.colorScheme.primary),
+            SizedBox(width: 8.w),
+            Text(
+              'ไม่พบข้อมูลเกษตรกร',
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          'ไม่พบเลขบัตรประชาชนนี้ในระบบ DLD ต้องการลงทะเบียนเกษตรกรผู้เลี้ยงสัตว์ใหม่หรือไม่?',
+          style: theme.textTheme.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'ภายหลัง',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final Uri url = Uri.parse('https://eregist.dld.go.th/eregist-portal/');
+              await launchUrl(url, mode: LaunchMode.externalApplication);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.r),
+              ),
+            ),
+            child: Text(
+              'ไปหน้าลงทะเบียน',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -67,7 +322,7 @@ class ProfileScreen extends ConsumerWidget {
                                 fullName.isNotEmpty
                                     ? fullName[0].toUpperCase()
                                     : '?',
-                                style: TextStyle(
+                                style: GoogleFonts.prompt(
                                   fontSize: 32.sp,
                                   fontWeight: FontWeight.bold,
                                   color: colorScheme.primary,
@@ -93,12 +348,29 @@ class ProfileScreen extends ConsumerWidget {
                         ],
                       ),
                       SizedBox(height: 16.h),
-                      Text(
-                        fullName,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.primary,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            fullName,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.primary,
+                            ),
+                          ),
+                          if (user.isDldVerified)
+                            Padding(
+                              padding: EdgeInsets.only(left: 8.w),
+                              child: Tooltip(
+                                message: 'เกษตรกรยืนยันตัวตนกับ DLD แล้ว',
+                                child: Icon(
+                                  Icons.verified,
+                                  color: Colors.blue,
+                                  size: 24.r,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       SizedBox(height: 4.h),
                       Text(
@@ -127,7 +399,79 @@ class ProfileScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                SizedBox(height: 32.h),
+
+                SizedBox(height: 24.h),
+
+                // Card สำหรับยืนยันตัวตน DLD
+                if (!user.isDldVerified && user.role == UserRole.FARMER)
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24.w),
+                    child: Card(
+                      elevation: 0,
+                      color: Colors.blue.shade50,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        side: BorderSide(color: Colors.blue.shade100),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(16.r),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.info_outline, color: Colors.blue.shade700),
+                                SizedBox(width: 12.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'ยังไม่ได้ยืนยันตัวตนเกษตรกร',
+                                        style: GoogleFonts.prompt(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.blue.shade900,
+                                          fontSize: 14.sp,
+                                        ),
+                                      ),
+                                      Text(
+                                        'ยืนยันข้อมูลกับกรมปศุสัตว์เพื่อรับสัญลักษณ์ยืนยัน',
+                                        style: GoogleFonts.prompt(
+                                          color: Colors.blue.shade800,
+                                          fontSize: 12.sp,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 12.h),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () =>
+                                    _showVerificationDialog(context, ref, user),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue.shade600,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  'ตรวจสอบข้อมูล DLD',
+                                  style: GoogleFonts.prompt(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14.sp,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                SizedBox(height: 16.h),
 
                 // แสดงข้อมูลเพิ่มเติม
                 if (user.title != null)

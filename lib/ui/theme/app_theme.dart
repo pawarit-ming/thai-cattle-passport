@@ -61,11 +61,17 @@ class AppTheme {
             fontSize: 20.sp, fontWeight: FontWeight.w600, color: _textPrimary),
         titleMedium: GoogleFonts.prompt(
             fontSize: 16.sp, fontWeight: FontWeight.w600, color: _textPrimary),
+        titleSmall: GoogleFonts.prompt(
+            fontSize: 14.sp, fontWeight: FontWeight.w600, color: _textPrimary),
         bodyLarge: GoogleFonts.prompt(fontSize: 16.sp, color: _textPrimary),
         bodyMedium: GoogleFonts.prompt(fontSize: 14.sp, color: _textSecondary),
         bodySmall: GoogleFonts.prompt(fontSize: 12.sp, color: _textSecondary),
         labelLarge: GoogleFonts.prompt(
             fontSize: 16.sp, fontWeight: FontWeight.bold, color: _textPrimary),
+        labelMedium: GoogleFonts.prompt(
+            fontSize: 14.sp, fontWeight: FontWeight.w500, color: _textSecondary),
+        labelSmall: GoogleFonts.prompt(
+            fontSize: 11.sp, fontWeight: FontWeight.w500, color: _textSecondary),
       ),
 
       dividerColor: _divider,

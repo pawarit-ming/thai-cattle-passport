@@ -38,21 +38,98 @@ class _OfferScreenState extends State<OfferScreen> {
         .order('created_at', ascending: false);
   }
 
-  // --- ฟังก์ชันอัปเดตสถานะ ---
-  Future<void> _updateStatus(
-      String offerId, String animalId, String newStatus) async {
-    try {
-      await _supabase
-          .from('offers')
-          .update({'status': newStatus}).eq('id', offerId);
+  // --- ฟังก์ชันแสดงตัวเลือกเมื่อกดยอมรับ ---
+  void _showAcceptOptions(
+      BuildContext context, String offerId, String animalId) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 16.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'เลือกรูปแบบหลังการขาย',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                SizedBox(height: 24.h),
+                ListTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    side: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  leading: const Icon(Icons.local_shipping_outlined,
+                      color: Colors.blue, size: 30),
+                  title: const Text('ส่งมอบทันที',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: const Text('เปลี่ยนสถานะวัวเป็น "ขายแล้ว"'),
+                  onTap: () {
+                    Navigator.pop(context); // ปิดหน้าต่าง
+                    _updateStatus(offerId, animalId, 'accepted',
+                        deliveryType: 'delivery');
+                  },
+                ),
+                SizedBox(height: 12.h),
+                ListTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    side: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  leading: const Icon(Icons.house_siding,
+                      color: Colors.orange, size: 30),
+                  title: const Text('ฝากเลี้ยง',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: const Text('เปลี่ยนสถานะวัวเป็น "ฝากเลี้ยง"'),
+                  onTap: () {
+                    Navigator.pop(context); // ปิดหน้าต่าง
+                    _updateStatus(offerId, animalId, 'accepted',
+                        deliveryType: 'foster');
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
+  // --- ฟังก์ชันอัปเดตสถานะ ---
+  Future<void> _updateStatus(String offerId, String animalId, String newStatus,
+      {String? deliveryType}) async {
+    try {
+      // 1. อัปเดตสถานะคำขอในตาราง offers
+      Map<String, dynamic> offerUpdate = {'status': newStatus};
+
+      // (Optional) หากคุณสร้างคอลัมน์ใหม่ในตาราง offers เพื่อเก็บรูปแบบ ให้ปลดคอมเมนต์ด้านล่าง
+      // if (deliveryType != null) {
+      //   offerUpdate['delivery_type'] = deliveryType;
+      // }
+
+      await _supabase.from('offers').update(offerUpdate).eq('id', offerId);
+
+      // 2. อัปเดตสถานะวัวในตาราง animals
       if (newStatus == 'accepted') {
+        // กำหนดสถานะตามที่เลือก
+        String finalAnimalStatus = 'SOLD'; // ค่าเริ่มต้นคือส่งมอบ (ขายขาด)
+        if (deliveryType == 'foster') {
+          finalAnimalStatus =
+              'FOSTER'; // เปลี่ยนเป็นสถานะฝากเลี้ยง (คุณสามารถเปลี่ยนคำนี้ตามที่ตั้งไว้ใน DB ได้)
+        }
+
         await _supabase.from('animals').update({
-          'status': 'SOLD',
+          'status': finalAnimalStatus,
         }).eq('animal_id', animalId);
       }
 
-      // 4. สั่งรีเฟรชหน้าจอหลังทำรายการเสร็จ
+      // 3. สั่งรีเฟรชหน้าจอหลังทำรายการเสร็จ
       setState(() {
         _offersFuture = _fetchOffers();
       });
@@ -419,10 +496,8 @@ class _OfferScreenState extends State<OfferScreen> {
                           SizedBox(width: 12.w),
                           Expanded(
                             child: FilledButton(
-                              onPressed: () => _updateStatus(
-                                  offer['id'].toString(),
-                                  animalId.toString(),
-                                  'accepted'),
+                              onPressed: () => _showAcceptOptions(context,
+                                  offer['id'].toString(), animalId.toString()),
                               style: FilledButton.styleFrom(
                                 backgroundColor: Colors.green,
                                 padding: EdgeInsets.symmetric(vertical: 12.h),

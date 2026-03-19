@@ -242,7 +242,8 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
         final offersData = await supabase
             .from('offers')
             .select('animal_id')
-            .eq('buyer_id', myUserId); // ดึงเฉพาะของฉัน
+            .eq('buyer_id', myUserId) // ดึงเฉพาะของฉัน
+            .neq('status', 'rejected');
 
         myOffers =
             (offersData as List).map((e) => e['animal_id'].toString()).toSet();

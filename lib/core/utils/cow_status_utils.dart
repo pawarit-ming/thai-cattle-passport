@@ -15,6 +15,8 @@ class CowStatusUtils {
         return 'ขายแล้ว';
       case 'DEATH':
         return 'ตายแล้ว';
+      case 'FOSTER':
+        return 'ฝากเลี้ยง';
       default:
         return 'ไม่ระบุ';
     }
@@ -30,6 +32,8 @@ class CowStatusUtils {
         return const Color(0xFF5C6BC0); // Muted indigo
       case 'DEATH':
         return const Color(0xFF9E9E9E); // Grey
+      case 'FOSTER':
+        return const Color(0xFFFF7043); // Dark green
       default:
         return Colors.grey;
     }
@@ -45,6 +49,8 @@ class CowStatusUtils {
         return Icons.sell_rounded;
       case 'DEATH':
         return Icons.dangerous_rounded;
+      case 'FOSTER':
+        return Icons.house_siding_rounded;
       default:
         return Icons.help_outline;
     }

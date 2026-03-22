@@ -7,11 +7,13 @@ import 'package:th_cow_passport/ui/screens/activity/wizard/wizard_constants.dart
 class Step1TypeSelection extends StatelessWidget {
   final Function(ActivityType) onTypeSelected;
   final String cowSex;
+  final bool isBreedingMissing;
 
   const Step1TypeSelection({
     super.key,
     required this.onTypeSelected,
     required this.cowSex,
+    this.isBreedingMissing = false,
   });
 
   @override
@@ -61,6 +63,9 @@ class Step1TypeSelection extends StatelessWidget {
   }
 
   Widget _buildTypeCard(BuildContext context, ActivityType type) {
+    final showWarning = isBreedingMissing &&
+        (type == ActivityType.PREGNANCY_CHECK || type == ActivityType.BIRTH);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -68,41 +73,64 @@ class Step1TypeSelection extends StatelessWidget {
         borderRadius: BorderRadius.circular(24.r),
         child: Container(
           decoration: WizardStyles.cardDecoration,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Stack(
             children: [
-              Container(
-                width: 60.r,
-                height: 60.r,
-                decoration: BoxDecoration(
-                  color: WizardColors.background,
-                  shape: BoxShape.circle,
-                ),
-                child: type.assetIcon != null
-                    ? Padding(
-                        padding: EdgeInsets.all(12.r),
-                        child: Image.asset(
-                          type.assetIcon!,
-                          width: 28.r,
-                          height: 28.r,
-                          color: WizardColors.textLight,
-                        ),
-                      )
-                    : Icon(
-                        type.icon,
-                        color: WizardColors.textLight,
-                        size: 28.r,
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 60.r,
+                      height: 60.r,
+                      decoration: BoxDecoration(
+                        color: WizardColors.background,
+                        shape: BoxShape.circle,
                       ),
-              ),
-              SizedBox(height: 16.h),
-              Text(
-                type.label, // Or key map to English if needed, but extension has Thai
-                style: WizardStyles.labelLarge.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: WizardColors.textDark,
+                      child: type.assetIcon != null
+                          ? Padding(
+                              padding: EdgeInsets.all(12.r),
+                              child: Image.asset(
+                                type.assetIcon!,
+                                width: 28.r,
+                                height: 28.r,
+                                color: WizardColors.textLight,
+                              ),
+                            )
+                          : Icon(
+                              type.icon,
+                              color: WizardColors.textLight,
+                              size: 28.r,
+                            ),
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      type.label,
+                      style: WizardStyles.labelLarge.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: WizardColors.textDark,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                textAlign: TextAlign.center,
               ),
+              if (showWarning)
+                Positioned(
+                  top: 12.r,
+                  right: 12.r,
+                  child: Container(
+                    padding: EdgeInsets.all(4.r),
+                    decoration: const BoxDecoration(
+                      color: Colors.orange,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.priority_high_rounded,
+                      color: Colors.white,
+                      size: 14.r,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

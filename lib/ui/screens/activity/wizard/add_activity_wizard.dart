@@ -41,6 +41,27 @@ class _AddActivityWizardState extends ConsumerState<AddActivityWizard> {
     });
   }
 
+  bool _checkIsBreedingMissing(List<Activity> activities) {
+    // Sort activities by date descending to accurately check recent history
+    final sortedActivities = activities.toList()
+      ..sort((a, b) => b.activityDate.compareTo(a.activityDate));
+
+    for (final activity in sortedActivities) {
+      if (activity.activityType == ActivityType.BREEDING) {
+        return false; // Found breeding first, valid
+      } else if (activity.activityType == ActivityType.BIRTH) {
+        return true; // Found birth first, missing new breeding after birth
+      } else if (activity.activityType == ActivityType.PREGNANCY_CHECK) {
+        final result = activity.data['check_result'];
+        if (result == 'NOT_PREGNANT') {
+          return true; // Found "Not Pregnant", needs new breeding
+        }
+        // If result is PREGNANT or RECHECK, we continue looking (might find the breeding that caused it)
+      }
+    }
+    return true; // No relevant history found, assume missing breeding
+  }
+
   Future<void> _handleTypeSelection(ActivityType type) async {
     setState(() => _selectedType = type);
 
@@ -48,17 +69,17 @@ class _AddActivityWizardState extends ConsumerState<AddActivityWizard> {
       // Check for breeding history
       final activities =
           await ref.read(activitiesProvider(widget.cowId).future);
-      final hasBreeding = activities
-          .any((activity) => activity.activityType == ActivityType.BREEDING);
+      
+      final missingBreeding = _checkIsBreedingMissing(activities);
 
-      if (!hasBreeding && mounted) {
+      if (missingBreeding && mounted) {
         final shouldProceed = await showDialog<bool>(
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
             title: const Text('ไม่พบประวัติการผสมพันธุ์'),
             content: const Text(
-              'วัวตัวนี้ยังไม่มีบันทึกการผสมพันธุ์ในระบบ\nคุณต้องการบันทึกข้อมูลต่อหรือไม่?',
+              'วัวตัวนี้ยังไม่มีบันทึกการผสมพันธุ์ในรอบปัจจุบัน\n(ยังไม่ได้ผสมรอบใหม่หลังคลอด หรือผลตรวจครรภ์ล่าสุดคือไม่ตั้งครรภ์)\n\nคุณต้องการบันทึกข้อมูลต่อหรือไม่?',
             ),
             actions: [
               TextButton(
@@ -181,6 +202,13 @@ class _AddActivityWizardState extends ConsumerState<AddActivityWizard> {
     String title = 'กิจกรรมใหม่';
     if (_currentStep == 2) title = 'สรุปข้อมูล';
 
+    final activitiesAsync = ref.watch(activitiesProvider(widget.cowId));
+    final isBreedingMissing = activitiesAsync.when(
+      data: (activities) => _checkIsBreedingMissing(activities),
+      loading: () => false,
+      error: (_, __) => false,
+    );
+
     return Scaffold(
       backgroundColor: WizardColors.background,
       appBar: AppBar(
@@ -206,6 +234,7 @@ class _AddActivityWizardState extends ConsumerState<AddActivityWizard> {
                 Step1TypeSelection(
                   cowSex: cowSex,
                   onTypeSelected: _handleTypeSelection,
+                  isBreedingMissing: isBreedingMissing,
                 ),
                 // Only build Step 2 if type is selected
                 if (_selectedType != null)

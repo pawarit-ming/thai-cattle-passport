@@ -32,7 +32,8 @@ class ProfileScreen extends ConsumerWidget {
           builder: (stContext, setState) {
             if (isSuccess) {
               return AlertDialog(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24.r)),
                 contentPadding: EdgeInsets.all(24.r),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -43,7 +44,8 @@ class ProfileScreen extends ConsumerWidget {
                         color: Colors.green.shade50,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.check_circle_outline, color: Colors.green.shade600, size: 64.r),
+                      child: Icon(Icons.check_circle_outline,
+                          color: Colors.green.shade600, size: 64.r),
                     ),
                     SizedBox(height: 16.h),
                     Text(
@@ -91,10 +93,12 @@ class ProfileScreen extends ConsumerWidget {
             }
 
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24.r)),
               title: Text(
                 'ยืนยันตัวตนเกษตรกร',
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
               content: Form(
                 key: formKey,
@@ -134,7 +138,8 @@ class ProfileScreen extends ConsumerWidget {
               ),
               actions: [
                 TextButton(
-                  onPressed: isLoading ? null : () => Navigator.pop(dialogContext),
+                  onPressed:
+                      isLoading ? null : () => Navigator.pop(dialogContext),
                   child: Text(
                     'ยกเลิก',
                     style: theme.textTheme.labelLarge?.copyWith(
@@ -154,7 +159,8 @@ class ProfileScreen extends ConsumerWidget {
 
                             try {
                               final service = DldVerificationService();
-                              final success = await service.verifyFarmer(citizenId, user.id);
+                              final success = await service.verifyFarmer(
+                                  citizenId, user.id);
 
                               if (dialogContext.mounted) {
                                 if (success) {
@@ -165,7 +171,8 @@ class ProfileScreen extends ConsumerWidget {
                                 } else {
                                   Navigator.pop(dialogContext); // ปิด dialog
                                   if (context.mounted) {
-                                    _showFailedRegistrationDialog(context, theme);
+                                    _showFailedRegistrationDialog(
+                                        context, theme);
                                   }
                                 }
                               }
@@ -182,7 +189,8 @@ class ProfileScreen extends ConsumerWidget {
                           }
                         },
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
                   ),
                   child: isLoading
                       ? SizedBox(
@@ -213,14 +221,16 @@ class ProfileScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
         title: Row(
           children: [
             Icon(Icons.warning_amber_rounded, color: theme.colorScheme.primary),
             SizedBox(width: 8.w),
             Text(
               'ไม่พบข้อมูลเกษตรกร',
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -241,7 +251,8 @@ class ProfileScreen extends ConsumerWidget {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              final Uri url = Uri.parse('https://eregist.dld.go.th/eregist-portal/');
+              final Uri url =
+                  Uri.parse('https://eregist.dld.go.th/eregist-portal/');
               await launchUrl(url, mode: LaunchMode.externalApplication);
             },
             style: ElevatedButton.styleFrom(
@@ -419,11 +430,13 @@ class ProfileScreen extends ConsumerWidget {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.info_outline, color: Colors.blue.shade700),
+                                Icon(Icons.info_outline,
+                                    color: Colors.blue.shade700),
                                 SizedBox(width: 12.w),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'ยังไม่ได้ยืนยันตัวตนเกษตรกร',

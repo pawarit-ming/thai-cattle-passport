@@ -9,6 +9,10 @@ import 'package:th_cow_passport/services/farm/farm_service.dart';
 import 'package:th_cow_passport/ui/screens/auth/steps/role_selection_step.dart';
 import 'package:th_cow_passport/features/address/presentation/widgets/thai_address_picker.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_text_field.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:th_cow_passport/ui/screens/map/map_picker_screen.dart';
+
 
 final logger = Logger();
 
@@ -45,6 +49,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   late TextEditingController _districtController;
   late TextEditingController _subDistrictController;
   late TextEditingController _postalCodeController;
+  final GlobalKey<ThaiAddressPickerState> _addressPickerKey = GlobalKey<ThaiAddressPickerState>();
+  
+  double? _selectedLat;
+  double? _selectedLng;
 
   // Data storage for multi-step
   late String _authEmail;
@@ -86,6 +94,90 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   // --- Logic Helpers ---
+
+  Future<void> _openMapPicker() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _showError('กรุณาเปิดบริการตำแหน่ง (GPS)');
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          _showError('ไม่ได้รับการอนุญาตการเข้าถึงตำแหน่ง');
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        _showError('การเข้าถึงตำแหน่งถูกปฏิเสธอย่างถาวร กรุณาไปที่การตั้งค่า');
+        return;
+      }
+    } catch (e) {
+      logger.e('Location permission check error: $e');
+    }
+
+    if (!mounted) return;
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MapPickerScreen(
+          initialLatitude: _selectedLat,
+          initialLongitude: _selectedLng,
+        ),
+      ),
+    );
+
+    if (result != null && result is Map<String, dynamic>) {
+      setState(() {
+        _selectedLat = result['lat'];
+        _selectedLng = result['lng'];
+      });
+      _fetchAddressFromCoordinates();
+    }
+  }
+
+  Future<void> _fetchAddressFromCoordinates() async {
+    if (_selectedLat == null || _selectedLng == null) {
+      _showError('กรุณาเลือกตำแหน่งบนแผนที่ก่อน');
+      return;
+    }
+    
+    setState(() => _isLoading = true);
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(_selectedLat!, _selectedLng!);
+
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        
+        String province = place.administrativeArea ?? '';
+        String district = place.subAdministrativeArea ?? '';
+        if (district.isEmpty) district = place.locality ?? '';
+        String tambon = place.subLocality ?? '';
+        if (tambon.isEmpty) tambon = place.thoroughfare ?? '';
+        String postalCode = place.postalCode ?? '';
+        
+        if (province.startsWith('จ.')) province = province.substring(2).trim();
+        if (province.startsWith('จังหวัด')) province = province.substring(7).trim();
+        if (district.startsWith('อ.')) district = district.substring(2).trim();
+        if (district.startsWith('อำเภอ')) district = district.substring(5).trim();
+        if (district.startsWith('เขต')) district = district.substring(3).trim();
+        if (tambon.startsWith('ต.')) tambon = tambon.substring(2).trim();
+        if (tambon.startsWith('ตำบล')) tambon = tambon.substring(4).trim();
+        if (tambon.startsWith('แขวง')) tambon = tambon.substring(4).trim();
+
+        await _addressPickerKey.currentState?.setAddressFromText(province, district, tambon, postalCode);
+      }
+    } catch (e) {
+      _showError('ไม่สามารถดึงข้อมูลที่อยู่ได้: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   int get _maxSteps => _selectedRole == 'FARMER' ? 4 : 3;
 
@@ -454,7 +546,48 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           SizedBox(height: 8.h),
           Text('กรุณากรอกข้อมูลฟาร์มของคุณ',
               style: TextStyle(color: Colors.grey.shade600)),
-          SizedBox(height: 24.h),
+          SizedBox(height: 16.h),
+          
+          Text('ระบุตำแหน่งฟาร์มบนแผนที่', style: theme.textTheme.titleMedium),
+          SizedBox(height: 8.h),
+          InkWell(
+            onTap: _openMapPicker,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              height: 120.h,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: _selectedLat != null ? theme.colorScheme.primary.withValues(alpha: 0.05) : Colors.grey.shade50,
+                border: Border.all(
+                  color: _selectedLat != null ? theme.colorScheme.primary : Colors.grey.shade300,
+                  width: _selectedLat != null ? 2 : 1,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    _selectedLat != null ? Icons.map : Icons.map_outlined,
+                    size: 48.r,
+                    color: _selectedLat != null ? theme.colorScheme.primary : Colors.grey.shade400,
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    _selectedLat != null 
+                        ? 'ระบุตำแหน่งฟาร์มเรียบร้อยแล้ว\n(แตะเพื่อเปลี่ยนตำแหน่ง)' 
+                        : 'แตะเพื่อเลือกตำแหน่งฟาร์มบนแผนที่',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: _selectedLat != null ? theme.colorScheme.primary : Colors.grey.shade600,
+                      fontWeight: _selectedLat != null ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
 
           AppTextField(
             controller: _farmNameController,
@@ -477,6 +610,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
           // Thai Address Picker
           ThaiAddressPicker(
+            key: _addressPickerKey,
             onAddressChanged: (province, district, tambon) {
               setState(() {
                 _provinceController.text = province?.nameTh ?? '';

@@ -5,6 +5,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart' as gmap;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart' as ll;
 import 'package:google_api_availability/google_api_availability.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 
 /// Cached GMS availability result (checked once per app session)
 bool? _gmsAvailable;
@@ -140,9 +142,10 @@ class AdaptivePickerMap extends StatefulWidget {
   final double initialZoom;
   final double? selectedLatitude;
   final double? selectedLongitude;
+  final String? selectedAddress; 
   final ValueChanged<({double lat, double lng})> onLocationSelected;
-  final VoidCallback?
-      onMapCreated; // Optional: called when google map is created
+  final VoidCallback? onConfirmLocation;
+  final VoidCallback? onMapCreated; // Optional: called when google map is created
 
   const AdaptivePickerMap({
     super.key,
@@ -151,7 +154,9 @@ class AdaptivePickerMap extends StatefulWidget {
     this.initialZoom = 10,
     this.selectedLatitude,
     this.selectedLongitude,
+    this.selectedAddress,
     required this.onLocationSelected,
+    this.onConfirmLocation,
     this.onMapCreated,
   });
 
@@ -186,6 +191,13 @@ class AdaptivePickerMapState extends State<AdaptivePickerMap> {
     }
   }
 
+  /// Show the info window for the selected location marker
+  void showMarkerInfoWindow() {
+    if (_useGoogleMap == true && _googleMapController != null) {
+      _googleMapController!.showMarkerInfoWindow(const gmap.MarkerId('farm_loc'));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_useGoogleMap == null) {
@@ -212,6 +224,11 @@ class AdaptivePickerMapState extends State<AdaptivePickerMap> {
         target: initPos,
         zoom: widget.initialZoom,
       ),
+      gestureRecognizers: {
+        Factory<OneSequenceGestureRecognizer>(
+          () => EagerGestureRecognizer(),
+        ),
+      },
       myLocationEnabled: true,
       myLocationButtonEnabled: false,
       zoomControlsEnabled: true,
@@ -230,7 +247,11 @@ class AdaptivePickerMapState extends State<AdaptivePickerMap> {
               gmap.Marker(
                 markerId: const gmap.MarkerId('farm_loc'),
                 position: selectedPos,
-                infoWindow: const gmap.InfoWindow(title: 'ตำแหน่งฟาร์ม'),
+                infoWindow: gmap.InfoWindow(
+                  title: widget.selectedAddress ?? 'ตำแหน่งฟาร์ม',
+                  snippet: (widget.selectedAddress != null && widget.onConfirmLocation != null) ? 'คลิกเพื่อใช้ตำแหน่งนี้' : null,
+                  onTap: widget.onConfirmLocation,
+                ),
               ),
             },
     );
@@ -264,9 +285,43 @@ class AdaptivePickerMapState extends State<AdaptivePickerMap> {
             markers: [
               Marker(
                 point: selectedPos,
-                width: 40.r,
-                height: 40.r,
-                child: Icon(Icons.location_on, color: Colors.red, size: 40.r),
+                width: 250.w,
+                height: 100.h,
+                alignment: Alignment.topCenter,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (widget.selectedAddress != null)
+                      GestureDetector(
+                        onTap: widget.onConfirmLocation,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                          margin: EdgeInsets.only(bottom: 4.h),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8.r),
+                            boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                widget.selectedAddress!,
+                                style: TextStyle(fontSize: 12.sp, color: Colors.black87),
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (widget.onConfirmLocation != null)
+                                Text('คลิกเพื่อใช้ตำแหน่งนี้', style: TextStyle(fontSize: 10.sp, color: Colors.blue)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    Icon(Icons.location_on, color: Colors.red, size: 40.r),
+                  ],
+                ),
               ),
             ],
           ),

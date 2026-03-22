@@ -5,32 +5,48 @@ import '../models/district_model.dart';
 import '../models/tambon_model.dart';
 
 class ThaiAddressDatasource {
+  // Singleton instance
+  static final ThaiAddressDatasource _instance = ThaiAddressDatasource._internal();
+  factory ThaiAddressDatasource() => _instance;
+  ThaiAddressDatasource._internal();
+
   List<Province> _provinces = [];
   List<District> _districts = [];
   List<Tambon> _tambons = [];
 
+  bool _isLoaded = false;
+  bool get isLoaded => _isLoaded;
+
   Future<void> loadData() async {
-    if (_provinces.isNotEmpty) return;
+    // If already loaded or currently loading, don't reload
+    if (_isLoaded) return;
 
-    final provincesJson =
-        await rootBundle.loadString('assets/data/thai_provinces.json');
-    final districtsJson =
-        await rootBundle.loadString('assets/data/thai_districts.json');
-    final tambonsJson =
-        await rootBundle.loadString('assets/data/thai_tambons.json');
+    try {
+      final provincesJson =
+          await rootBundle.loadString('assets/data/thai_provinces.json');
+      final districtsJson =
+          await rootBundle.loadString('assets/data/thai_districts.json');
+      final tambonsJson =
+          await rootBundle.loadString('assets/data/thai_tambons.json');
 
-    final List<dynamic> provincesList = json.decode(provincesJson);
-    final List<dynamic> districtsList = json.decode(districtsJson);
-    final List<dynamic> tambonsList = json.decode(tambonsJson);
+      final List<dynamic> provincesList = json.decode(provincesJson);
+      final List<dynamic> districtsList = json.decode(districtsJson);
+      final List<dynamic> tambonsList = json.decode(tambonsJson);
 
-    _provinces = provincesList.map((e) => Province.fromJson(e)).toList();
-    _districts = districtsList.map((e) => District.fromJson(e)).toList();
-    _tambons = tambonsList.map((e) => Tambon.fromJson(e)).toList();
+      _provinces = provincesList.map((e) => Province.fromJson(e)).toList();
+      _districts = districtsList.map((e) => District.fromJson(e)).toList();
+      _tambons = tambonsList.map((e) => Tambon.fromJson(e)).toList();
 
-    // Sort by name for better UX
-    _provinces.sort((a, b) => a.nameTh.compareTo(b.nameTh));
-    _districts.sort((a, b) => a.nameTh.compareTo(b.nameTh));
-    _tambons.sort((a, b) => a.nameTh.compareTo(b.nameTh));
+      // Sort by name for better UX
+      _provinces.sort((a, b) => a.nameTh.compareTo(b.nameTh));
+      _districts.sort((a, b) => a.nameTh.compareTo(b.nameTh));
+      _tambons.sort((a, b) => a.nameTh.compareTo(b.nameTh));
+      
+      _isLoaded = true;
+    } catch (e) {
+      // Log error or handle appropriately
+      _isLoaded = false;
+    }
   }
 
   List<Province> getProvinces() => _provinces;

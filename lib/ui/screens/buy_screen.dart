@@ -231,6 +231,9 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
       // กรองวัวที่ตายแล้วออก
       query = query.neq('status', 'DEATH');
 
+      // กรองวัวที่อยู่ในสถานะฝากเลี้ยงออก
+      query = query.neq('status', 'FOSTER');
+
       // กรองวัวที่ถูกลบออก (Soft Delete)
       query = query.eq('is_deleted', false);
 

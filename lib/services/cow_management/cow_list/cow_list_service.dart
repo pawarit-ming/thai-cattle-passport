@@ -65,18 +65,66 @@ class CowService extends ChangeNotifier {
     }
 
     try {
-      final response = await supabase
+      // --- ขั้นตอนที่ 1: ดึงวัวที่ฉันเป็นเจ้าของ ---
+      final myCowsResponse = await supabase
           .from('animals')
           .select(
               'animal_id, user_id, farm_id, nid_number, animal_name, breed, sex, birth_date, color, weight, height, status, face_pic, body_pic, origin, import_date, created_at, updated_at')
           .eq('is_deleted', false)
-          .eq('user_id', myUserId) // กรองเอาเฉพาะเจ้าของ ID นี้เท่านั้น
+          .eq('user_id', myUserId)
           .order('created_at', ascending: false);
 
-      _cows = (response as List).map((data) => Cow.fromMap(data)).toList();
-      logger.d("Fetched ${_cows.length} cows for user: $myUserId");
+      List<Cow> allCows =
+          (myCowsResponse as List).map((data) => Cow.fromMap(data)).toList();
 
-      // Save to cache
+      // --- ขั้นตอนที่ 2: ดึงวัวที่ฉันรับฝากเลี้ยง (หาจากตาราง offers) ---
+      // 2.1 หา ID วัวที่ฉันเคยขายและกดยอมรับไปแล้ว
+      final myOffersResponse = await supabase
+          .from('offers')
+          .select('animal_id')
+          .eq('seller_id', myUserId)
+          .eq('status', 'accepted');
+
+      final List<dynamic> offerList = myOffersResponse as List;
+
+      if (offerList.isNotEmpty) {
+        // ดึงเฉพาะ ID วัวออกมาเป็น List
+        final List<int> soldAnimalIds =
+            offerList.map((o) => int.parse(o['animal_id'].toString())).toList();
+
+        // 2.2 ไปดึงข้อมูลวัวเหล่านั้นมา "เฉพาะตัวที่สถานะเป็น FOSTER"
+        final fosteredCowsResponse = await supabase
+            .from('animals')
+            .select(
+                'animal_id, user_id, farm_id, nid_number, animal_name, breed, sex, birth_date, color, weight, height, status, face_pic, body_pic, origin, import_date, created_at, updated_at')
+            .eq('is_deleted', false)
+            .eq('status', 'FOSTER')
+            .filter('animal_id', 'in',
+                soldAnimalIds); // ใช้ filter 'in' เพื่อค้นหาจาก List ID
+
+        final List<Cow> fosteredCows = (fosteredCowsResponse as List)
+            .map((data) => Cow.fromMap(data))
+            .toList();
+
+        // 2.3 นำวัวรับฝากเลี้ยง มารวมกับวัวของฉัน (เช็คไม่ให้ซ้ำ)
+        for (var cow in fosteredCows) {
+          if (!allCows.any((c) => c.animalId == cow.animalId)) {
+            allCows.add(cow);
+          }
+        }
+      }
+
+      // เรียงลำดับทั้งหมดใหม่ตามวันที่สร้าง
+      allCows.sort((a, b) {
+        final dateA = a.createdAt ?? DateTime.now();
+        final dateB = b.createdAt ?? DateTime.now();
+        return dateB.compareTo(dateA); // เรียงจากใหม่ไปเก่า
+      });
+
+      _cows = allCows;
+      logger.d("Fetched ${_cows.length} cows in total for user: $myUserId");
+
+      // Save to cache (โค้ดเดิมของคุณ)
       try {
         final prefs = await SharedPreferences.getInstance();
         final encodedData = jsonEncode(_cows.map((c) => c.toMap()).toList());
@@ -88,7 +136,6 @@ class CowService extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       logger.e('Error fetching cows: $e', error: e);
-      // Optionally, set an error state here
     } finally {
       if (!silentlyFetch) {
         _setLoading(false);

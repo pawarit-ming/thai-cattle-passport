@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
 import 'package:th_cow_passport/core/utils/cow_status_utils.dart';
 
@@ -26,6 +27,10 @@ class CowCard extends StatelessWidget {
         ? DateTime.now().difference(cow.birthDate!).inDays ~/ 365
         : null;
 
+    final myUserId = Supabase.instance.client.auth.currentUser?.id;
+    final isFosteredByMe = cow.userId != myUserId;
+    final isFosteredByOthers = cow.userId == myUserId && cow.status == 'FOSTER';
+
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
@@ -36,8 +41,7 @@ class CowCard extends StatelessWidget {
         border: Border.all(
           color: isSelected
               ? colorScheme.primary
-              : Colors.grey.withValues(
-                  alpha: 0.2), // เพิ่มเส้นขอบสีเทาจาง ๆ เมื่อไม่ได้เลือก
+              : Colors.grey.withValues(alpha: 0.2),
           width: isSelected ? 2.w : 1.w,
         ),
         boxShadow: [
@@ -72,6 +76,7 @@ class CowCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                // รูปภาพวัว
                 Container(
                   width: 60.r,
                   height: 60.r,
@@ -112,70 +117,130 @@ class CowCard extends StatelessWidget {
                   }(),
                 ),
                 SizedBox(width: 16.w),
+                // เนื้อหาหลักของการ์ด และป้ายสถานะ
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Stack(
                     children: [
-                      // NID
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          cow.nidNumber,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            color: colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18.sp,
-                          ),
-                        ),
-                      ),
-                      // Name
-                      Text(
-                        cow.animalName,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey.shade700,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: 4.h),
-                      // Breed
-                      Text(
-                        cow.breed ?? '-',
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      SizedBox(height: 8.h),
-                      // Gender + Age
-                      Row(
-                        children: [
-                          _buildMiniTag(
-                            icon: cow.sex == 'MALE' ? Icons.male : Icons.female,
-                            color: cow.sex == 'MALE'
-                                ? Colors.blue.shade100
-                                : Colors.pink.shade100,
-                            textColor: cow.sex == 'MALE'
-                                ? Colors.blue.shade800
-                                : Colors.pink.shade800,
-                          ),
-                          if (age != null) ...[
-                            SizedBox(width: 8.w),
-                            Text(
-                              '$age ปี',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: Colors.grey.shade600,
-                                fontWeight: FontWeight.bold,
+                      // 1. เนื้อหาหลัก (ซ้าย)
+                      Container(
+                        padding: EdgeInsets.only(right: 80.w), // เว้นระยะเผื่อให้ป้ายด้านขวา ตัวหนังสือจะได้ไม่ทับกัน
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // NID
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                cow.nidNumber,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18.sp,
+                                ),
                               ),
                             ),
+                            // Name
+                            Text(
+                              cow.animalName,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: Colors.grey.shade700,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 4.h),
+                            // Breed
+                            Text(
+                              cow.breed ?? '-',
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                            SizedBox(height: 8.h),
+                            // เพศและอายุ
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                _buildMiniTag(
+                                  icon: cow.sex == 'MALE' ? Icons.male : Icons.female,
+                                  color: cow.sex == 'MALE'
+                                      ? Colors.blue.shade100
+                                      : Colors.pink.shade100,
+                                  textColor: cow.sex == 'MALE'
+                                      ? Colors.blue.shade800
+                                      : Colors.pink.shade800,
+                                ),
+                                if (age != null) ...[
+                                  SizedBox(width: 8.w),
+                                  Text(
+                                    '$age ปี',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: Colors.grey.shade600,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ],
-                        ],
+                        ),
                       ),
+
+                      // 2. ป้ายสถานะหลัก (ฝากเลี้ยง / ตายแล้ว) - จัดให้อยู่กึ่งกลางแนวตั้งเสมอ
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        child: Center(
+                          child: _buildHealthTag(),
+                        ),
+                      ),
+
+                      // 3. ป้ายฝากเลี้ยง (ชิดขวาล่างสุด ซึ่งจะตรงกับแถวเพศ/อายุพอดีเป๊ะ)
+                      if (isFosteredByMe)
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(6.r),
+                              border: Border.all(color: Colors.blue.shade300),
+                            ),
+                            child: Text(
+                              'วัวรับฝากเลี้ยง',
+                              style: TextStyle(
+                                  fontSize: 10.sp,
+                                  color: Colors.blue.shade800,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+
+                      if (isFosteredByOthers)
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade50,
+                              borderRadius: BorderRadius.circular(6.r),
+                              border: Border.all(color: Colors.orange.shade300),
+                            ),
+                            child: Text(
+                              'ฝากคนอื่นเลี้ยงอยู่',
+                              style: TextStyle(
+                                  fontSize: 10.sp,
+                                  color: Colors.orange.shade800,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
-                SizedBox(width: 8.w),
-                // Health status (replaces arrow)
-                _buildHealthTag(),
               ],
             ),
           ),

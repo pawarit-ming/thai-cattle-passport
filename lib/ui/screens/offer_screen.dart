@@ -40,7 +40,7 @@ class _OfferScreenState extends State<OfferScreen> {
 
   // --- ฟังก์ชันแสดงตัวเลือกเมื่อกดยอมรับ ---
   void _showAcceptOptions(
-      BuildContext context, String offerId, String animalId) {
+      BuildContext context, String offerId, String animalId, String buyerId) {
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
@@ -72,7 +72,7 @@ class _OfferScreenState extends State<OfferScreen> {
                   subtitle: const Text('เปลี่ยนสถานะวัวเป็น "ขายแล้ว"'),
                   onTap: () {
                     Navigator.pop(context); // ปิดหน้าต่าง
-                    _updateStatus(offerId, animalId, 'accepted',
+                    _updateStatus(offerId, animalId, buyerId, 'accepted',
                         deliveryType: 'delivery');
                   },
                 ),
@@ -89,7 +89,7 @@ class _OfferScreenState extends State<OfferScreen> {
                   subtitle: const Text('เปลี่ยนสถานะวัวเป็น "ฝากเลี้ยง"'),
                   onTap: () {
                     Navigator.pop(context); // ปิดหน้าต่าง
-                    _updateStatus(offerId, animalId, 'accepted',
+                    _updateStatus(offerId, animalId, buyerId, 'accepted',
                         deliveryType: 'foster');
                   },
                 ),
@@ -102,31 +102,32 @@ class _OfferScreenState extends State<OfferScreen> {
   }
 
   // --- ฟังก์ชันอัปเดตสถานะ ---
-  Future<void> _updateStatus(String offerId, String animalId, String newStatus,
+  Future<void> _updateStatus(
+      String offerId, String animalId, String buyerId, String newStatus,
       {String? deliveryType}) async {
     try {
-      // 1. อัปเดตสถานะคำขอในตาราง offers
-      Map<String, dynamic> offerUpdate = {'status': newStatus};
+      final myUserId = _supabase.auth.currentUser?.id; // ID ของผู้ขายปัจจุบัน
 
-      // (Optional) หากคุณสร้างคอลัมน์ใหม่ในตาราง offers เพื่อเก็บรูปแบบ ให้ปลดคอมเมนต์ด้านล่าง
-      // if (deliveryType != null) {
-      //   offerUpdate['delivery_type'] = deliveryType;
-      // }
+      await _supabase
+          .from('offers')
+          .update({'status': newStatus}).eq('id', offerId);
 
-      await _supabase.from('offers').update(offerUpdate).eq('id', offerId);
-
-      // 2. อัปเดตสถานะวัวในตาราง animals
+      // 2. อัปเดตข้อมูลวัว
       if (newStatus == 'accepted') {
-        // กำหนดสถานะตามที่เลือก
-        String finalAnimalStatus = 'SOLD'; // ค่าเริ่มต้นคือส่งมอบ (ขายขาด)
+        Map<String, dynamic> animalUpdate = {
+          'user_id': buyerId, // โอนกรรมสิทธิ์ให้ผู้ซื้อ
+        };
+
         if (deliveryType == 'foster') {
-          finalAnimalStatus =
-              'FOSTER'; // เปลี่ยนเป็นสถานะฝากเลี้ยง (คุณสามารถเปลี่ยนคำนี้ตามที่ตั้งไว้ใน DB ได้)
+          animalUpdate['status'] = 'FOSTER';
+        } else {
+          animalUpdate['status'] = 'ACTIVE';
         }
 
-        await _supabase.from('animals').update({
-          'status': finalAnimalStatus,
-        }).eq('animal_id', animalId);
+        await _supabase
+            .from('animals')
+            .update(animalUpdate)
+            .eq('animal_id', int.parse(animalId));
       }
 
       // 3. สั่งรีเฟรชหน้าจอหลังทำรายการเสร็จ
@@ -484,6 +485,7 @@ class _OfferScreenState extends State<OfferScreen> {
                               onPressed: () => _updateStatus(
                                   offer['id'].toString(),
                                   animalId.toString(),
+                                  buyerId.toString(),
                                   'rejected'),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: Colors.red,
@@ -496,8 +498,11 @@ class _OfferScreenState extends State<OfferScreen> {
                           SizedBox(width: 12.w),
                           Expanded(
                             child: FilledButton(
-                              onPressed: () => _showAcceptOptions(context,
-                                  offer['id'].toString(), animalId.toString()),
+                              onPressed: () => _showAcceptOptions(
+                                  context,
+                                  offer['id'].toString(),
+                                  animalId.toString(),
+                                  buyerId.toString()),
                               style: FilledButton.styleFrom(
                                 backgroundColor: Colors.green,
                                 padding: EdgeInsets.symmetric(vertical: 12.h),

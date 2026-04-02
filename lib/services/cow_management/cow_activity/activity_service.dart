@@ -49,22 +49,50 @@ class ActivityService {
       await _supabaseClient.from(_tableName).insert(map);
 
       // 2. Handle side effects based on activity type
+      final ns = NotificationService();
+      final cowName = await _getCowName(activity.animalId);
+
       if (activity.activityType == ActivityType.BIRTH) {
         await _createCalfFromActivity(activity);
+        // Schedule weaning reminder (90 days after birth)
+        await ns.scheduleWeaningReminder(
+          cowId: activity.animalId,
+          cowName: cowName,
+          birthDate: activity.activityDate,
+        );
       } else if (activity.activityType == ActivityType.DEATH) {
-        // Automatically set status to DEATH
         await _updateCowStatus(activity.animalId, 'DEATH');
       } else if (activity.activityType == ActivityType.SICKNESS) {
-        // Automatically set status to SICK
         await _updateCowStatus(activity.animalId, 'SICK');
+        // Schedule follow-up reminder (3 days after sickness recorded)
+        await ns.scheduleSicknessFollowUpReminder(
+          cowId: activity.animalId,
+          cowName: cowName,
+          sicknessDate: activity.activityDate,
+        );
       } else if (activity.activityType == ActivityType.TREATMENT) {
-        // If recovered, set status back to ACTIVE
         if (activity.data['is_recovered'] == true) {
           await _updateCowStatus(activity.animalId, 'ACTIVE');
         }
       } else if (activity.activityType == ActivityType.VACCINE) {
-        // Schedule next dose notification
         await _scheduleVaccineNotification(activity);
+      } else if (activity.activityType == ActivityType.BREEDING) {
+        // Schedule heat check (19 days), pregnancy check (90 days), near birth (270 days)
+        await ns.scheduleHeatCheckReminder(
+          cowId: activity.animalId,
+          cowName: cowName,
+          breedingDate: activity.activityDate,
+        );
+        await ns.schedulePregnancyCheckReminder(
+          cowId: activity.animalId,
+          cowName: cowName,
+          breedingDate: activity.activityDate,
+        );
+        await ns.scheduleNearBirthReminder(
+          cowId: activity.animalId,
+          cowName: cowName,
+          breedingDate: activity.activityDate,
+        );
       }
     } catch (e) {
       Logger().e('Error adding activity: $e');

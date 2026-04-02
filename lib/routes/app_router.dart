@@ -11,6 +11,7 @@ import 'package:th_cow_passport/ui/screens/edit_cow_screen.dart';
 import 'package:th_cow_passport/ui/screens/auth/login_screen.dart'; // เพิ่ม import หน้า Login
 import 'package:th_cow_passport/ui/screens/auth/register_screen.dart'; // เพิ่ม import หน้า Register
 import 'package:th_cow_passport/ui/screens/activity/wizard/add_activity_wizard.dart';
+import 'package:th_cow_passport/ui/screens/notification/notification_center_screen.dart';
 
 import 'package:th_cow_passport/ui/screens/profile_screen.dart';
 import 'package:th_cow_passport/ui/screens/offer_screen.dart';
@@ -113,9 +114,14 @@ final router = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) {
         final cowId = int.parse(state.pathParameters['cowId']!);
-
         return AddActivityWizard(cowId: cowId);
       },
+    ),
+
+    GoRoute(
+      path: '/notifications',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const NotificationCenterScreen(),
     ),
 
     // --- Shell Route (Bottom Navigation) ---

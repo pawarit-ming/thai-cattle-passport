@@ -136,4 +136,136 @@ class NotificationService {
   static int generateNotificationId(int cowId, String vaccineId) {
     return cowId * 1000 + vaccineId.hashCode.abs() % 1000;
   }
+
+  /// Generate a unique notification ID from cowId and a string suffix
+  static int generateIdFromSuffix(int cowId, String suffix) {
+    return (cowId * 10000 + suffix.hashCode.abs() % 10000).abs();
+  }
+
+  // ====== BREEDING REMINDERS ======
+
+  /// เตือนสังเกตการเป็นสัด (18-21 วันหลังผสม)
+  Future<void> scheduleHeatCheckReminder({
+    required int cowId,
+    required String cowName,
+    required DateTime breedingDate,
+  }) async {
+    final reminderDate = kDebugNotification
+        ? DateTime.now().add(const Duration(seconds: 5))
+        : breedingDate.add(const Duration(days: 19));
+    if (reminderDate.isBefore(DateTime.now())) return;
+    await _scheduleRaw(
+      id: generateIdFromSuffix(cowId, 'heat_check'),
+      title: 'สังเกตการเป็นสัด',
+      body: '$cowName อาจกำลังเป็นสัด — ควรสังเกตพฤติกรรม',
+      at: reminderDate,
+    );
+  }
+
+  /// เตือนตรวจสอบการตั้งท้อง (90 วันหลังผสม)
+  Future<void> schedulePregnancyCheckReminder({
+    required int cowId,
+    required String cowName,
+    required DateTime breedingDate,
+  }) async {
+    final reminderDate = kDebugNotification
+        ? DateTime.now().add(const Duration(seconds: 10))
+        : breedingDate.add(const Duration(days: 90));
+    if (reminderDate.isBefore(DateTime.now())) return;
+    await _scheduleRaw(
+      id: generateIdFromSuffix(cowId, 'preg_check'),
+      title: 'ตรวจสอบการตั้งท้อง',
+      body: '$cowName ถึงเวลาตรวจครรภ์ (90 วันหลังผสม)',
+      at: reminderDate,
+    );
+  }
+
+  /// เตือนใกล้กำหนดคลอด (270 วันหลังผสม)
+  Future<void> scheduleNearBirthReminder({
+    required int cowId,
+    required String cowName,
+    required DateTime breedingDate,
+  }) async {
+    final reminderDate = kDebugNotification
+        ? DateTime.now().add(const Duration(seconds: 15))
+        : breedingDate.add(const Duration(days: 270));
+    if (reminderDate.isBefore(DateTime.now())) return;
+    await _scheduleRaw(
+      id: generateIdFromSuffix(cowId, 'near_birth'),
+      title: 'ใกล้กำหนดคลอด',
+      body: '$cowName ใกล้ถึงกำหนดคลอด — เตรียมพื้นที่และอุปกรณ์ให้พร้อม',
+      at: reminderDate,
+    );
+  }
+
+  // ====== BIRTH REMINDERS ======
+
+  /// เตือนถึงกำหนดหย่านม (90 วันหลังคลอด)
+  Future<void> scheduleWeaningReminder({
+    required int cowId,
+    required String cowName,
+    required DateTime birthDate,
+  }) async {
+    final reminderDate = kDebugNotification
+        ? DateTime.now().add(const Duration(seconds: 20))
+        : birthDate.add(const Duration(days: 90));
+    if (reminderDate.isBefore(DateTime.now())) return;
+    await _scheduleRaw(
+      id: generateIdFromSuffix(cowId, 'weaning'),
+      title: 'ถึงกำหนดหย่านม',
+      body: '$cowName ถึงเวลาหย่านมลูกโค (90 วันหลังคลอด)',
+      at: reminderDate,
+    );
+  }
+
+  // ====== SICKNESS REMINDERS ======
+
+  /// เตือนติดตามอาการป่วย (3 วันหลังบันทึก SICKNESS)
+  Future<void> scheduleSicknessFollowUpReminder({
+    required int cowId,
+    required String cowName,
+    required DateTime sicknessDate,
+  }) async {
+    final reminderDate = kDebugNotification
+        ? DateTime.now().add(const Duration(seconds: 5))
+        : sicknessDate.add(const Duration(days: 3));
+    if (reminderDate.isBefore(DateTime.now())) return;
+    await _scheduleRaw(
+      id: generateIdFromSuffix(cowId, 'sick_followup'),
+      title: 'ติดตามอาการป่วย',
+      body: '$cowName — ควรตรวจสอบอาการและบันทึกผลการรักษา',
+      at: reminderDate,
+    );
+  }
+
+  // ====== INTERNAL HELPERS ======
+
+  Future<void> _scheduleRaw({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime at,
+  }) async {
+    if (!_initialized) await initialize();
+    final tzDateTime = tz.TZDateTime.from(at, tz.local);
+    await _plugin.zonedSchedule(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tzDateTime,
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'farm_reminders',
+          'แจ้งเตือนฟาร์ม',
+          channelDescription: 'แจ้งเตือนกิจกรรมสำคัญของฟาร์ม',
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    );
+    _logger.i('Scheduled: $title (#$id) at $at');
+  }
 }

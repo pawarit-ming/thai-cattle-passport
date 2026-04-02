@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:logger/logger.dart';
 import 'package:th_cow_passport/services/cow_management/cow_activity/activity_service.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
+import 'package:th_cow_passport/services/notification/farm_alert_service.dart';
 import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_text_field.dart';
 
@@ -368,6 +369,7 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
       await ref.read(activityServiceProvider).addActivity(newActivity);
       ref.invalidate(activitiesProvider(widget.cowId));
       ref.invalidate(cowDetailServiceProvider);
+      ref.invalidate(farmAlertsProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

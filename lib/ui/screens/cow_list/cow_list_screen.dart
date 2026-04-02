@@ -13,6 +13,8 @@ import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_empty_state.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_shimmer.dart';
+import 'package:th_cow_passport/services/notification/farm_alert_service.dart';
+import 'package:th_cow_passport/ui/widgets/common/app_badge.dart';
 
 class CowListScreen extends ConsumerStatefulWidget {
   const CowListScreen({super.key});
@@ -317,9 +319,24 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                   _selectedCowIds.isEmpty ? null : () => _confirmBatchDelete(),
             ),
           ] else
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () => setState(() => _isEditMode = true),
+            Consumer(
+              builder: (context, ref, child) {
+                final alertCount = ref.watch(pendingAlertCountProvider);
+                return Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 12.w),
+                    child: AppBadge(
+                      showBadge: alertCount > 0,
+                      count: alertCount,
+                      child: IconButton(
+                        icon: const Icon(Icons.notifications_none),
+                        tooltip: 'การแจ้งเตือน',
+                        onPressed: () => context.push('/notifications'),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
         ],
       ),

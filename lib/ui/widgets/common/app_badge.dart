@@ -8,17 +8,20 @@ class AppBadge extends StatelessWidget {
   final bool showBadge;
   final Color? badgeColor;
 
+  final bool isDot;
+
   const AppBadge({
     super.key,
     required this.child,
     this.count = 0,
     this.showBadge = true,
     this.badgeColor,
+    this.isDot = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (!showBadge || count == 0) {
+    if (!showBadge || (count == 0 && !isDot)) {
       return child;
     }
 
@@ -30,9 +33,9 @@ class AppBadge extends StatelessWidget {
         child,
         Positioned(
           top: -4.h,
-          right: -8.w,
+          right: isDot ? -4.w : -8.w,
           child: Container(
-            padding: EdgeInsets.all(4.r),
+            padding: isDot ? EdgeInsets.zero : EdgeInsets.all(4.r),
             decoration: BoxDecoration(
               color: effectiveColor,
               shape: BoxShape.circle,
@@ -41,22 +44,23 @@ class AppBadge extends StatelessWidget {
                 width: 1.5,
               ),
             ),
-            constraints: BoxConstraints(
-              minWidth: 16.r,
-              minHeight: 16.r,
-            ),
-            child: Center(
-              child: Text(
-                count > 99 ? '99+' : count.toString(),
-                style: GoogleFonts.prompt(
-                  color: Colors.white,
-                  fontSize: 8.sp,
-                  fontWeight: FontWeight.bold,
-                  height: 1, // Minimize vertical padding
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
+            constraints: isDot
+                ? BoxConstraints(minWidth: 10.r, minHeight: 10.r)
+                : BoxConstraints(minWidth: 16.r, minHeight: 16.r),
+            child: isDot
+                ? null
+                : Center(
+                    child: Text(
+                      count > 99 ? '99+' : count.toString(),
+                      style: GoogleFonts.prompt(
+                        color: Colors.white,
+                        fontSize: 8.sp,
+                        fontWeight: FontWeight.bold,
+                        height: 1, // Minimize vertical padding
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
           ),
         ),
       ],

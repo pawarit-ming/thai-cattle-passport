@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:th_cow_passport/services/notification/farm_alert_service.dart';
 import 'package:th_cow_passport/services/offer/offer_badge_provider.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_badge.dart';
 
@@ -82,8 +83,8 @@ class _CustomNavBar extends ConsumerWidget {
     const textSecondary = Color(0xFF8D6E63);
     const primaryLight = Color(0xFFD7CCC8);
 
-    // ดึงจำนวน pending offer จาก Supabase Realtime
     final pendingCount = ref.watch(pendingOfferCountProvider).valueOrNull ?? 0;
+    final pendingAlertCount = ref.watch(pendingAlertCountProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -105,8 +106,12 @@ class _CustomNavBar extends ConsumerWidget {
             final item = _items[index];
             final isSelected = index == currentIndex;
 
-            // Badge แสดงเฉพาะที่ index 1 (หน้า "เสนอซื้อ") ดึงค่าจาก Supabase
-            final badgeCount = (index == 1) ? pendingCount : 0;
+            // Badge: index 0 = farm alerts, index 1 = offers
+            final badgeCount = (index == 0)
+                ? pendingAlertCount
+                : (index == 1)
+                    ? pendingCount
+                    : 0;
 
             return Expanded(
               child: GestureDetector(
@@ -131,6 +136,7 @@ class _CustomNavBar extends ConsumerWidget {
                       AppBadge(
                         showBadge: badgeCount > 0,
                         count: badgeCount,
+                        isDot: index == 0,
                         child: item.imageProvider != null
                             ? ImageIcon(
                                 item.imageProvider!,

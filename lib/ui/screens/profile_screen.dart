@@ -9,6 +9,7 @@ import 'package:th_cow_passport/services/auth/auth_service.dart';
 import 'package:th_cow_passport/services/profile/models/user_model.dart';
 import 'package:th_cow_passport/services/profile/services/dld_verification_service.dart';
 import 'package:th_cow_passport/supabase_config.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 final logger = Logger();
@@ -509,7 +510,9 @@ class ProfileScreen extends ConsumerWidget {
                 _buildProfileMenu(context,
                     icon: Icons.history, text: 'ประวัติการซื้อขาย'),
                 _buildProfileMenu(context,
-                    icon: Icons.notifications_outlined, text: 'การแจ้งเตือน'),
+                    icon: Icons.notifications_outlined,
+                    text: 'การแจ้งเตือน',
+                    onTap: () => context.push('/notifications')),
 
                 _buildProfileMenu(context,
                     icon: Icons.logout,

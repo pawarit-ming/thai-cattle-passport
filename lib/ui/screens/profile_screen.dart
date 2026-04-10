@@ -182,8 +182,12 @@ class ProfileScreen extends ConsumerWidget {
                                 setState(() {
                                   isLoading = false;
                                 });
+                                final errorMessage = e is String ? e : 'เกิดข้อผิดพลาด: $e';
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+                                  SnackBar(
+                                    content: Text(errorMessage),
+                                    backgroundColor: Colors.red,
+                                  ),
                                 );
                               }
                             }

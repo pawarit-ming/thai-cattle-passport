@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:crypto/crypto.dart';
 import 'package:http/io_client.dart';
 import 'package:logger/logger.dart';
 import 'package:th_cow_passport/supabase_config.dart';
@@ -15,6 +16,22 @@ class DldVerificationService {
   Future<bool> verifyFarmer(String citizenId, String userId) async {
     try {
       logger.i('[DldVerificationService] Verifying farmer with citizenId: $citizenId');
+
+      // 1. Hash the citizen ID (ป้องกันการสืบย้อนกลับและไม่เก็บเลขจริง)
+      final bytes = utf8.encode(citizenId);
+      final digest = sha256.convert(bytes);
+      final hashedCitizenId = digest.toString();
+
+      // 2. Check if this hashed ID already exists
+      final existingRecord = await supabase
+          .from('verified_citizen_ids')
+          .select('hashed_citizen_id')
+          .eq('hashed_citizen_id', hashedCitizenId)
+          .maybeSingle();
+
+      if (existingRecord != null) {
+        throw 'เลขบัตรประชาชนนี้ถูกใช้งานบัญชีอื่นไปแล้ว ไม่สามารถใช้ซ้ำได้';
+      }
 
       // DLD ใช้ government CA ที่ Android ไม่รู้จัก ต้องข้าม SSL verification
       final httpClient = HttpClient()
@@ -42,17 +59,25 @@ class DldVerificationService {
         }
 
         if (isVerified) {
+          // 4. Record the hashed ID in the table to prevent reuse
+          await supabase.from('verified_citizen_ids').insert({
+            'hashed_citizen_id': hashedCitizenId,
+          });
+
           await _updateVerificationStatus(userId, true);
           return true;
         }
       } else {
-
         logger.e('[DldVerificationService] API Error: ${response.statusCode} - ${response.body}');
       }
       
       return false;
     } catch (e) {
       logger.e('[DldVerificationService] Error during verification', error: e);
+      if (e is String) {
+        // rethrow if it is our custom string exception
+        rethrow;
+      }
       return false;
     }
   }

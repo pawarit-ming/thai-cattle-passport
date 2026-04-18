@@ -123,6 +123,7 @@ class FarmAlert {
     this.isDismissed = false,
   });
 
+
   bool get isOverdue => dueDate.isBefore(DateTime.now());
 
   AlertUrgency get urgency {

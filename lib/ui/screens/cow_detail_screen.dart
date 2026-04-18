@@ -17,6 +17,9 @@ import 'package:screenshot/screenshot.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_shimmer.dart';
 import 'package:th_cow_passport/core/utils/cow_status_utils.dart';
+import 'package:th_cow_passport/services/cow_management/cow_detail/cow_verification_service.dart';
+import 'package:th_cow_passport/services/cow_management/models/cow_model.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CowDetailScreen extends ConsumerStatefulWidget {
   final int cowId;
@@ -315,7 +318,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
       floatingActionButton: widget.isReadOnly || isDead
           ? null
           : FloatingActionButton(
-              onPressed: () => _showScanInstructionDialog(context),
+              onPressed: () => _showScanInstructionDialog(context, cow),
               backgroundColor: colorScheme.secondary,
               foregroundColor: colorScheme.onSecondary,
               child: const Icon(Icons.camera_alt),
@@ -323,7 +326,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
     );
   }
 
-  void _showScanInstructionDialog(BuildContext context) {
+  void _showScanInstructionDialog(BuildContext context, Cow cow) {
     final theme = Theme.of(context);
     showDialog(
       context: context,
@@ -386,9 +389,9 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    onPressed: () {
+                    onPressed: () async {
                       Navigator.pop(ctx);
-                      Navigator.push(
+                      final result = await Navigator.push<List<String>?>(
                         context,
                         MaterialPageRoute(
                           builder: (_) => const CameraScreen(
@@ -401,6 +404,11 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
                           ),
                         ),
                       );
+
+                      if (result != null && result.isNotEmpty) {
+                        final facePath = result[0]; // รูปหน้า
+                        _verifyCowIdentity(facePath, cow);
+                      }
                     },
                     style: FilledButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 14.h),
@@ -409,6 +417,30 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
                     ),
                     icon: const Icon(Icons.camera_alt, size: 18),
                     label: Text('เริ่มถ่ายภาพ',
+                        style: TextStyle(
+                            fontSize: 15.sp, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      final ImagePicker picker = ImagePicker();
+                      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+                      
+                      if (image != null) {
+                        _verifyCowIdentity(image.path, cow);
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 14.h),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14.r)),
+                    ),
+                    icon: const Icon(Icons.photo_library, size: 18),
+                    label: Text('อัปโหลดเพื่อทดสอบ',
                         style: TextStyle(
                             fontSize: 15.sp, fontWeight: FontWeight.w600)),
                   ),
@@ -426,6 +458,111 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
         );
       },
     );
+  }
+
+  Future<void> _verifyCowIdentity(String facePath, Cow cow) async {
+    final originalFaces = cow.facePic;
+    if (originalFaces == null || originalFaces.isEmpty) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('ไม่สามารถตรวจสอบได้'),
+            content: const Text('ไม่มีรูปภาพใบหน้าเดิมของวัวเพื่อใช้ในการยืนยันตัวตน'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('ตกลง'),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
+
+    // แสดงหน้า loading
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    try {
+      final isVerified = await ref
+          .read(cowVerificationServiceProvider)
+          .verifyCowIdentity(facePath, originalFaces);
+
+      if (mounted) {
+        Navigator.pop(context); // ปิด loading
+
+        // แสดงผล
+        showDialog(
+          context: context,
+          builder: (ctx) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20.r)),
+              contentPadding: EdgeInsets.all(24.r),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isVerified ? Icons.check_circle : Icons.cancel,
+                    color: isVerified ? Colors.green : Colors.red,
+                    size: 80.r,
+                  ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    isVerified ? 'ยืนยันตัวตนสำเร็จ!' : 'ยืนยันตัวตนล้มเหลว',
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.bold,
+                      color: isVerified ? Colors.green.shade700 : Colors.red.shade700,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    isVerified
+                        ? 'นี่คือวัวตัวเดียวกัน'
+                        : 'ภาพที่ถ่ายไม่ตรงกับข้อมูลในระบบ',
+                    style: TextStyle(fontSize: 14.sp, color: Colors.grey.shade700),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 24.h),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: isVerified ? Colors.green : Colors.red,
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                      child: Text(
+                        'ตกลง',
+                        style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // ปิด loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('เกิดข้อผิดพลาดในการตรวจสอบ: $e')),
+        );
+      }
+    }
   }
 
   Widget _buildInstructionStep(BuildContext context, int number, String title,

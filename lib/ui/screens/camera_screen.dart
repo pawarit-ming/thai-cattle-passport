@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
@@ -30,25 +31,32 @@ class _CameraScreenState extends State<CameraScreen> {
   /// ฟังก์ชันจัดการเมื่อผู้ใช้กดยืนยันรูปภาพจาก CameraWidget
   Future<void> _onPictureConfirmed(String tempPath) async {
     try {
-      // 1. เตรียม Path สำหรับบันถึกไฟล์ถาวร
-      final Directory extDir = await getApplicationDocumentsDirectory();
-      final String dirPath = '${extDir.path}/Pictures/th_cow_passport';
-      await Directory(dirPath).create(recursive: true);
+      String finalImagePath = tempPath;
 
-      // สร้างชื่อไฟล์ไม่ซ้ำกัน
-      final String fileName =
-          '${DateTime.now().millisecondsSinceEpoch}_step$_currentStep.jpg';
-      final String filePath = '$dirPath/$fileName';
+      if (!kIsWeb) {
+        // 1. เตรียม Path สำหรับบันทึกไฟล์ถาวร
+        final Directory extDir = await getApplicationDocumentsDirectory();
+        final String dirPath = '${extDir.path}/Pictures/th_cow_passport';
+        await Directory(dirPath).create(recursive: true);
 
-      // 2. Copy ไฟล์จาก Cache ของกล้องไปยัง Folder ของแอพ
-      final File newImage = await File(tempPath).copy(filePath);
-      logger.i("Saved image at: ${newImage.path}");
+        // สร้างชื่อไฟล์ไม่ซ้ำกัน
+        final String fileName =
+            '${DateTime.now().millisecondsSinceEpoch}_step$_currentStep.jpg';
+        final String filePath = '$dirPath/$fileName';
+
+        // 2. Copy ไฟล์จาก Cache ของกล้องไปยัง Folder ของแอพ
+        final File newImage = await File(tempPath).copy(filePath);
+        logger.i("Saved image at: ${newImage.path}");
+        finalImagePath = newImage.path;
+      } else {
+        logger.i("Web mode: kept image URL: $tempPath");
+      }
 
       if (!mounted) return;
 
       // 3. Logic การเปลี่ยน Step
       if (_isMultiStep) {
-        _capturedImagePaths.add(newImage.path);
+        _capturedImagePaths.add(finalImagePath);
 
         if (_currentStep < widget.steps!.length - 1) {
           // ยังไม่ครบทุกขั้นตอน -> ไปขั้นตอนถัดไป
@@ -61,7 +69,7 @@ class _CameraScreenState extends State<CameraScreen> {
         }
       } else {
         // กรณีถ่ายรูปเดียว -> ส่ง Path รูปเดียวกลับ
-        Navigator.of(context).pop(newImage.path);
+        Navigator.of(context).pop(finalImagePath);
       }
     } catch (e) {
       logger.e("Error saving image: $e");

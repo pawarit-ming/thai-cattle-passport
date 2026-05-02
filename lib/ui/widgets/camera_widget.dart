@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:permission_handler/permission_handler.dart';
 
 class CameraWidget extends StatefulWidget {
@@ -58,10 +59,12 @@ class _CameraWidgetState extends State<CameraWidget>
 
   Future<void> _initCamera() async {
     try {
-      final status = await Permission.camera.request();
-      if (!status.isGranted) {
-        if (mounted) setState(() => _error = "ไม่ได้รับสิทธิ์กล้อง");
-        return;
+      if (!kIsWeb) {
+        final status = await Permission.camera.request();
+        if (!status.isGranted) {
+          if (mounted) setState(() => _error = "ไม่ได้รับสิทธิ์กล้อง");
+          return;
+        }
       }
 
       final cameras = await availableCameras();
@@ -191,10 +194,15 @@ class _CameraWidgetState extends State<CameraWidget>
       return Column(
         children: [
           Expanded(
-            child: Image.file(
-              File(_previewImagePath!),
-              fit: BoxFit.contain,
-            ),
+            child: kIsWeb
+                ? Image.network(
+                    _previewImagePath!,
+                    fit: BoxFit.contain,
+                  )
+                : Image.file(
+                    File(_previewImagePath!),
+                    fit: BoxFit.contain,
+                  ),
           ),
           Container(
             padding: const EdgeInsets.all(20),

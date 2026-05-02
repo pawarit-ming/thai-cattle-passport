@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_segmented_tab.dart';
@@ -154,7 +155,11 @@ class _ImageCarouselState extends State<_ImageCarousel> {
         ),
       );
     } else {
-      imageWidget = Image.file(File(url), fit: BoxFit.cover);
+      if (kIsWeb) {
+        imageWidget = Image.network(url, fit: BoxFit.cover);
+      } else {
+        imageWidget = Image.file(File(url), fit: BoxFit.cover);
+      }
     }
 
     return Stack(
@@ -330,7 +335,7 @@ class _FullScreenImageViewerState extends State<_FullScreenImageViewer> {
             itemBuilder: (context, index) {
               final url = widget.images[index];
               final isNetworkImage = url.startsWith('http');
-              final imageProvider = isNetworkImage
+              final imageProvider = (kIsWeb || isNetworkImage)
                   ? NetworkImage(url)
                   : FileImage(File(url)) as ImageProvider;
 

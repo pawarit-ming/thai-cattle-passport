@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class CowVerificationService {
   final logger = Logger();
@@ -38,10 +39,19 @@ class CowVerificationService {
           filename: 'original_$i.jpg',
         ));
 
-        request.files.add(await http.MultipartFile.fromPath(
-          'image2',
-          capturedFacePath,
-        ));
+        if (kIsWeb) {
+          final res2 = await http.get(Uri.parse(capturedFacePath));
+          request.files.add(http.MultipartFile.fromBytes(
+            'image2',
+            res2.bodyBytes,
+            filename: 'captured.jpg',
+          ));
+        } else {
+          request.files.add(await http.MultipartFile.fromPath(
+            'image2',
+            capturedFacePath,
+          ));
+        }
 
         // Accept headers
         request.headers.addAll({

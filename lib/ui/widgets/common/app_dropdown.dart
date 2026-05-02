@@ -136,14 +136,14 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
                                 widget.onChanged!(newValue);
                               }
                             },
-                            child: Container(
+                            child: Ink(
                               padding: EdgeInsets.symmetric(
                                   horizontal: 16.w, vertical: 14.h),
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? colorScheme.primary
                                         .withValues(alpha: 0.08)
-                                    : Colors.transparent,
+                                    : theme.cardColor,
                                 border: Border(
                                   bottom: BorderSide(
                                     color: theme.dividerColor

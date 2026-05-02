@@ -516,7 +516,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    isVerified ? 'ยืนยันตัวตนสำเร็จ!' : 'ยืนยันตัวตนล้มเหลว',
+                    isVerified ? 'ยืนยันตัวตนสำเร็จ!' : 'ยืนยันตัวตนไม่สำเร็จ',
                     style: TextStyle(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.bold,
@@ -526,8 +526,8 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
                   SizedBox(height: 8.h),
                   Text(
                     isVerified
-                        ? 'นี่คือวัวตัวเดียวกัน'
-                        : 'ภาพที่ถ่ายไม่ตรงกับข้อมูลในระบบ',
+                        ? 'ระบบตรวจสอบสำเร็จ'
+                        : 'กรุณาลองใหม่อีกครั้ง',
                     style: TextStyle(fontSize: 14.sp, color: Colors.grey.shade700),
                     textAlign: TextAlign.center,
                   ),

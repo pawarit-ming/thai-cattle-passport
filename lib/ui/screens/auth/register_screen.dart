@@ -184,6 +184,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _handleStepContinue() async {
     logger.i('[RegisterScreen] Current step: $_currentStep');
 
+    setState(() {
+      _errorMessage = null;
+      _emailError = null;
+    });
+
     // 1. Role Selection
     if (_currentStep == 0) {
       setState(() => _currentStep = 1);
@@ -214,8 +219,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _performRegistration() async {
-    setState(() => _isLoading = true);
-    _emailError = null; // Clear previous errors
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _emailError = null;
+    });
 
     try {
       // 1. Sign Up (Create Auth User)
@@ -268,6 +276,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   void _handleAuthError(dynamic e) {
     final msg = e.toString();
+    logger.e('Registration Error: $msg');
+    
     if (msg.contains('user_already_exists') ||
         msg.contains('Email already registered')) {
       setState(() {
@@ -281,13 +291,27 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   String _parseErrorMessage(String error) {
-    if (error.contains('weak_password')) {
+    final lowerError = error.toLowerCase();
+    if (lowerError.contains('weak_password') || lowerError.contains('password is too short')) {
       return 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร';
     }
-    if (error.contains('invalid_email')) {
+    if (lowerError.contains('invalid_email') || lowerError.contains('invalid email')) {
       return 'รูปแบบอีเมลไม่ถูกต้อง';
     }
-    return 'เกิดข้อผิดพลาด: $error';
+    if (lowerError.contains('user_already_exists') || lowerError.contains('email already registered')) {
+      return 'อีเมลนี้ถูกใช้งานแล้วในระบบ';
+    }
+    if (lowerError.contains('duplicate key value')) {
+      return 'ข้อมูลบางอย่างซ้ำในระบบ กรุณาตรวจสอบอีกครั้ง';
+    }
+    if (lowerError.contains('network') || lowerError.contains('socket') || lowerError.contains('clientexception')) {
+      return 'มีปัญหาการเชื่อมต่ออินเทอร์เน็ต กรุณาลองใหม่อีกครั้ง';
+    }
+    if (lowerError.contains('timeout')) {
+      return 'การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง';
+    }
+    
+    return 'ไม่สามารถลงทะเบียนได้ กรุณาตรวจสอบข้อมูลและลองใหม่อีกครั้ง';
   }
 
   void _showError(String message) {
@@ -383,7 +407,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 }
                               } else {
                                 // Other steps: Go back one step
-                                setState(() => _currentStep--);
+                                setState(() {
+                                  _errorMessage = null;
+                                  _emailError = null;
+                                  _currentStep--;
+                                });
                               }
                             },
                       child: const Text('ย้อนกลับ'),

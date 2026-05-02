@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
@@ -201,7 +202,7 @@ class _ImagePickerStepState extends State<ImagePickerStep> {
                   borderRadius: BorderRadius.circular(24.r),
                   image: isAdded
                       ? DecorationImage(
-                          image: FileImage(imageFile), fit: BoxFit.cover)
+                          image: kIsWeb ? NetworkImage(imageFile.path) : FileImage(imageFile) as ImageProvider, fit: BoxFit.cover)
                       : null,
                 ),
                 child: isAdded

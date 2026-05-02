@@ -14,6 +14,11 @@ bool? _gmsAvailable;
 Future<bool> isGmsAvailable() async {
   if (_gmsAvailable != null) return _gmsAvailable!;
 
+  if (kIsWeb) {
+    _gmsAvailable = false; // Fallback to flutter_map on Web
+    return false;
+  }
+
   // iOS always works with Google Maps SDK (no GMS needed)
   if (!Platform.isAndroid) {
     _gmsAvailable = true;

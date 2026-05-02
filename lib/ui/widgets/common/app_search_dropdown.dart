@@ -158,10 +158,12 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
 
     _overlayEntry = _createOverlayEntry(size, state);
 
+    final OverlayState? overlayState = Overlay.of(context);
+
     // Defer insertion into Overlay safely
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        Overlay.of(context).insert(_overlayEntry!);
+      if (mounted && overlayState != null) {
+        overlayState.insert(_overlayEntry!);
         setState(() {
           _isOpen = true;
         });
@@ -295,7 +297,7 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
                                       widget.onChanged!(customValue);
                                     }
                                   },
-                                  child: Container(
+                                  child: Ink(
                                     padding: EdgeInsets.symmetric(
                                         horizontal: 16.w,
                                         vertical: 14.h),
@@ -364,14 +366,14 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
                                     widget.onChanged!(newValue);
                                   }
                                 },
-                                child: Container(
+                                child: Ink(
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 16.w, vertical: 14.h),
                                   decoration: BoxDecoration(
                                     color: isSelected
                                         ? colorScheme.primary
                                             .withValues(alpha: 0.08)
-                                        : Colors.transparent,
+                                        : theme.cardColor,
                                     border: Border(
                                       bottom: BorderSide(
                                         color: theme.dividerColor

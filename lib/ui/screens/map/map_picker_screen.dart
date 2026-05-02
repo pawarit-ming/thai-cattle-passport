@@ -35,6 +35,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
 
   Future<void> _goToCurrentLocation() async {
     setState(() => _isFetchingLocation = true);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     try {
       final position = await Geolocator.getCurrentPosition(
         locationSettings:
@@ -49,7 +50,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
           ?.animateTo(position.latitude, position.longitude, zoom: 16);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           const SnackBar(content: Text('ไม่สามารถดึงตำแหน่งปัจจุบันได้')),
         );
       }

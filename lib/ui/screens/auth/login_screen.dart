@@ -137,7 +137,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 obscureText: _obscurePassword,
               ),
+
+              // ปุ่มลืมรหัสผ่าน
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    context.push('/forgot-password'); 
+                  },
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    'ลืมรหัสผ่าน?',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14.sp,
+                    ),
+                  ),
+                ),
+              ),
               SizedBox(height: 24.h),
+              
+              // ปุ่มเข้าสู่ระบบ
               ElevatedButton(
                 onPressed: _isLoading ? null : _signIn,
                 style: ElevatedButton.styleFrom(
@@ -154,6 +179,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     : Text('เข้าสู่ระบบ', style: TextStyle(fontSize: 16.sp)),
               ),
               SizedBox(height: 16.h),
+
+              // ปุ่มสมัครสมาชิก
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

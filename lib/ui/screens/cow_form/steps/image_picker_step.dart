@@ -110,54 +110,61 @@ class _ImagePickerStepState extends State<ImagePickerStep> {
           onPressed: widget.onBack,
         ),
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16.r),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('รูปถ่ายระบุตัวตน',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.sp)),
-            SizedBox(height: 8.h),
-            const Text(
-                'กรุณาเพิ่มรูปภาพให้ครบทั้ง 2 รูปเพื่อใช้ในการระบุตัวตน'),
-            SizedBox(height: 24.h),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    _buildPhotoPicker(
-                      label: 'รูปหน้าตรง',
-                      assetPath: 'assets/images/cow_face.png',
-                      imageFile: widget.faceImage,
-                      onTap: () => _showImageSourceDialog(
-                          'รูปหน้าตรง', widget.onFaceImageChanged),
-                    ),
-                    _buildPhotoPicker(
-                      label: 'รูปด้านข้างลำตัว',
-                      assetPath: 'assets/images/cow.png',
-                      imageFile: widget.bodyImage,
-                      onTap: () => _showImageSourceDialog(
-                          'รูปด้านข้างลำตัว', widget.onBodyImageChanged),
-                    ),
-                  ],
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 16.r,
+            right: 16.r,
+            top: 16.r,
+            bottom: 24.h,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('รูปถ่ายระบุตัวตน',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.sp)),
+              SizedBox(height: 8.h),
+              const Text(
+                  'กรุณาเพิ่มรูปภาพให้ครบทั้ง 2 รูปเพื่อใช้ในการระบุตัวตน'),
+              SizedBox(height: 24.h),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      _buildPhotoPicker(
+                        label: 'รูปหน้าตรง',
+                        assetPath: 'assets/images/cow_face.png',
+                        imageFile: widget.faceImage,
+                        onTap: () => _showImageSourceDialog(
+                            'รูปหน้าตรง', widget.onFaceImageChanged),
+                      ),
+                      _buildPhotoPicker(
+                        label: 'รูปด้านข้างลำตัว',
+                        assetPath: 'assets/images/cow.png',
+                        imageFile: widget.bodyImage,
+                        onTap: () => _showImageSourceDialog(
+                            'รูปด้านข้างลำตัว', widget.onBodyImageChanged),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 16.h),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                icon: const Icon(Icons.arrow_forward),
-                label: const Text('ถัดไป'),
-                onPressed: canContinue ? widget.onNext : null,
-                style: FilledButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16.h),
-                  backgroundColor: colorScheme.primary,
-                  disabledBackgroundColor: Colors.grey.shade400,
+              SizedBox(height: 16.h),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('ถัดไป'),
+                  onPressed: canContinue ? widget.onNext : null,
+                  style: FilledButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    backgroundColor: colorScheme.primary,
+                    disabledBackgroundColor: Colors.grey.shade400,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

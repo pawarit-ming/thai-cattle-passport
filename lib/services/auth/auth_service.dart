@@ -113,6 +113,35 @@ class AuthService {
       rethrow;
     }
   }
+  
+  // Reset password
+  Future<void> resetPassword(String email) async {
+    try {
+      logger.i('[AuthService] Requesting password reset for: $email');
+      
+      // เรียกใช้คำสั่งของ Supabase เพื่อส่งอีเมลรีเซ็ตรหัสผ่าน
+      await supabaseClient.auth.resetPasswordForEmail(email);
+      
+      logger.i('[AuthService.resetPassword] [SUCCESS] Password reset email sent to: $email');
+    } catch (e) {
+      logger.e('[AuthService] Reset password error', error: e);
+      rethrow;
+    }
+  }
+
+  // Update password
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      logger.i('[AuthService] Updating to new password');
+      await supabaseClient.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+      logger.i('[AuthService.updatePassword] [SUCCESS] Password updated successfully');
+    } catch (e) {
+      logger.e('[AuthService] Update password error', error: e);
+      rethrow;
+    }
+  }
 
   // Sign out
   Future<void> signOut() async {

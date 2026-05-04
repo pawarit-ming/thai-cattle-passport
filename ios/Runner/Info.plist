@@ -81,5 +81,19 @@
     <key>NSLocationAlwaysUsageDescription</key>
     <string>แอปนี้ต้องการเข้าถึงตำแหน่งของคุณเพื่อแสดงพิกัดบนแผนที่ตลอดเวลา</string>
 
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLName</key>
+            <string>resetpassword</string> <!-- ชื่ออะไรก็ได้ -->
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>cowd</string> <!-- scheme ต้องตรงกับที่ตั้งใน Supabase -->
+            </array>
+        </dict>
+    </array>
+
 </dict>
 </plist>

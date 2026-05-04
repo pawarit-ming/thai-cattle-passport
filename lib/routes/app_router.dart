@@ -1,15 +1,17 @@
-import 'dart:async'; // เพิ่ม import นี้
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:th_cow_passport/supabase_config.dart'; // import supabase config
+import 'package:th_cow_passport/supabase_config.dart';
 import 'package:th_cow_passport/ui/screens/app_shell.dart';
 import 'package:th_cow_passport/ui/screens/cow_detail_screen.dart';
 import 'package:th_cow_passport/ui/screens/cow_form/cow_form_screen.dart';
 import 'package:th_cow_passport/ui/screens/cow_list/cow_list_screen.dart';
 import 'package:th_cow_passport/ui/screens/edit_cow_screen.dart';
-import 'package:th_cow_passport/ui/screens/auth/login_screen.dart'; // เพิ่ม import หน้า Login
-import 'package:th_cow_passport/ui/screens/auth/register_screen.dart'; // เพิ่ม import หน้า Register
+import 'package:th_cow_passport/ui/screens/auth/login_screen.dart';
+import 'package:th_cow_passport/ui/screens/auth/register_screen.dart';
+import 'package:th_cow_passport/ui/screens/auth/forgot_password_screen.dart';
+import 'package:th_cow_passport/ui/screens/auth/update_password_screen.dart';
 import 'package:th_cow_passport/ui/screens/activity/wizard/add_activity_wizard.dart';
 import 'package:th_cow_passport/ui/screens/notification/notification_center_screen.dart';
 
@@ -24,6 +26,9 @@ final _shellNavigatorBKey = GlobalKey<NavigatorState>(debugLabel: 'shellB');
 final _shellNavigatorCKey = GlobalKey<NavigatorState>(debugLabel: 'shellC');
 final _shellNavigatorDKey = GlobalKey<NavigatorState>(debugLabel: 'shellD');
 
+// ตัวแปรสำหรับเช็คว่าเปิดแอปมาจากการกดลิงก์กู้รหัสผ่านหรือไม่
+bool isRecoveringPassword = false;
+
 final router = GoRouter(
   initialLocation: '/',
   navigatorKey: _rootNavigatorKey,
@@ -36,15 +41,22 @@ final router = GoRouter(
     final session = supabase.auth.currentSession;
     final isLoggingIn = state.matchedLocation == '/login';
     final isRegistering = state.matchedLocation == '/register';
+    final isForgotPassword = state.matchedLocation == '/forgot-password';
+    final isResetPassword = state.matchedLocation == '/reset-password';
     final isPublicView = state.matchedLocation.startsWith('/cow-detail');
 
+    // --- เพิ่มเงื่อนไขนี้: ถ้ากำลังอยู่ในโหมดกู้รหัสผ่าน ให้บังคับไปหน้า /reset-password ทันที ---
+    if (isRecoveringPassword && !isResetPassword) {
+      return '/reset-password';
+    }
+
     // ถ้ายังไม่ Login และไม่ได้อยู่ที่หน้า Login หรือ Register -> บังคับไป Login
-    if (session == null && !isLoggingIn && !isRegistering && !isPublicView) {
+    if (session == null && !isLoggingIn && !isRegistering && !isForgotPassword && !isResetPassword && !isPublicView) {
       return '/login';
     }
 
-    // ถ้า Login แล้ว แต่อยู่ที่หน้า Login -> ให้ไปหน้าแรก (Home)
-    if (session != null && isLoggingIn) {
+    /// ถ้า Login แล้ว แต่อยู่ที่หน้า Login, Register หรือ ลืมรหัสผ่าน -> ให้ไปหน้าแรก (Home)
+    if (session != null && (isLoggingIn || isRegistering || isForgotPassword)) {
       return '/';
     }
 
@@ -55,7 +67,9 @@ final router = GoRouter(
     if (session != null &&
         !sessionRecognized &&
         !isLoggingIn &&
-        !isRegistering) {
+        !isRegistering &&
+        !isForgotPassword &&
+        !isResetPassword) {
       return '/login';
     }
 
@@ -73,6 +87,18 @@ final router = GoRouter(
     GoRoute(
       path: '/register',
       builder: (context, state) => const RegisterScreen(),
+    ),
+
+    // เพิ่ม Route สำหรับหน้า Forgot Password
+    GoRoute(
+      path: '/forgot-password',
+      builder: (context, state) => const ForgotPasswordScreen(),
+    ),
+
+    // เพิ่ม Route สำหรับหน้า Update Password
+    GoRoute(
+      path: '/reset-password',
+      builder: (context, state) => const UpdatePasswordScreen(),
     ),
 
     GoRoute(
@@ -184,6 +210,16 @@ class GoRouterRefreshStream extends ChangeNotifier {
     notifyListeners();
     _subscription = stream.asBroadcastStream().listen(
       (AuthState authState) {
+        
+        // --- ดักจับ Event กู้รหัสผ่าน ---
+        if (authState.event == AuthChangeEvent.passwordRecovery) {
+          isRecoveringPassword = true;
+        } 
+        else if (authState.event == AuthChangeEvent.signedOut) {
+          isRecoveringPassword = false;
+        }
+        // -----------------------------
+
         notifyListeners();
       },
     );

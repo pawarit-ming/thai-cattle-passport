@@ -71,6 +71,24 @@ final signInProvider =
   },
 );
 
+// Reset password provider
+final resetPasswordProvider = FutureProvider.autoDispose.family<void, String>(
+  (ref, email) async {
+    final authService = ref.watch(authServiceProvider);
+    
+    // เรียกฟังก์ชันรีเซ็ตรหัสผ่านจาก AuthService
+    await authService.resetPassword(email); 
+  },
+);
+
+// Update password provider
+final updatePasswordProvider = FutureProvider.autoDispose.family<void, String>(
+  (ref, newPassword) async {
+    final authService = ref.watch(authServiceProvider);
+    await authService.updatePassword(newPassword); 
+  },
+);
+
 // Sign out provider
 final signOutProvider = FutureProvider.autoDispose<void>((ref) async {
   final authService = ref.watch(authServiceProvider);

@@ -169,7 +169,7 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
           AppTextField(
             controller: widget.animalNameController,
             label: 'ชื่อวัว',
@@ -178,7 +178,7 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
             isRequired: true,
             maxLength: 50,
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
           AppSearchDropdown<String>(
             label: 'สายพันธุ์',
             isRequired: true,
@@ -208,7 +208,7 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
               return null;
             },
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
           AppTextField(
             controller: TextEditingController(
                 text: MaterialLocalizations.of(context)
@@ -229,7 +229,7 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
               }
             },
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
           AppDropdown<String>(
             label: 'เพศ',
             isRequired: true,

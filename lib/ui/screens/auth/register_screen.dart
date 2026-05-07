@@ -511,7 +511,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
             ],
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
           AppTextField(
             controller: _phoneController,
             label: 'เบอร์โทรศัพท์',
@@ -522,7 +522,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             maxLength: 10,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
           AppTextField(
             controller: _emailController,
             label: 'อีเมล',
@@ -534,7 +534,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             customValidator: (v) =>
                 !v!.contains('@') ? 'กรุณากรอกอีเมลให้ถูกต้อง' : null,
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
           AppTextField(
             controller: _passwordController,
             label: 'รหัสผ่าน',
@@ -574,7 +574,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           SizedBox(height: 8.h),
           Text('กรุณากรอกข้อมูลฟาร์มของคุณ',
               style: TextStyle(color: Colors.grey.shade600)),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
           
           Text('ระบุตำแหน่งฟาร์มบนแผนที่', style: theme.textTheme.titleMedium),
           SizedBox(height: 8.h),
@@ -615,7 +615,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
             ),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
 
           AppTextField(
             controller: _farmNameController,
@@ -623,7 +623,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             icon: Icons.agriculture,
             isRequired: true,
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
 
           // Simplified Address Field
           AppTextField(
@@ -634,7 +634,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             maxLines: 2,
             isRequired: true,
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
 
           // Thai Address Picker
           ThaiAddressPicker(
@@ -668,7 +668,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           Text('ลงทะเบียนสำเร็จ!',
               style: theme.textTheme.headlineMedium
                   ?.copyWith(color: Colors.green, fontWeight: FontWeight.bold)),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
           Text(
             'ยินดีต้อนรับสู่ระบบ Cow Passport\nเริ่มต้นใช้งานได้ทันที',
             textAlign: TextAlign.center,

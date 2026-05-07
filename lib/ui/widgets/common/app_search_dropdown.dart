@@ -475,6 +475,9 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
                   },
                   decoration: InputDecoration(
                     hintText: widget.hintText ?? 'เลือก${widget.label}',
+                    hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.hintColor,
+                    ),
                     errorText: state.errorText ?? widget.errorText,
                     prefixIcon: widget.prefixIcon,
                     filled: true,

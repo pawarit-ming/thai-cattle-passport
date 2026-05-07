@@ -117,7 +117,9 @@ class AppTextField extends StatelessWidget {
               errorText: errorText,
               suffixText: suffixText,
               helperMaxLines: 2,
-              hintStyle: TextStyle(color: theme.hintColor),
+              hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.hintColor,
+              ),
               prefixIcon: assetIcon != null
                   ? Padding(
                       padding: EdgeInsets.all(12.r),

@@ -310,11 +310,9 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
                       isFocused: _isOpen,
                       child: Text(
                         displayText,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: widget.value == null
-                              ? theme.hintColor
-                              : colorScheme.onSurface,
-                        ),
+                        style: widget.value == null
+                            ? theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor)
+                            : theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

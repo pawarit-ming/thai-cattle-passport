@@ -127,11 +127,18 @@ class _GeneralInfoTabState extends ConsumerState<GeneralInfoTab> {
                       );
                     }
 
+                    if (widget.selectedFarm == null && farms.isNotEmpty) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) {
+                          widget.onFarmChanged(farms.first);
+                        }
+                      });
+                    }
+
                     return AppSearchDropdown<Farm>(
                       label: 'ฟาร์ม',
                       isRequired: true,
-                      value: widget.selectedFarm ??
-                          (farms.isNotEmpty ? farms.first : null),
+                      value: widget.selectedFarm ?? farms.first,
                       prefixIcon: const Icon(Icons.home),
                       items: farms
                           .map((farm) => DropdownMenuItem(

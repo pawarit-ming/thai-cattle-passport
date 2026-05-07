@@ -431,9 +431,11 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
       validator: widget.validator,
       builder: (FormFieldState<T> state) {
         _formFieldState = state;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        return Padding(
+          padding: EdgeInsets.only(bottom: 16.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             RichText(
               text: TextSpan(
                 text: widget.label,
@@ -545,7 +547,7 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
               ),
             ),
           ],
-        );
+        ));
       },
     );
   }

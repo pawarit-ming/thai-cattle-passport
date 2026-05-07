@@ -511,7 +511,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
             ],
           ),
-          SizedBox(height: 12.h),
           AppTextField(
             controller: _phoneController,
             label: 'เบอร์โทรศัพท์',
@@ -522,7 +521,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             maxLength: 10,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
-          SizedBox(height: 12.h),
           AppTextField(
             controller: _emailController,
             label: 'อีเมล',
@@ -534,7 +532,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             customValidator: (v) =>
                 !v!.contains('@') ? 'กรุณากรอกอีเมลให้ถูกต้อง' : null,
           ),
-          SizedBox(height: 12.h),
           AppTextField(
             controller: _passwordController,
             label: 'รหัสผ่าน',
@@ -615,7 +612,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
             ),
           ),
-          SizedBox(height: 12.h),
 
           AppTextField(
             controller: _farmNameController,
@@ -623,7 +619,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             icon: Icons.agriculture,
             isRequired: true,
           ),
-          SizedBox(height: 12.h),
 
           // Simplified Address Field
           AppTextField(
@@ -634,7 +629,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             maxLines: 2,
             isRequired: true,
           ),
-          SizedBox(height: 12.h),
 
           // Thai Address Picker
           ThaiAddressPicker(

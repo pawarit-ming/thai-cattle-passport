@@ -91,7 +91,6 @@ class _PhysicalInfoTabState extends State<PhysicalInfoTab> {
               ),
             ],
           ),
-          SizedBox(height: 12.h),
           AppSearchDropdown<String>(
             label: 'สี',
             value: _selectedColor,
@@ -114,14 +113,12 @@ class _PhysicalInfoTabState extends State<PhysicalInfoTab> {
               });
             },
           ),
-          SizedBox(height: 12.h),
           CowSelectionField(
             label: 'พ่อพันธุ์',
             icon: Icons.male,
             initialCowId: widget.selectedSireId,
             onCowSelected: widget.onSireSelected,
           ),
-          SizedBox(height: 12.h),
           CowSelectionField(
             label: 'แม่พันธุ์',
             icon: Icons.female,

@@ -303,7 +303,6 @@ class ThaiAddressPickerState extends State<ThaiAddressPicker> {
           validator: (v) => v == null ? 'กรุณาเลือกจังหวัด' : null,
           prefixIcon: const Icon(Icons.map),
         ),
-        const SizedBox(height: 16),
         AppSearchDropdown<District>(
           label: 'อำเภอ/เขต',
           value: _selectedDistrict,
@@ -320,7 +319,6 @@ class ThaiAddressPickerState extends State<ThaiAddressPicker> {
           validator: (v) => v == null ? 'กรุณาเลือกอำเภอ' : null,
           prefixIcon: const Icon(Icons.map),
         ),
-        const SizedBox(height: 16),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

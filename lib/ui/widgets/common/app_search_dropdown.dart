@@ -158,7 +158,7 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
 
     _overlayEntry = _createOverlayEntry(size, state);
 
-    final OverlayState? overlayState = Overlay.of(context);
+    final OverlayState overlayState = Overlay.of(context);
 
     // Defer insertion into Overlay safely
     WidgetsBinding.instance.addPostFrameCallback((_) {

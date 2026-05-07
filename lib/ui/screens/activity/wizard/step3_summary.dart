@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:th_cow_passport/services/cow_management/cow_activity/activity_service.dart';
 import 'package:th_cow_passport/services/cow_management/cow_detail/cow_detail_service.dart';
 import 'package:th_cow_passport/services/cow_management/cow_list/cow_list_service.dart';
+import 'package:th_cow_passport/services/cow_management/vaccine/vaccine_service.dart';
 import 'package:th_cow_passport/services/notification/farm_alert_service.dart';
 import 'package:th_cow_passport/services/cow_management/models/activity_model.dart';
 import 'package:th_cow_passport/ui/screens/activity/activity_extensions.dart';
@@ -52,6 +53,7 @@ class _Step3SummaryState extends ConsumerState<Step3Summary> {
     try {
       await ref.read(activityServiceProvider).addActivity(newActivity);
       ref.invalidate(activitiesProvider(widget.cowId));
+      ref.invalidate(cowVaccineHistoryProvider(widget.cowId));
       ref.invalidate(cowDetailServiceProvider);
       ref.invalidate(farmAlertsProvider);
       // Force refresh the global cow list as well (important for Birth activities)

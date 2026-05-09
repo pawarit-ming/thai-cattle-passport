@@ -1,23 +1,34 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
+import 'package:th_cow_passport/supabase_config.dart';
 import 'package:th_cow_passport/services/auth/auth_service.dart';
 import 'package:th_cow_passport/services/profile/models/user_model.dart';
 
 final authServiceProvider = Provider((ref) => AuthService());
 
+final _authStateStreamProvider = StreamProvider<AuthState>((ref) {
+  return supabase.auth.onAuthStateChange;
+});
+
 // Current logged-in user from database
 final currentUserProvider = FutureProvider<User?>((ref) async {
+  // Watch auth state to automatically refresh user data on login/logout
+  ref.watch(_authStateStreamProvider);
+  
   final authService = ref.watch(authServiceProvider);
   return authService.getCurrentUserFromDatabase();
 });
 
 // Auth state (is user logged in)
 final isAuthenticatedProvider = Provider<bool>((ref) {
+  ref.watch(_authStateStreamProvider);
   final authService = ref.watch(authServiceProvider);
   return authService.isAuthenticated();
 });
 
 // Current user ID
 final currentUserIdProvider = Provider<String?>((ref) {
+  ref.watch(_authStateStreamProvider);
   final authService = ref.watch(authServiceProvider);
   return authService.getUserId();
 });

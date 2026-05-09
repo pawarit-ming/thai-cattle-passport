@@ -196,7 +196,7 @@ class ThaiAddressPickerState extends State<ThaiAddressPicker> {
       if (t == null && zipCode.isNotEmpty) {
         try {
           // Search all tambons for this zip code
-          final globalTambons = _datasource.getTambons(-1); // Assuming -1 or similar returns all or we can use _tambons from datasource
+
           // Let's use the internal _tambons list if possible, or search via province
           for (var prov in _provinces) {
             final dists = _datasource.getDistricts(prov.id);

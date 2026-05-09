@@ -162,7 +162,7 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
 
     // Defer insertion into Overlay safely
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && overlayState != null) {
+      if (mounted) {
         overlayState.insert(_overlayEntry!);
         setState(() {
           _isOpen = true;

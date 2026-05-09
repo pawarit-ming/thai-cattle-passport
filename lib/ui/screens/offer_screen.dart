@@ -106,7 +106,6 @@ class _OfferScreenState extends State<OfferScreen> {
       String offerId, String animalId, String buyerId, String newStatus,
       {String? deliveryType}) async {
     try {
-      final myUserId = _supabase.auth.currentUser?.id; // ID ของผู้ขายปัจจุบัน
 
       await _supabase
           .from('offers')

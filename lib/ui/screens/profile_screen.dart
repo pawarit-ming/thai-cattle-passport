@@ -68,8 +68,7 @@ class ProfileScreen extends ConsumerWidget {
                       child: ElevatedButton(
                         onPressed: () {
                           Navigator.pop(dialogContext);
-                          // ignore: discarded_futures
-                          ref.refresh(currentUserProvider.future);
+                          ref.invalidate(currentUserProvider);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green.shade600,

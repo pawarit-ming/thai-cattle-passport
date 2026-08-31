@@ -1,60 +1,76 @@
-# TH Cow Passport
+# Thai Cattle Passport
 
-A Flutter application for managing cow passports.
+A Flutter app that gives every head of cattle a verifiable identity and a health
+record that follows it to its next owner. Cattle in Thailand change hands often
+and the animal's history — vaccinations, treatments, previous owners — tends not
+to travel with it; a buyer takes the seller's word for it because there is no
+record to check.
 
-## Features
+Built by three of us as our senior project at Mahidol University,
+September 2025 – May 2026.
 
-- Add new cows with details and images.
-- View a list of all cows.
-- Delete cows from the list.
-- (In Progress) Edit existing cow details.
+📝 [Case study with screenshots →](https://pawarit-wang.vercel.app/projects/thai-cattle-passport)
 
-## Architecture
+---
 
-This project uses a layered architecture inspired by Clean Architecture and MVVM.
+## Whose work is what
 
-- **`lib/services`**: Contains the business logic and data access layers.
-  - **`lib/services/cow`**: Handles all cow-related business logic.
-    - **`cow_service.dart`**: A service class that interacts with the Supabase backend to perform CRUD operations on cows.
-    - **`models/cow_model.dart`**: The data model for a cow.
-- **`lib/ui`**: Contains the presentation layer (UI).
-  - **`lib/ui/screens`**: The different screens of the application.
-    - **`cow_list_screen.dart`**: Displays the list of cows.
-    - **`cow_form_screen.dart`**: A form to add or edit a cow.
-  - **`lib/ui/widgets`**: Reusable widgets.
-- **`lib/routes`**: Defines the application's routes using `go_router`.
-- **`lib/main.dart`**: The entry point of the application.
-- **`lib/supabase_config.dart`**: Configuration for the Supabase client.
+**This is a team project**, republished here as a portfolio reference. Most of the
+herd, cow-form, activity-logging and notification code is my teammates' work, and
+it is here because the app does not make sense in pieces.
 
-## Getting Started
+What I built:
 
-### Prerequisites
+| Area | Files |
+| --- | --- |
+| **Marketplace** — listings, search and filtering, seller and farm details, offer tracking, and the ownership-transfer flow including foster arrangements | `lib/ui/screens/buy_screen.dart` (975 lines mine) · `lib/ui/screens/offer_screen.dart` (438) |
+| **Password recovery** with deep links back into the app | `lib/ui/screens/auth/forgot_password_screen.dart` · `auth/update_password_screen.dart` |
+| **QR passport scanner** — opens an animal's public read-only profile from a scan | `lib/ui/screens/qr_scanner_screen.dart` |
+| **Routing** — including the public passport route registered against the root navigator, so a scan lands on a clean profile instead of dropping a stranger into the owner's navigation | `lib/routes/app_router.dart` |
+| **Camera capture** for an animal's reference photos | `lib/ui/widgets/camera_widget.dart` |
 
-- Flutter SDK
-- A Supabase project with a table named `animals` that matches the `Cow` model.
-- A Supabase storage bucket.
+I also worked on the identification model with the team — a ConvNeXt-Tiny metric
+learner that decides whether two photos show the same animal, averaging 94.6%
+accuracy and AUC above 0.94 across five folds. That model is not in this
+repository; the app calls it over REST.
 
-### Installation
+`git blame` on any file shows the split honestly.
 
-1. Clone the repository.
-2. Create a `lib/supabase_config.dart` file with your Supabase credentials:
-   ```dart
-   import 'package:supabase_flutter/supabase_flutter.dart';
+## Configuring Supabase
 
-   class SupabaseConfig {
-     static const String supabaseUrl = 'YOUR_SUPABASE_URL';
-     static const String supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
-     static const String bucketName = 'YOUR_BUCKET_NAME';
-   }
+The credentials in `lib/supabase_config.dart` are placeholders — the project's own
+Supabase keys were removed from the entire commit history before publishing. To
+run this against a backend you need your own Supabase project:
 
-   final supabase = Supabase.instance.client;
-   ```
-3. Run `flutter pub get` to install the dependencies.
-4. Run the application: `flutter run`.
+```dart
+// lib/supabase_config.dart
+static const String url = 'https://YOUR_PROJECT.supabase.co';
+static const String anonKey = 'YOUR_SUPABASE_ANON_KEY';
+static const String bucketName = 'cow';
+```
 
-## Dependencies
+The schema it expects is visible from the service layer in `lib/services/` —
+`auth`, `cow_management`, `farm`, `offer`, `profile` and `notification` — plus a
+storage bucket for photos. Row-level security scopes a farm's data to its owner while
+leaving the public passport view readable by anyone holding the QR link.
 
-- `flutter_riverpod`: For state management.
-- `go_router`: For navigation.
-- `supabase_flutter`: For interacting with the Supabase backend.
-- `image_picker`: For picking images from the gallery or camera.
+```bash
+flutter pub get
+flutter run
+```
+
+## Stack
+
+Flutter · Dart · Riverpod (state) · go_router (navigation) · Supabase (auth,
+Postgres, storage) · Google Maps · `qr_flutter` and `mobile_scanner` to write and read the
+passport codes · `camera` and `image_picker` for the reference photos.
+
+## Team
+
+Three of us over the final year of the degree. We worked on the identification
+model together and split the application between us.
+
+---
+
+Archived — the state of the project at submission in May 2026, kept as a
+portfolio reference rather than a maintained app.

@@ -11,6 +11,15 @@ September 2025 – May 2026.
 
 📝 [Case study with screenshots →](https://pawarit-wang.vercel.app/projects/thai-cattle-passport)
 
+## Screenshots
+
+Marketplace and seller details show parts of my contribution. The animal profile
+shows the wider team application. Images are from the portfolio case study.
+
+| Marketplace | Seller location | Animal profile |
+| --- | --- | --- |
+| <img src="https://raw.githubusercontent.com/pawarit-ming/portfolio/main/public/projects/thai-cattle-passport/marketplace.png" alt="Cattle marketplace" width="240"> | <img src="https://raw.githubusercontent.com/pawarit-ming/portfolio/main/public/projects/thai-cattle-passport/seller-location.png" alt="Seller location and farm details" width="240"> | <img src="https://raw.githubusercontent.com/pawarit-ming/portfolio/main/public/projects/thai-cattle-passport/cow-profile.png" alt="Animal identity and health profile" width="240"> |
+
 ---
 
 ## Whose work is what

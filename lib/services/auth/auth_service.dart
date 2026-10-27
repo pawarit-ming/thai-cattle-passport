@@ -88,19 +88,18 @@ class AuthService {
     try {
       logger.i('[AuthService] Attempting lookup for phone: $phone');
 
-      // 1. Lookup email from users table using phone number
-      final data = await supabaseClient
-          .from('users')
-          .select('email')
-          .eq('mobile_phone', phone)
-          .maybeSingle();
+      // 1. Lookup email for this phone number. The users table is not
+      // readable before sign-in, so this goes through a database function.
+      final email = await supabaseClient.rpc<String?>(
+        'email_for_phone',
+        params: {'p_phone': phone},
+      );
 
-      if (data == null || data['email'] == null) {
+      if (email == null) {
         logger.w('[AuthService] No user found with phone: $phone');
         throw 'invalid_credentials';
       }
 
-      final email = data['email'] as String;
       logger.i('[AuthService] Found email for phone: $email');
 
       // 2. Sign in with the found email
@@ -193,11 +192,10 @@ class AuthService {
     if (session == null) return null;
 
     try {
-      final response = await supabaseClient
-          .from('users')
-          .select()
-          .eq('id', session.user.id)
-          .single();
+      // Other people's phone, address and birth date are not readable, so
+      // the full own profile comes from a database function.
+      final response =
+          await supabaseClient.rpc('get_my_profile').single();
 
       return User.fromMap(response);
     } catch (e) {

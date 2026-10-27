@@ -67,7 +67,8 @@ static const String bucketName = 'cow';
 The schema it expects is visible from the service layer in `lib/services/` —
 `auth`, `cow_management`, `farm`, `offer`, `profile` and `notification` — plus a
 storage bucket for photos. Row-level security scopes a farm's data to its owner while
-leaving the public passport view readable by anyone holding the QR link.
+leaving the public passport view readable by anyone holding the QR link. The access
+rules for profiles and farms are in `supabase/migrations/`.
 
 ```bash
 flutter pub get

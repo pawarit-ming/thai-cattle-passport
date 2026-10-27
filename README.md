@@ -53,15 +53,16 @@ need your own:
 
 | Key | Where |
 | --- | --- |
-| Supabase URL and anon key | `lib/supabase_config.dart` |
-| Google Maps API key (seller location map) | `android/app/src/main/AndroidManifest.xml` · `ios/Runner/AppDelegate.swift` |
+| Supabase URL and anon key | `supabase_env.json` (copy `supabase_env.example.json`; gitignored) |
+| Google Maps API key (seller location map) | `MAPS_API_KEY=` in `android/local.properties` (gitignored) · `ios/Runner/AppDelegate.swift` |
 | Firebase config (Android build plugin only; the Dart code does not call Firebase) | `android/app/google-services.json` · `lib/firebase_options.dart` |
 
-```dart
-// lib/supabase_config.dart
-static const String url = 'https://YOUR_PROJECT.supabase.co';
-static const String anonKey = 'YOUR_SUPABASE_ANON_KEY';
-static const String bucketName = 'cow';
+```json
+// supabase_env.json
+{
+  "SUPABASE_URL": "https://YOUR_PROJECT.supabase.co",
+  "SUPABASE_ANON_KEY": "YOUR_SUPABASE_ANON_KEY"
+}
 ```
 
 The schema it expects is visible from the service layer in `lib/services/` —
@@ -72,7 +73,7 @@ rules for profiles and farms are in `supabase/migrations/`.
 
 ```bash
 flutter pub get
-flutter run
+flutter run --dart-define-from-file=supabase_env.json
 ```
 
 ## Stack

@@ -8,6 +8,14 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+// MAPS_API_KEY is read from android/local.properties (gitignored) so the real
+// Google Maps key never lands in the repository.
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader("UTF-8") { reader -> localProperties.load(reader) }
+}
+
 android {
     namespace = "com.example.th_cow_passport"
     compileSdk = flutter.compileSdkVersion
@@ -32,6 +40,9 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders += [
+            MAPS_API_KEY: localProperties.getProperty("MAPS_API_KEY", "YOUR_GOOGLE_MAPS_API_KEY")
+        ]
     }
 
     buildTypes {

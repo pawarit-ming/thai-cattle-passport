@@ -68,3 +68,6 @@ android_old/
 
 # บังคับข้าม ephemeral ทุก Platform
 /*/flutter/ephemeral/
+
+# Real Supabase config for local runs (see supabase_env.example.json)
+supabase_env.json

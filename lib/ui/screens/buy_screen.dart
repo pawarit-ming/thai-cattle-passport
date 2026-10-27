@@ -8,7 +8,7 @@ import 'package:th_cow_passport/ui/widgets/common/app_shimmer.dart';
 import 'package:th_cow_passport/ui/widgets/common/app_empty_state.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-// 1. Model สำหรับรายการในตลาด
+// Model สำหรับรายการในตลาด
 class MarketItem {
   final String id;
   final String name;
@@ -220,12 +220,12 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
       )
       ''');
 
-      // 1. กรอง User ID ตัวเองออก
+      // กรองวัวของตัวเองออก
       if (myUserId != null) {
         query = query.neq('user_id', myUserId);
       }
 
-      // 2. กรองวัวที่ขายแล้วออก
+      // กรองวัวที่ขายแล้วออก
       query = query.neq('status', 'SOLD');
 
       // กรองวัวที่ตายแล้วออก
@@ -239,7 +239,7 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
 
       final data = await query.order('created_at', ascending: false);
 
-      // 3. [เพิ่มใหม่] ดึงข้อมูล Offer ของเรามาเช็คว่าเคยเสนอซื้อตัวไหนไปแล้วบ้าง
+      // ดึงข้อมูล Offer ของเรามาเช็คว่าเคยเสนอซื้อตัวไหนไปแล้วบ้าง
       Set<String> myOffers = {};
       if (myUserId != null) {
         final offersData = await supabase
@@ -507,14 +507,14 @@ class _BuyScreenState extends ConsumerState<BuyScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      // 1. AppBar เอาปุ่มออกทั้งหมด (เหลือแค่ชื่อ)
+      // AppBar แสดงแค่ชื่อหน้า
       appBar: AppBar(
         title: const Text('ตลาดซื้อขายวัว'),
         centerTitle: true,
         // actions: [], // ไม่ใส่ actions ตามที่ขอ (เอา reset และ filter เดิมออก)
       ),
 
-      // 2. Body ให้ทุกอย่างเลื่อนได้ (Scroll with parent)
+      // Body เลื่อนไปพร้อมกันทั้งหน้า
       body: RefreshIndicator(
         onRefresh: _fetchAnimals,
         child: ListView.builder(
@@ -717,7 +717,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                 cowId: int.tryParse(item.id) ?? 0,
                 isReadOnly: true,
                 hideBackButton:
-                    false, // ✅ ระบุชัดเจนว่าให้แสดงปุ่ม Back (แม้จะเป็น default)
+                    false,
               ),
             ),
           );
@@ -891,7 +891,7 @@ class _MarketItemCardState extends State<_MarketItemCard> {
                   SizedBox(height: 16.h),
                   SizedBox(
                     width: double.infinity,
-                    // 4. Logic เปลี่ยนปุ่ม: ถ้าเสนอซื้อแล้ว ให้ปิดปุ่ม
+                    // ถ้าเสนอซื้อแล้ว ให้ปิดปุ่ม
                     child: widget.hasOffered
                         ? FilledButton.icon(
                             onPressed: null, // ปิดการกด (Disabled)

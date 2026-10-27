@@ -39,8 +39,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       }
     } catch (e) {
       setState(() {
-        // คุณสามารถใช้ท่าเดียวกับหน้า Login คือมี _parseErrorMessage(e.toString())
-        // หรือใช้ข้อความนี้ไปก่อนก็ได้ครับ
         _errorMessage = 'ไม่พบที่อยู่อีเมลนี้ในระบบ หรือเกิดข้อผิดพลาด';
       });
     } finally {

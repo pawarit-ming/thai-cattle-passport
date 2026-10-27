@@ -33,10 +33,10 @@ final router = GoRouter(
   initialLocation: '/',
   navigatorKey: _rootNavigatorKey,
   debugLogDiagnostics: true,
-  // 1. เพิ่ม refreshListenable เพื่อให้ Router ทำงานใหม่เมื่อ Auth เปลี่ยนแปลง
+  // ให้ Router ประเมิน redirect ใหม่ทุกครั้งที่สถานะ Auth เปลี่ยน
   refreshListenable: GoRouterRefreshStream(supabase.auth.onAuthStateChange),
 
-  // 2. เพิ่ม logic การ Redirect
+  // Redirect ตามสถานะการเข้าสู่ระบบ
   redirect: (context, state) {
     final session = supabase.auth.currentSession;
     final isLoggingIn = state.matchedLocation == '/login';
@@ -45,7 +45,7 @@ final router = GoRouter(
     final isResetPassword = state.matchedLocation == '/reset-password';
     final isPublicView = state.matchedLocation.startsWith('/cow-detail');
 
-    // --- เพิ่มเงื่อนไขนี้: ถ้ากำลังอยู่ในโหมดกู้รหัสผ่าน ให้บังคับไปหน้า /reset-password ทันที ---
+    // ถ้ากำลังอยู่ในโหมดกู้รหัสผ่าน ให้บังคับไปหน้า /reset-password ทันที
     if (isRecoveringPassword && !isResetPassword) {
       return '/reset-password';
     }
@@ -77,25 +77,25 @@ final router = GoRouter(
   },
 
   routes: [
-    // 3. เพิ่ม Route สำหรับหน้า Login
+    // หน้า Login
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
     ),
 
-    // เพิ่ม Route สำหรับหน้า Register
+    // หน้า Register
     GoRoute(
       path: '/register',
       builder: (context, state) => const RegisterScreen(),
     ),
 
-    // เพิ่ม Route สำหรับหน้า Forgot Password
+    // หน้า Forgot Password
     GoRoute(
       path: '/forgot-password',
       builder: (context, state) => const ForgotPasswordScreen(),
     ),
 
-    // เพิ่ม Route สำหรับหน้า Update Password
+    // หน้า Update Password (ปลายทางของลิงก์กู้รหัสผ่าน)
     GoRoute(
       path: '/reset-password',
       builder: (context, state) => const UpdatePasswordScreen(),
@@ -204,7 +204,7 @@ final router = GoRouter(
   ],
 );
 
-// 4. Class ช่วยแปลง Stream ของ Supabase เป็น Listenable สำหรับ GoRouter
+// แปลง Stream ของ Supabase เป็น Listenable สำหรับ GoRouter
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<AuthState> stream) {
     notifyListeners();

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:logger/logger.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart'; // ✅ Import ที่ขาดหายไป
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class QRScannerScreen extends StatefulWidget {
   const QRScannerScreen({super.key});
@@ -87,8 +87,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
           // ปุ่มไอคอนรูปภาพที่มุมซ้ายล่าง
           Positioned(
-            left: 24.w, // ✅ ตอนนี้จะรู้จัก .w แล้ว
-            bottom: 24.h, // ✅ ตอนนี้จะรู้จัก .h แล้ว
+            left: 24.w,
+            bottom: 24.h,
             child: FloatingActionButton(
               onPressed: _pickImage,
               backgroundColor: Colors.black.withValues(alpha: 0.5),

@@ -17,23 +17,22 @@ class OfferScreen extends StatefulWidget {
 class _OfferScreenState extends State<OfferScreen> {
   final _supabase = Supabase.instance.client;
 
-  // 1. เปลี่ยนจาก Stream เป็น Future
   late Future<List<Map<String, dynamic>>> _offersFuture;
 
   @override
   void initState() {
     super.initState();
     initializeDateFormatting('th');
-    // 2. เรียกโหลดข้อมูลครั้งแรก
+    // โหลดข้อมูลครั้งแรก
     _offersFuture = _fetchOffers();
   }
 
-  // 3. แยกฟังก์ชันดึงข้อมูลออกมา เพื่อให้เรียกซ้ำได้
+  // ดึงรายการคำเสนอซื้อวัวของเรา แยกเป็นฟังก์ชันเพื่อเรียกซ้ำตอนรีเฟรช
   Future<List<Map<String, dynamic>>> _fetchOffers() {
     final myUserId = _supabase.auth.currentUser?.id;
     return _supabase
         .from('offers')
-        .select() // ใช้ select ธรรมดา (ไม่ใช่ stream)
+        .select()
         .eq('seller_id', myUserId ?? '')
         .order('created_at', ascending: false);
   }
@@ -111,7 +110,7 @@ class _OfferScreenState extends State<OfferScreen> {
           .from('offers')
           .update({'status': newStatus}).eq('id', offerId);
 
-      // 2. อัปเดตข้อมูลวัว
+      // อัปเดตข้อมูลวัว
       if (newStatus == 'accepted') {
         Map<String, dynamic> animalUpdate = {
           'user_id': buyerId, // โอนกรรมสิทธิ์ให้ผู้ซื้อ
@@ -129,7 +128,7 @@ class _OfferScreenState extends State<OfferScreen> {
             .eq('animal_id', int.parse(animalId));
       }
 
-      // 3. สั่งรีเฟรชหน้าจอหลังทำรายการเสร็จ
+      // รีเฟรชหน้าจอหลังทำรายการเสร็จ
       setState(() {
         _offersFuture = _fetchOffers();
       });
@@ -174,7 +173,7 @@ class _OfferScreenState extends State<OfferScreen> {
     try {
       await _supabase.from('offers').delete().eq('id', offerId);
 
-      // 5. สั่งรีเฟรชหน้าจอทันทีหลังลบเสร็จ
+      // รีเฟรชหน้าจอทันทีหลังลบเสร็จ
       setState(() {
         _offersFuture = _fetchOffers();
       });
@@ -225,7 +224,7 @@ class _OfferScreenState extends State<OfferScreen> {
             .eq('seller_id', myUserId)
             .neq('status', 'pending');
 
-        // 6. สั่งรีเฟรชหน้าจอทันทีหลังลบทั้งหมดเสร็จ
+        // รีเฟรชหน้าจอทันทีหลังลบทั้งหมดเสร็จ
         setState(() {
           _offersFuture = _fetchOffers();
         });
@@ -258,7 +257,6 @@ class _OfferScreenState extends State<OfferScreen> {
           ),
         ],
       ),
-      // 7. เปลี่ยน StreamBuilder เป็น FutureBuilder
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _offersFuture, // ใช้ตัวแปร Future แทน
         builder: (context, snapshot) {

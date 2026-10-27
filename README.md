@@ -14,11 +14,11 @@ September 2025 – May 2026.
 ## Screenshots
 
 Marketplace and seller details show parts of my contribution. The animal profile
-shows the wider team application. Images are from the portfolio case study.
+shows the wider team application.
 
 | Marketplace | Seller location | Animal profile |
 | --- | --- | --- |
-| <img src="https://raw.githubusercontent.com/pawarit-ming/portfolio/main/public/projects/thai-cattle-passport/marketplace.png" alt="Cattle marketplace" width="240"> | <img src="https://raw.githubusercontent.com/pawarit-ming/portfolio/main/public/projects/thai-cattle-passport/seller-location.png" alt="Seller location and farm details" width="240"> | <img src="https://raw.githubusercontent.com/pawarit-ming/portfolio/main/public/projects/thai-cattle-passport/cow-profile.png" alt="Animal identity and health profile" width="240"> |
+| <img src="docs/screenshots/marketplace.png" alt="Cattle marketplace" width="240"> | <img src="docs/screenshots/seller-location.png" alt="Seller location and farm details" width="240"> | <img src="docs/screenshots/cow-profile.png" alt="Animal identity and health profile" width="240"> |
 
 ---
 
@@ -45,11 +45,17 @@ repository; the app calls it over REST.
 
 `git blame` on any file shows the split honestly.
 
-## Configuring Supabase
+## Configuration
 
-The credentials in `lib/supabase_config.dart` are placeholders — the project's own
-Supabase keys were removed from the entire commit history before publishing. To
-run this against a backend you need your own Supabase project:
+Every key in the current code is a placeholder — the project's own Supabase keys
+were removed from the entire commit history before publishing. To run it you
+need your own:
+
+| Key | Where |
+| --- | --- |
+| Supabase URL and anon key | `lib/supabase_config.dart` |
+| Google Maps API key (seller location map) | `android/app/src/main/AndroidManifest.xml` · `ios/Runner/AppDelegate.swift` |
+| Firebase config (Android build plugin only; the Dart code does not call Firebase) | `android/app/google-services.json` · `lib/firebase_options.dart` |
 
 ```dart
 // lib/supabase_config.dart

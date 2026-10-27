@@ -75,7 +75,7 @@ class _CameraWidgetState extends State<CameraWidget>
 
       _controller = CameraController(
         cameras.first,
-        ResolutionPreset.high, // แนะนำ High เพื่อความชัด
+        ResolutionPreset.high,
         enableAudio: false,
       );
 

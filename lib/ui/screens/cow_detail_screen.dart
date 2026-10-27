@@ -24,14 +24,13 @@ import 'package:image_picker/image_picker.dart';
 class CowDetailScreen extends ConsumerStatefulWidget {
   final int cowId;
   final bool isReadOnly;
-  final bool hideBackButton; // ✅ 1. เพิ่มตัวแปรนี้เพื่อคุมการแสดงปุ่มถอยกลับ
+  final bool hideBackButton; // ซ่อนปุ่มถอยกลับ (หน้า passport สาธารณะที่เปิดจาก QR)
 
   const CowDetailScreen({
     super.key,
     required this.cowId,
     this.isReadOnly = false,
-    this.hideBackButton =
-        false, // ✅ 2. ค่า Default เป็น false (แสดงปุ่มตามปกติ)
+    this.hideBackButton = false,
   });
 
   @override
@@ -188,7 +187,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
       ],
       tabController: _tabController,
 
-      // ✅ 3. ปรับ Logic ตรงนี้: ถ้า hideBackButton เป็น true ให้ส่ง null (เพื่อซ่อนปุ่ม)
+      // ถ้า hideBackButton เป็น true ให้ส่ง null เพื่อซ่อนปุ่ม
       onBack: widget.hideBackButton
           ? null
           : () {
@@ -947,8 +946,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen>
                 child: Container(
                   padding: EdgeInsets.all(10.r),
                   decoration: BoxDecoration(
-                    color: Colors
-                        .white, // ✅ สำคัญ: ต้องใส่สีพื้นหลัง ไม่งั้นรูปจะโปร่งใส
+                    color: Colors.white, // ต้องมีสีพื้นหลัง ไม่งั้นรูปที่บันทึกจะโปร่งใส
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
                         color: theme.scaffoldBackgroundColor, width: 2.w),

@@ -136,6 +136,10 @@ class AuthService {
       await supabaseClient.auth.updateUser(
         UserAttributes(password: newPassword),
       );
+      // The recovery link signed the user in at runtime; mark the session
+      // recognized so the router lets them into the app instead of looping
+      // between '/' and '/login'.
+      sessionRecognized = true;
       logger.i('[AuthService.updatePassword] [SUCCESS] Password updated successfully');
     } catch (e) {
       logger.e('[AuthService] Update password error', error: e);

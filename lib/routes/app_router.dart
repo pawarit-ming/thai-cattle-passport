@@ -55,8 +55,9 @@ final router = GoRouter(
       return '/login';
     }
 
-    /// ถ้า Login แล้ว แต่อยู่ที่หน้า Login, Register หรือ ลืมรหัสผ่าน -> ให้ไปหน้าแรก (Home)
-    if (session != null && (isLoggingIn || isRegistering || isForgotPassword)) {
+    // ถ้า Login แล้ว แต่อยู่ที่หน้า Login, Register หรือ ลืมรหัสผ่าน -> ให้ไปหน้าแรก (Home)
+    // เช็ค sessionRecognized ด้วย ไม่งั้นจะวนกับเงื่อนไขด้านล่างที่ส่งกลับมา /login
+    if (session != null && sessionRecognized && (isLoggingIn || isRegistering || isForgotPassword)) {
       return '/';
     }
 
